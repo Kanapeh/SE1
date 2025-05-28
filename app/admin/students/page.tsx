@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createServerClient } from '@supabase/ssr';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -30,7 +30,8 @@ export default function StudentsPage() {
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     fetchStudents();
@@ -38,135 +39,74 @@ export default function StudentsPage() {
 
   const fetchStudents = async () => {
     try {
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            get(name: string) {
-              return document.cookie
-                .split('; ')
-                .find((row) => row.startsWith(`${name}=`))
-                ?.split('=')[1];
-            },
-            set(name: string, value: string, options: { path?: string; maxAge?: number }) {
-              document.cookie = `${name}=${value}; path=${options.path || '/'}; max-age=${options.maxAge || 3600}`;
-            },
-            remove(name: string, options: { path?: string }) {
-              document.cookie = `${name}=; path=${options.path || '/'}; max-age=0`;
-            },
-          },
-        }
-      );
-
       const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log("Fetched students:", data);
       setStudents(data || []);
     } catch (error) {
-      console.error("Error fetching students:", error);
-      toast.error("خطا در دریافت اطلاعات دانش‌آموزان");
+      console.error('Error fetching students:', error);
+      toast.error('خطا در دریافت لیست دانش‌آموزان');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewDetails = (studentId: string) => {
-    router.push(`/admin/students/${studentId}`);
-  };
-
-  const filteredStudents = students.filter((student) => {
-    const searchTerm = searchQuery.toLowerCase();
-    return (
-      student.first_name?.toLowerCase().includes(searchTerm) ||
-      student.last_name?.toLowerCase().includes(searchTerm) ||
-      student.email?.toLowerCase().includes(searchTerm) ||
-      student.phone?.includes(searchTerm)
-    );
-  });
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const filteredStudents = students.filter(student =>
+    student.first_name.toLowerCase().includes(search.toLowerCase()) ||
+    student.last_name.toLowerCase().includes(search.toLowerCase()) ||
+    student.email.toLowerCase().includes(search.toLowerCase()) ||
+    student.phone.includes(search)
+  );
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">مدیریت دانش‌آموزان</h1>
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            type="text"
-            placeholder="جستجوی دانش‌آموز..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            placeholder="جستجو..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>نام</TableHead>
-              <TableHead>نام خانوادگی</TableHead>
               <TableHead>ایمیل</TableHead>
-              <TableHead>شماره تماس</TableHead>
+              <TableHead>تلفن</TableHead>
               <TableHead>تاریخ ثبت‌نام</TableHead>
               <TableHead>وضعیت</TableHead>
               <TableHead>عملیات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStudents.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">
-                  دانش‌آموزی یافت نشد
+            {filteredStudents.map((student) => (
+              <TableRow key={student.id}>
+                <TableCell>{`${student.first_name} ${student.last_name}`}</TableCell>
+                <TableCell>{student.email}</TableCell>
+                <TableCell>{student.phone}</TableCell>
+                <TableCell>{new Date(student.created_at).toLocaleDateString('fa-IR')}</TableCell>
+                <TableCell>{student.status}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.push(`/admin/students/${student.id}`)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredStudents.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.first_name}</TableCell>
-                  <TableCell>{student.last_name}</TableCell>
-                  <TableCell>{student.email}</TableCell>
-                  <TableCell>{student.phone}</TableCell>
-                  <TableCell>
-                    {new Date(student.created_at).toLocaleDateString("fa-IR")}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        student.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {student.status === "active" ? "فعال" : "غیرفعال"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewDetails(student.id)}
-                    >
-                      <Eye className="h-4 w-4 ml-1" />
-                      جزئیات
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
