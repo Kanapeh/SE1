@@ -46,7 +46,7 @@ export default function AdminRequestsPage() {
       setLoading(true);
       setError(null);
 
-      const { data: requestsData, error: requestsError } = await supabase
+      const { data: requestsData, error: requestsError } = await supabaseAdmin
         .from("requests")
         .select("*")
         .order("created_at", { ascending: false });
@@ -130,21 +130,18 @@ export default function AdminRequestsPage() {
     try {
       const { error } = await supabase
         .from("requests")
-        .update({ status: "rejected" })
+        .delete()
         .eq("id", requestId);
 
       if (error) throw error;
 
-      setRequests(
-        requests.map((request) =>
-          request.id === requestId
-            ? { ...request, status: "rejected" }
-            : request
-        )
-      );
+      // Remove the request from the local state
+      setRequests(requests.filter(request => request.id !== requestId));
+      
+      alert("درخواست با موفقیت حذف شد");
     } catch (err: any) {
       console.error("Error rejecting request:", err);
-      alert("خطا در رد درخواست");
+      alert("خطا در حذف درخواست");
     }
   };
 

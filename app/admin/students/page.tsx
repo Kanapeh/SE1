@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createServerClient } from '@supabase/ssr';
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -38,12 +38,34 @@ export default function StudentsPage() {
 
   const fetchStudents = async () => {
     try {
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return document.cookie
+                .split('; ')
+                .find((row) => row.startsWith(`${name}=`))
+                ?.split('=')[1];
+            },
+            set(name: string, value: string, options: { path?: string; maxAge?: number }) {
+              document.cookie = `${name}=${value}; path=${options.path || '/'}; max-age=${options.maxAge || 3600}`;
+            },
+            remove(name: string, options: { path?: string }) {
+              document.cookie = `${name}=; path=${options.path || '/'}; max-age=0`;
+            },
+          },
+        }
+      );
+
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      console.log("Fetched students:", data);
       setStudents(data || []);
     } catch (error) {
       console.error("Error fetching students:", error);
