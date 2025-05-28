@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ClipLoader } from "react-spinners";
 import {
   Table,
@@ -38,6 +38,7 @@ export default function AdminCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     fetchCourses();
@@ -201,7 +202,7 @@ export default function AdminCoursesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Link href={`/admin/courses/edit/${course.id}`}>
+                      <Link href={`/admin/courses/${course.id}`}>
                         <Button variant="outline" size="sm">
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -209,7 +210,7 @@ export default function AdminCoursesPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={() => handleDeleteCourse(course.id)}
                       >
                         <Trash2 className="w-4 h-4" />

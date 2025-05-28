@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from "next/link";
 import { Editor } from '@tinymce/tinymce-react';
 import { useRouter } from 'next/navigation';
@@ -27,6 +27,7 @@ export default function BlogPage() {
   const [search, setSearch] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const editorRef = useRef<any>(null);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     checkAuth();

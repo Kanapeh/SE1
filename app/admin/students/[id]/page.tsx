@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,6 +38,7 @@ export default function StudentDetailsPage({
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const resolvedParams = use(params);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     fetchStudentDetails();
@@ -204,7 +205,7 @@ export default function StudentDetailsPage({
                         className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center">
-                          <BookOpen className="h-5 w-5 ml-2 text-green-500" />
+                          <BookOpen className="h-5 w-5 ml-2 text-primary" />
                           <div>
                             <h3 className="font-medium">{course.title}</h3>
                             <p className="text-sm text-gray-500">
@@ -212,7 +213,9 @@ export default function StudentDetailsPage({
                             </p>
                           </div>
                         </div>
-                        <div className="text-sm text-green-500">تکمیل شده</div>
+                        <div className="text-sm text-gray-500">
+                          تکمیل شده
+                        </div>
                       </div>
                     ))}
                 </div>
