@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
       return NextResponse.json(
@@ -32,6 +34,7 @@ export async function DELETE(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
       return NextResponse.json(
@@ -65,6 +68,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
       return NextResponse.json(
