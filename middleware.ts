@@ -4,11 +4,11 @@ import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   try {
-    // ایجاد response و supabase client
+    // Create response and supabase client
     const res = NextResponse.next();
     const supabase = createMiddlewareClient({ req: request, res });
 
-    // بررسی وضعیت کاربر
+    // Check user session
     const {
       data: { session },
       error: sessionError
@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // مسیرهای محافظت شده
+    // Protected routes
     const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
     const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
     const isLoginRoute = request.nextUrl.pathname === '/login';
@@ -28,17 +28,17 @@ export async function middleware(request: NextRequest) {
     console.log('Session exists:', !!session);
     console.log('Session user:', session?.user?.id);
 
-    // اگر کاربر لاگین نکرده و سعی می‌کند به صفحات محافظت شده دسترسی پیدا کند
+    // If user is not logged in and tries to access protected routes
     if (!session?.user && (isAdminRoute || isDashboardRoute)) {
       console.log('No session, redirecting to login');
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // اگر کاربر لاگین کرده است
+    // If user is logged in
     if (session?.user) {
       console.log('User is logged in, checking role...');
       
-      // بررسی نقش کاربر
+      // Check user role
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('is_admin')
@@ -52,20 +52,20 @@ export async function middleware(request: NextRequest) {
 
       console.log('User role:', userData.is_admin ? 'admin' : 'user');
 
-      // اگر کاربر ادمین نیست و سعی می‌کند به صفحات ادمین دسترسی پیدا کند
+      // If user is not admin and tries to access admin routes
       if (isAdminRoute && !userData.is_admin) {
         console.log('Non-admin user trying to access admin route, redirecting to dashboard');
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
 
-      // اگر کاربر ادمین است و در صفحه لاگین است
+      // If admin user is on login page
       if (isLoginRoute && userData.is_admin) {
         console.log('Admin user on login page, redirecting to admin dashboard');
         return NextResponse.redirect(new URL('/admin/requests', request.url));
       }
     }
 
-    // برگرداندن response با کوکی‌های به‌روز شده
+    // Return response with updated cookies
     return res;
   } catch (error) {
     console.error('Middleware error:', error);
