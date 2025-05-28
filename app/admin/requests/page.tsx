@@ -156,7 +156,6 @@ export default function RequestsPage() {
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام خانوادگی</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">ایمیل</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">دوره</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">تاریخ درخواست</TableHead>
