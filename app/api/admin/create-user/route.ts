@@ -1,80 +1,56 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from "next/server";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Missing required environment variables');
-    }
+    const supabase = createRouteHandlerClient({ cookies });
+    const { email, password, role } = await request.json();
 
-    const body = await request.json();
-    const { email, first_name, last_name, phone, language, level, class_type, preferred_time } = body;
-
-    // Create Supabase client with service role key
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      }
-    );
-
-    // Create auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // Create user in Supabase
+    const { data: userData, error: userError } = await supabase.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
-      user_metadata: {
-        first_name,
-        last_name,
-        phone,
-        language,
-        level,
-        class_type,
-        preferred_time
-      }
     });
 
-    if (authError) {
-      console.error('Error creating auth user:', authError);
-      return NextResponse.json({ error: authError.message }, { status: 400 });
+    if (userError) {
+      console.error("Error creating user:", userError);
+      return NextResponse.json(
+        { error: userError.message },
+        { status: 400 }
+      );
     }
 
-    // Create user in public.users
-    const { data: userData, error: userError } = await supabaseAdmin
+    // Insert user data into users table
+    const { error: profileError } = await supabase
       .from('users')
       .insert([
         {
-          id: authData.user.id,
-          email,
-          full_name: `${first_name} ${last_name}`,
-          first_name,
-          last_name,
-          phone,
-          language,
-          level,
-          class_type,
-          preferred_time,
-          role: 'student',
+          id: userData.user.id,
+          email: email,
+          role: role || 'student',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_admin: false
-        }
-      ])
-      .select()
-      .single();
+        },
+      ]);
 
-    if (userError) {
-      console.error('Error creating user:', userError);
-      return NextResponse.json({ error: userError.message }, { status: 400 });
+    if (profileError) {
+      console.error("Error creating user profile:", profileError);
+      return NextResponse.json(
+        { error: profileError.message },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ user: userData });
-  } catch (error: any) {
-    console.error('Error in create-user:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({
+      message: "User created successfully",
+      user: userData.user,
+    });
+  } catch (error) {
+    console.error("Error in create-user route:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 } 

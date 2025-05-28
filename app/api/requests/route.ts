@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // Add dynamic configuration
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,7 @@ interface RequestBody {
 
 export async function GET() {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
     console.log("Testing Supabase connection...");
     const { data: testData, error: testError } = await supabase
       .from('requests')
@@ -59,6 +61,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
     console.log("Received POST request");
 
     let body: RequestBody;
