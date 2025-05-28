@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { ClipLoader } from "react-spinners";
 import {
   Table,
@@ -19,22 +19,24 @@ import { faIR } from "date-fns/locale";
 
 interface Request {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  language: string;
-  level: string;
-  class_type: string;
-  preferred_time: string;
-  status: "pending" | "approved" | "rejected";
+  student_id: string;
+  course_id: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  student: {
+    full_name: string;
+    email: string;
+  };
+  course: {
+    name: string;
+  };
 }
 
-export default function AdminRequestsPage() {
+export default function RequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const supabase = createClientComponentClient();
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -43,21 +45,22 @@ export default function AdminRequestsPage() {
 
   const fetchRequests = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      const { data, error } = await supabase
+        .from('requests')
+        .select(`
+          *,
+          student:students(full_name, email),
+          course:courses(name)
+        `)
+        .order('created_at', { ascending: false });
 
-      const { data: requestsData, error: requestsError } = await supabaseAdmin
-        .from("requests")
-        .select("*")
-        .order("created_at", { ascending: false });
+      if (error) throw error;
 
-      if (requestsError) throw requestsError;
-
-      console.log("Fetched requests:", requestsData);
-      setRequests(requestsData as Request[]);
-    } catch (err: any) {
-      console.error("Error in fetchRequests:", err);
-      setError(err.message || "خطا در دریافت لیست درخواست‌ها");
+      console.log('Fetched requests:', data);
+      setRequests(data || []);
+    } catch (err) {
+      console.error('Error fetching requests:', err);
+      setError('خطا در دریافت درخواست‌ها');
     } finally {
       setLoading(false);
     }
@@ -65,94 +68,42 @@ export default function AdminRequestsPage() {
 
   const handleApproveRequest = async (requestId: string) => {
     try {
-      // First, get the request details
-      const { data: requestData, error: requestError } = await supabase
-        .from("requests")
-        .select("*")
-        .eq("id", requestId)
-        .single();
+      const { error } = await supabase
+        .from('requests')
+        .update({ status: 'approved' })
+        .eq('id', requestId);
 
-      if (requestError) {
-        console.error("Error fetching request:", requestError);
-        throw requestError;
-      }
+      if (error) throw error;
 
-      // Create user through API
-      const response = await fetch('/api/admin/create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: requestData.email,
-          first_name: requestData.first_name,
-          last_name: requestData.last_name,
-          phone: requestData.phone,
-          language: requestData.language,
-          level: requestData.level,
-          class_type: requestData.class_type,
-          preferred_time: requestData.preferred_time
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'خطا در ایجاد کاربر');
-      }
-
-      // Update the request status
-      const { error: updateError } = await supabase
-        .from("requests")
-        .update({ status: "approved" })
-        .eq("id", requestId);
-
-      if (updateError) {
-        console.error("Error updating request:", updateError);
-        throw updateError;
-      }
-
-      setRequests(
-        requests.map((request) =>
-          request.id === requestId
-            ? { ...request, status: "approved" }
-            : request
-        )
-      );
-
-      alert("درخواست با موفقیت تایید شد و کاربر جدید ایجاد شد");
-    } catch (err: any) {
-      console.error("Error approving request:", err);
-      alert(`خطا در تایید درخواست: ${err.message || 'خطای ناشناخته'}`);
+      await fetchRequests();
+    } catch (err) {
+      console.error('Error approving request:', err);
+      setError('خطا در تایید درخواست');
     }
   };
 
   const handleRejectRequest = async (requestId: string) => {
     try {
       const { error } = await supabase
-        .from("requests")
-        .delete()
-        .eq("id", requestId);
+        .from('requests')
+        .update({ status: 'rejected' })
+        .eq('id', requestId);
 
       if (error) throw error;
 
-      // Remove the request from the local state
-      setRequests(requests.filter(request => request.id !== requestId));
-      
-      alert("درخواست با موفقیت حذف شد");
-    } catch (err: any) {
-      console.error("Error rejecting request:", err);
-      alert("خطا در حذف درخواست");
+      await fetchRequests();
+    } catch (err) {
+      console.error('Error rejecting request:', err);
+      setError('خطا در رد درخواست');
     }
   };
 
   const filteredRequests = requests.filter((request) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      request.first_name.toLowerCase().includes(searchLower) ||
-      request.last_name.toLowerCase().includes(searchLower) ||
-      request.email.toLowerCase().includes(searchLower) ||
-      request.language.toLowerCase().includes(searchLower) ||
-      request.level.toLowerCase().includes(searchLower)
+      request.student.full_name.toLowerCase().includes(searchLower) ||
+      request.student.email.toLowerCase().includes(searchLower) ||
+      request.course.name.toLowerCase().includes(searchLower)
     );
   });
 
@@ -207,11 +158,7 @@ export default function AdminRequestsPage() {
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام خانوادگی</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">ایمیل</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">شماره تماس</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">زبان</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">سطح</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نوع کلاس</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">زمان ترجیحی</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">دوره</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">تاریخ درخواست</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">وضعیت</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">عملیات</TableHead>
@@ -220,14 +167,9 @@ export default function AdminRequestsPage() {
                   <TableBody className="divide-y divide-gray-200">
                     {filteredRequests.map((request) => (
                       <TableRow key={request.id} className="hover:bg-gray-50">
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.first_name}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.last_name}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.email}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.phone}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.language}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.level}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.class_type}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.preferred_time}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.student.full_name}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.student.email}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.course.name}</TableCell>
                         <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
                           {format(new Date(request.created_at), "PPP", {
                             locale: faIR,
