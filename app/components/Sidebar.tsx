@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,12 +29,12 @@ export default function Sidebar() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
+        const { data: userData } = await supabase
+          .from("users")
+          .select("is_admin")
           .eq("id", user.id)
           .single();
-        setUserRole(profile?.role || null);
+        setIsAdmin(userData?.is_admin || false);
       }
     } catch (error) {
       console.error("Error checking user role:", error);
@@ -53,15 +53,15 @@ export default function Sidebar() {
   const menuItems = [
     {
       title: "داشبورد",
-      href: userRole === "admin" ? "/admin" : "/dashboard",
+      href: isAdmin ? "/admin" : "/dashboard",
       icon: Home,
     },
     {
       title: "دوره‌ها",
-      href: userRole === "admin" ? "/admin/courses" : "/courses",
+      href: isAdmin ? "/admin/courses" : "/courses",
       icon: BookOpen,
     },
-    ...(userRole === "admin"
+    ...(isAdmin
       ? [
           {
             title: "دانش‌آموزان",
@@ -72,7 +72,7 @@ export default function Sidebar() {
       : []),
     {
       title: "تنظیمات",
-      href: userRole === "admin" ? "/admin/settings" : "/settings",
+      href: isAdmin ? "/admin/settings" : "/settings",
       icon: Settings,
     },
   ];
@@ -138,7 +138,7 @@ export default function Sidebar() {
                     className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
-                    <span>خروج از {userRole === "admin" ? "ادمین" : "دانش‌آموز"}</span>
+                    <span>خروج از {isAdmin ? "ادمین" : "دانش‌آموز"}</span>
                   </button>
                 </nav>
               </div>
