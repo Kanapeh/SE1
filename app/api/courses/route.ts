@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
+
     const { data, error } = await supabase
       .from('coursesstudents')
       .select('*')
@@ -31,6 +25,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
     const course = await request.json();
 
     const { data, error } = await supabase
