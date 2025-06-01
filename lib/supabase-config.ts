@@ -1,7 +1,6 @@
 export const supabaseConfig = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL,
   anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
 };
 
 // Validate environment variables
@@ -11,8 +10,4 @@ if (!supabaseConfig.url) {
 
 if (!supabaseConfig.anonKey) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY');
-}
-
-if (!supabaseConfig.serviceRoleKey) {
-  throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
 } 
