@@ -1,8 +1,8 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { supabaseConfig } from './supabase-config';
 
 // Initialize Supabase client for client-side operations using anon key
-export const supabase = createClientComponentClient({
-  supabaseUrl: supabaseConfig.url,
-  supabaseKey: supabaseConfig.anonKey,
-});
+export const supabase = createBrowserClient(
+  supabaseConfig.url!,
+  supabaseConfig.anonKey!
+);
