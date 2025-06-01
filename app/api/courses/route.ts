@@ -1,15 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase-api';
+import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await createApiClient();
+    const supabase = createRouteHandlerClient({ cookies });
 
     const { data, error } = await supabase
       .from('coursesstudents')
-      .select('*');
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -23,9 +25,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const supabase = await createApiClient();
+    const supabase = createRouteHandlerClient({ cookies });
     const course = await request.json();
 
     const { data, error } = await supabase

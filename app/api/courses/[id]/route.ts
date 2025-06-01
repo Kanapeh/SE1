@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createApiClient } from '@/lib/supabase-api';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createApiClient();
+    const supabase = createRouteHandlerClient({ cookies });
 
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createApiClient();
+    const supabase = createRouteHandlerClient({ cookies });
 
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {
@@ -68,7 +69,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createApiClient();
+    const supabase = createRouteHandlerClient({ cookies });
 
     const id = request.nextUrl.pathname.split('/').pop();
     if (!id) {

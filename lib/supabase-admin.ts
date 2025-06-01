@@ -1,2 +1,14 @@
-// This file is no longer needed as we're not using service role key
-// All operations will be handled through the regular client with proper RLS policies 
+import { createClient } from '@supabase/supabase-js';
+import { supabaseConfig } from './supabase-config';
+
+// This is used for server-side operations only
+export const supabaseAdmin = createClient(
+  supabaseConfig.url!,
+  supabaseConfig.serviceRoleKey!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+); 
