@@ -1,55 +1,28 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { supabaseConfig } from './supabase-config';
+import { serverConfig } from './supabase-config';
 import { CookieOptions } from '@supabase/ssr';
 
 export async function createClient() {
-  const cookieStore = cookies();
-  
   return createServerClient(
-    supabaseConfig.url,
-    supabaseConfig.anonKey,
+    serverConfig.url,
+    serverConfig.anonKey,
     {
       cookies: {
         get(name: string) {
-          const cookie = cookieStore.get(name);
-          return cookie?.value;
+          return document.cookie
+            .split('; ')
+            .find((row) => row.startsWith(`${name}=`))
+            ?.split('=')[1];
         },
         set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              // Ensure cookies are secure in production
-              secure: process.env.NODE_ENV === 'production',
-              // Prevent JavaScript access to cookies
-              httpOnly: true,
-              // Same site policy
-              sameSite: 'lax',
-            });
-          } catch (error) {
-            console.error('Error setting cookie:', error);
-          }
+          document.cookie = `${name}=${value}; ${Object.entries(options)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('; ')}`;
         },
         remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({
-              name,
-              value: '',
-              ...options,
-              // Set expiration to past date to remove cookie
-              expires: new Date(0),
-              // Ensure cookies are secure in production
-              secure: process.env.NODE_ENV === 'production',
-              // Prevent JavaScript access to cookies
-              httpOnly: true,
-              // Same site policy
-              sameSite: 'lax',
-            });
-          } catch (error) {
-            console.error('Error removing cookie:', error);
-          }
+          document.cookie = `${name}=; ${Object.entries(options)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('; ')}`;
         },
       },
     }

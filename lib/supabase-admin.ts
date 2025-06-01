@@ -1,14 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import { supabaseConfig } from './supabase-config';
-
-if (!supabaseConfig.url || !supabaseConfig.serviceRoleKey) {
-  throw new Error('Missing required environment variables for Supabase admin client');
-}
+import { serverConfig } from './supabase-config';
 
 // This is used for server-side operations only
 export const supabaseAdmin = createClient(
-  supabaseConfig.url,
-  supabaseConfig.serviceRoleKey,
+  serverConfig.url,
+  serverConfig.serviceRoleKey,
   {
     auth: {
       autoRefreshToken: false,
