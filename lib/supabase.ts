@@ -1,8 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { clientConfig } from './supabase-config';
+import { supabaseConfig } from './supabase-config';
 
-// Initialize Supabase client for client-side operations using anon key
+// Initialize Supabase client for client-side operations
 export const supabase = createBrowserClient(
-  clientConfig.url,
-  clientConfig.anonKey
+  supabaseConfig.url,
+  supabaseConfig.anonKey
 );

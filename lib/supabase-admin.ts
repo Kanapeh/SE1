@@ -1,14 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// This is used for server-side operations only
+// This is used for server-side operations only in API routes
 export const createAdminClient = () => {
-  if (typeof window !== 'undefined') {
-    throw new Error('Admin client cannot be used in the browser');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for admin operations');
   }
 
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
         autoRefreshToken: false,
