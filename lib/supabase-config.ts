@@ -27,21 +27,31 @@ export const validateClientEnv = (): ClientConfig => {
   };
 };
 
-// Validate environment variables for server-side
-export const validateServerEnv = (): ServerConfig => {
-  const clientConfig = validateClientEnv();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Export validated client configuration
+export const clientConfig: ClientConfig = validateClientEnv();
 
+// Server-side configuration
+let serverConfig: ServerConfig;
+
+try {
+  // This will only work on the server
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
   if (!serviceRoleKey) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  return {
+  serverConfig = {
     ...clientConfig,
     serviceRoleKey,
   };
-};
+} catch (error) {
+  // On the client, this will throw when accessed
+  serverConfig = new Proxy({} as ServerConfig, {
+    get: () => {
+      throw new Error('Server configuration is not available on the client side');
+    },
+  });
+}
 
-// Export validated configurations
-export const clientConfig: ClientConfig = validateClientEnv();
-export const serverConfig: ServerConfig = validateServerEnv(); 
+export { serverConfig }; 
