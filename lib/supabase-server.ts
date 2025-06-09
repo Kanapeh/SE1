@@ -1,11 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
-import { serverConfig } from './supabase-config';
+import { supabaseConfig } from './supabase-config';
 import { CookieOptions } from '@supabase/ssr';
 
 export async function createClient() {
+  if (!supabaseConfig.url || !supabaseConfig.anonKey) {
+    throw new Error('Missing Supabase configuration');
+  }
+
   return createServerClient(
-    serverConfig.url,
-    serverConfig.anonKey,
+    supabaseConfig.url,
+    supabaseConfig.anonKey,
     {
       cookies: {
         get(name: string) {
