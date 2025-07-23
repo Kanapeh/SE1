@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+// حذف import supabase
 
 interface Settings {
   site_name: string;
@@ -43,38 +44,29 @@ export default function SettingsPage() {
     const fetchSettings = async () => {
       try {
         const response = await fetch('/api/settings');
-        if (response.ok) {
-          const data = await response.json();
-          setSettings(data);
-        }
+        if (!response.ok) throw new Error('خطا در دریافت تنظیمات');
+        const data = await response.json();
+        setSettings(data);
       } catch (error) {
         console.error('Error fetching settings:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchSettings();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       const response = await fetch('/api/settings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
-
-      if (response.ok) {
-        alert('تنظیمات با موفقیت ذخیره شد.');
-      } else {
-        throw new Error('خطا در ذخیره تنظیمات');
-      }
+      if (!response.ok) throw new Error('خطا در ذخیره تنظیمات. لطفا دوباره تلاش کنید.');
+      alert('تنظیمات با موفقیت ذخیره شد.');
     } catch (error) {
       console.error('Error saving settings:', error);
       alert('خطا در ذخیره تنظیمات. لطفا دوباره تلاش کنید.');
