@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createAdminClient } from '@/lib/supabase-admin';
 import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('settings')
       .select('*')
@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createAdminClient();
     const settings = await request.json();
 
     const { data, error } = await supabase

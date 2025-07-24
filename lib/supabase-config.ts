@@ -5,6 +5,7 @@ type SupabaseConfig = {
 };
 
 // Configuration using only public environment variables
+// This should never include service role key
 const config: SupabaseConfig = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
   anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

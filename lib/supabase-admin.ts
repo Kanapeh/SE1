@@ -2,6 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 
 // This is used for server-side operations only in API routes
 export const createAdminClient = () => {
+  if (typeof window !== 'undefined') {
+    throw new Error('This function can only be used in server-side code');
+  }
+
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for admin operations');
   }
