@@ -12,6 +12,7 @@ import {
   X,
   LogOut,
   Home,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,6 +62,11 @@ export default function Sidebar() {
       href: isAdmin ? "/admin/courses" : "/courses",
       icon: BookOpen,
     },
+    {
+      title: "معلمان",
+      href: "/teachers",
+      icon: GraduationCap,
+    },
     ...(isAdmin
       ? [
           {
@@ -82,9 +88,9 @@ export default function Sidebar() {
       {/* دکمه همبرگری */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-white shadow-lg hover:bg-gray-100 transition-colors"
+        className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-background border shadow-lg hover:bg-muted transition-colors"
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-6 h-6 text-foreground" />
       </button>
 
       {/* سایدبار */}
@@ -106,16 +112,16 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 20 }}
-              className="fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-50"
+              className="fixed top-0 right-0 h-full w-64 bg-background border-l shadow-xl z-50"
             >
               <div className="p-4">
                 <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-xl font-bold">منو</h2>
+                  <h2 className="text-xl font-bold text-foreground">منو</h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-6 h-6 text-foreground" />
                   </button>
                 </div>
 
@@ -124,7 +130,7 @@ export default function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
                       <item.icon className="w-5 h-5" />
@@ -135,7 +141,7 @@ export default function Sidebar() {
                   {/* Logout Button */}
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
                     <span>خروج از {isAdmin ? "ادمین" : "دانش‌آموز"}</span>

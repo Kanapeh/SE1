@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Sidebar from "./components/Sidebar";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Head from "next/head";
 
 const vazirmatn = Vazirmatn({
@@ -51,6 +52,7 @@ export default function RootLayout({
           <Sidebar />
           <main className="min-h-screen">{children}</main>
           <Footer />
+          <FloatingWhatsApp />
           <Toaster position="top-center" />
         </ThemeProvider>
       </body>

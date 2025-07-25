@@ -129,7 +129,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 {post.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                    className="bg-gray-100 text-foreground px-3 py-1 rounded-full text-sm"
                   >
                     {tag}
                   </span>
@@ -148,8 +148,8 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             ) : (
               <ul className="space-y-4">
                 {comments.map((comment) => (
-                  <li key={comment.id} className="bg-gray-50 p-4 rounded shadow">
-                    <div className="text-sm text-gray-700 mb-2">{comment.content}</div>
+                  <li key={comment.id} className="bg-muted p-4 rounded shadow">
+                    <div className="text-sm text-foreground mb-2">{comment.content}</div>
                     <div className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString('fa-IR')}</div>
                   </li>
                 ))}

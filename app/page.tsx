@@ -7,10 +7,14 @@ import Image from "next/image";
 import Link from "next/link";
 import HeroImage from "../components/images/Hero.jpg";
 import { motion } from "framer-motion";
+import InstagramStories from "@/components/InstagramStories";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Instagram Stories Section */}
+      <InstagramStories />
+
       {/* Hero Section */}
       <section className="relative py-20 px-4 bg-gradient-to-r from-primary/10 to-primary/5">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-8">
@@ -55,30 +59,30 @@ export default function Home() {
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <Card className="p-6 bg-purple-200">
+            <Card className="p-6 bg-purple-200 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700">
               <Globe2 className="h-12 w-12 mb-4 text-primary" />
-              <h3 className="text-xl font-semibold mb-2">متد های جهانی</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">متد های جهانی</h3>
               <p className="text-muted-foreground">
                 از روش‌های مدرن و جهانی برای یادگیری زبان استفاده کنید.
               </p>
             </Card>
-            <Card className="p-6 bg-yellow-100">
+            <Card className="p-6 bg-yellow-100 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
               <BookOpen className="h-12 w-12 mb-4 text-primary" />
-              <h3 className="text-xl font-semibold mb-2">تدریس تخصصی</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">تدریس تخصصی</h3>
               <p className="text-muted-foreground">
                 از معلمان مجرب با سال‌ها تجربه یاد بگیرید.
               </p>
             </Card>
-            <Card className="p-6 bg-green-200">
+            <Card className="p-6 bg-green-200 dark:bg-green-900/20 border-green-300 dark:border-green-700">
               <Users className="h-12 w-12 mb-4 text-primary" />
-              <h3 className="text-xl font-semibold mb-2">کلاس‌های کوچک</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">کلاس‌های کوچک</h3>
               <p className="text-muted-foreground">
                 توجه شخصی در گروه‌های کوچک.
               </p>
             </Card>
-            <Card className="p-6 bg-pink-300">
+            <Card className="p-6 bg-pink-300 dark:bg-pink-900/20 border-pink-300 dark:border-pink-700">
               <Trophy className="h-12 w-12 mb-4 text-primary" />
-              <h3 className="text-xl font-semibold mb-2">گواهینامه</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">گواهینامه</h3>
               <p className="text-muted-foreground">
                 پس از اتمام دوره، گواهینامه‌های معتبر دریافت کنید.
               </p>
@@ -88,7 +92,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4 bg-gray-500">
+      <section className="py-20 px-4 bg-muted">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold mb-12 text-center">
             سوالات متداول
@@ -116,7 +120,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="bg-white p-6 rounded-lg shadow-md"
+                className="bg-background p-6 rounded-lg shadow-md border"
               >
                 <h3 className="text-xl font-semibold mb-2">{faq.question}</h3>
                 <p className="text-muted-foreground">{faq.answer}</p>

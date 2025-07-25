@@ -114,7 +114,7 @@ export default function BlogPage() {
                     {post.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded"
+                        className="text-xs bg-gray-100 text-foreground px-2 py-1 rounded"
                       >
                         {tag}
                       </span>

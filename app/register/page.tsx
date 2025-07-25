@@ -91,7 +91,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4">
       <Card className="max-w-md w-full space-y-8 p-8">
         <div>
-          <h2 className="text-center text-2xl font-bold text-gray-900">
+          <h2 className="text-center text-2xl font-bold text-foreground">
             ثبت‌نام در سایت
           </h2>
         </div>

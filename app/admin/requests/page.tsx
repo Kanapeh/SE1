@@ -211,31 +211,31 @@ export default function RequestsPage() {
               <div className="overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام خانوادگی</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">ایمیل</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">تلفن</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">زبان</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">سطح</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نوع کلاس</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">زمان ترجیحی</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">تاریخ درخواست</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">وضعیت</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">عملیات</TableHead>
+                                          <TableRow className="bg-muted">
+                                  <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">نام</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">نام خانوادگی</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">ایمیل</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">تلفن</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">زبان</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">سطح</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">نوع کلاس</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">زمان ترجیحی</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">تاریخ درخواست</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">وضعیت</TableHead>
+            <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-foreground">عملیات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-gray-200">
                     {filteredRequests.map((request) => (
-                      <TableRow key={request.id} className="hover:bg-gray-50">
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.first_name}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.last_name}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.email}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.phone}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.language}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.level}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.class_type}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.preferred_time}</TableCell>
+                                              <TableRow key={request.id} className="hover:bg-muted">
+                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.first_name}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.last_name}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.email}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.phone}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.language}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.level}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.class_type}</TableCell>
+              <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{request.preferred_time}</TableCell>
                         <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
                           {format(new Date(request.created_at), "PPP", {
                             locale: faIR,
