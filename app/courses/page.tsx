@@ -69,7 +69,7 @@ export default function CoursesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <ClipLoader color="#000000" size={50} />
+        <ClipLoader color="hsl(var(--foreground))" size={50} />
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function CoursesPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
           {error}
         </div>
       </div>
@@ -96,14 +96,14 @@ export default function CoursesPage() {
         </motion.div>
 
         {courses.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-muted-foreground py-8">
             در حال حاضر دوره‌ای موجود نیست
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course) => (
               <motion.div key={course.id}>
-                <Card className={`overflow-hidden h-full rounded-lg shadow-lg ${course.color}`}>
+                <Card className="overflow-hidden h-full rounded-lg shadow-lg bg-card border">
                   {/* تصویر دوره */}
                   <div className="relative">
                     {course.image_url && (
@@ -119,35 +119,37 @@ export default function CoursesPage() {
                   </div>
 
                   {/* محتوای دوره */}
-                  <div className="p-6 flex flex-col space-y-4">
-                    <h3 className="text-sm font-semibold text-primary">
-                      {course.level}
-                    </h3>
-                    <h2 className="text-2xl font-bold">{course.title}</h2>
-                    <p className="text-muted-foreground">{course.description}</p>
+                  <div className="p-6 flex flex-col space-y-4 text-foreground">
+                    <div className="inline-block px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                      <h3 className="text-sm font-semibold text-primary">
+                        {course.level}
+                      </h3>
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">{course.title}</h2>
+                    <p className="text-muted-foreground leading-relaxed">{course.description}</p>
 
                     {/* اطلاعات دوره */}
-                    <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
+                    <div className="mt-4 p-4 bg-muted rounded-lg shadow-sm">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-primary" />
-                          <span>{course.duration}</span>
+                          <span className="text-foreground">{course.duration}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-primary" />
-                          <span>{course.class_size}</span>
+                          <span className="text-foreground">{course.class_size}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* ویژگی‌های دوره */}
                     <div className="mt-4">
-                      <h4 className="text-lg font-semibold mb-2">ویژگی‌های دوره:</h4>
+                      <h4 className="text-lg font-semibold mb-2 text-foreground">ویژگی‌های دوره:</h4>
                       <div className="flex flex-col space-y-2">
                         {course.features.map((feature, index) => (
                           <div key={index} className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-primary mt-1" />
-                            <span>{feature}</span>
+                            <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                            <span className="text-foreground text-sm">{feature}</span>
                           </div>
                         ))}
                       </div>
@@ -155,7 +157,7 @@ export default function CoursesPage() {
 
                     {/* قیمت و دکمه ثبت‌نام */}
                     <div className="mt-6 text-center">
-                      <div className="text-3xl font-bold">
+                      <div className="text-3xl font-bold text-foreground">
                         {course.price}
                         <span className="text-base font-normal text-muted-foreground">
                           {" "}

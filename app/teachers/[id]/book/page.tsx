@@ -81,7 +81,7 @@ export default function BookSessionPage() {
   const mockTeachers: Teacher[] = [
     {
       id: "1",
-      name: "سارا احمدی",
+      name: "سپنتا علیزاده",
       avatar: "/images/teacher1.jpg",
       specialty: "مکالمه انگلیسی",
       experience: 8,
@@ -103,7 +103,7 @@ export default function BookSessionPage() {
     },
     {
       id: "2",
-      name: "علی محمدی",
+      name: "پارمیدا معصومی",
       avatar: "/images/teacher2.jpg",
       specialty: "گرامر پیشرفته",
       experience: 12,

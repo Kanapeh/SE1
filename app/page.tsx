@@ -34,12 +34,27 @@ export default function Home() {
       <section className="relative py-20 px-4 bg-gradient-to-r from-primary/10 to-primary/5">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-8">
           <motion.div 
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col items-center md:items-start text-center md:text-left"
+            className="flex justify-center md:justify-end order-2 md:order-1"
           >
-            <h1 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <Image
+              className="rounded-xl shadow-2xl"
+              src={HeroImage}
+              alt="Learning Languages"
+              width={500}
+              height={500}
+            />
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="flex flex-col items-center md:items-end text-center md:text-right order-1 md:order-2"
+          >
+            <h1 className="text-3xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               زبان‌های جدید را یاد بگیرید، <br />
               درهای جدید را باز کنید
             </h1>
@@ -49,7 +64,7 @@ export default function Home() {
               با مربیان متخصص و روش‌های نوین یادگیری، سفر خود را به سوی تسلط
               زبانی آغاز کنید.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
               <Link href="/register">
                 <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
                   <Play className="w-4 h-4 mr-2" />
@@ -62,21 +77,6 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex justify-center"
-          >
-            <Image
-              className="rounded-xl shadow-2xl"
-              src={HeroImage}
-              alt="Learning Languages"
-              width={500}
-              height={500}
-            />
           </motion.div>
         </div>
       </section>

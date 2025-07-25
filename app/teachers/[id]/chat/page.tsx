@@ -67,7 +67,7 @@ export default function ChatPage() {
   const mockTeachers: Teacher[] = [
     {
       id: "1",
-      name: "سارا احمدی",
+      name: "سپنتا علیزاده",
       avatar: "/images/teacher1.jpg",
       specialty: "مکالمه انگلیسی",
       experience: 8,
@@ -89,13 +89,13 @@ export default function ChatPage() {
     },
     {
       id: "2",
-      name: "علی محمدی",
+      name: "پاریمدا معصومی",
       avatar: "/images/teacher2.jpg",
       specialty: "گرامر پیشرفته",
       experience: 12,
       rating: 4.8,
       students: 203,
-      languages: ["انگلیسی", "فارسی", "عربی"],
+      languages: ["انگلیسی", "فارسی", ],
       bio: "متخصص در آموزش گرامر پیشرفته و آمادگی برای آزمون‌های بین‌المللی.",
       hourlyRate: 300000,
       location: "اصفهان",

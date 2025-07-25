@@ -2,137 +2,260 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { 
+  Facebook, 
+  Instagram, 
+  Twitter, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  GraduationCap,
+  BookOpen,
+  Users,
+  MessageCircle,
+  ArrowRight,
+  Heart,
+  Sparkles
+} from "lucide-react";
+import Image from "next/image";
+import imageLogo from "@/components/images/logo.png";
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
+  const quickLinks = [
+    { name: "خانه", href: "/", icon: GraduationCap },
+    { name: "دوره‌ها", href: "/courses", icon: BookOpen },
+    { name: "معلمان", href: "/teachers", icon: Users },
+    { name: "وبلاگ", href: "/blog", icon: MessageCircle },
+    { name: "درباره ما", href: "/about", icon: Users },
+    { name: "تماس با ما", href: "/contact", icon: MessageCircle },
+  ];
+
+  const socialLinks = [
+    { name: "اینستاگرام", href: "#", icon: Instagram, color: "hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-600" },
+    { name: "فیسبوک", href: "#", icon: Facebook, color: "hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-700" },
+    { name: "توییتر", href: "#", icon: Twitter, color: "hover:bg-gradient-to-r hover:from-sky-500 hover:to-sky-700" },
+  ];
+
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* درباره ما */}
+    <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black text-gray-300 overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* About Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6 }}
             viewport={{ once: true }}
+            className="lg:col-span-1"
           >
-            <h3 className="text-white text-lg font-semibold mb-4">درباره ما</h3>
-            <p className="text-sm leading-relaxed">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="relative">
+                <Image src={imageLogo} alt="لوگو" className="h-12 w-12" />
+                <motion.div
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  SE1A
+                </h3>
+                <p className="text-xs text-gray-400">آکادمی زبان</p>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-300 mb-6">
               مرکز تخصصی آموزش زبان انگلیسی SE1A با بیش از ۱۰ سال تجربه در زمینه آموزش زبان،
               با استفاده از اساتید مجرب و متدهای نوین آموزشی، در خدمت شما عزیزان است.
             </p>
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
+              <Heart className="w-4 h-4 text-red-500" />
+              <span>طراح و بنیانگذار: سپنتا علیزاده</span>
+            </div>
           </motion.div>
 
-          {/* دسترسی سریع */}
+          {/* Quick Links */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-white text-lg font-semibold mb-4">دسترسی سریع</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="hover:text-white transition-colors">
-                  صفحه اصلی
-                </Link>
-              </li>
-              <li>
-                <Link href="/courses" className="hover:text-white transition-colors">
-                  دوره‌ها
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-white transition-colors">
-                  درباره ما
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
-                  تماس با ما
-                </Link>
-              </li>
+            <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
+              <Sparkles className="w-5 h-5 mr-2 text-primary" />
+              دسترسی سریع
+            </h3>
+            <ul className="space-y-3">
+              {quickLinks.map((link, index) => (
+                <motion.li
+                  key={link.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Link 
+                    href={link.href} 
+                    className="flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-300 group"
+                  >
+                    <link.icon className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                  </Link>
+                </motion.li>
+              ))}
             </ul>
           </motion.div>
 
-          {/* اطلاعات تماس */}
+          {/* Contact Info */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-white text-lg font-semibold mb-4">اطلاعات تماس</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-primary mt-1" />
-                <span className="text-sm">
-                  پاسداران، نزدیک سام فود هال<br />
-                  بوستان سوم
-                </span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-primary" />
-                <a href="tel:09387279975" className="text-sm hover:text-white transition-colors">
+            <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
+              <MessageCircle className="w-5 h-5 mr-2 text-primary" />
+              اطلاعات تماس
+            </h3>
+            <ul className="space-y-4">
+              <motion.li 
+                className="flex items-start space-x-3 group"
+                whileHover={{ x: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="bg-gradient-to-r from-primary to-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                  <MapPin className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <span className="text-sm text-gray-300 block">آدرس:</span>
+                  <span className="text-sm text-gray-400">
+                    پاسداران، نزدیک سام فود هال<br />
+                    بوستان سوم
+                  </span>
+                </div>
+              </motion.li>
+              <motion.li 
+                className="flex items-center space-x-3 group"
+                whileHover={{ x: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                  <Phone className="w-4 h-4 text-white" />
+                </div>
+                <a href="tel:09387279975" className="text-sm text-gray-300 hover:text-white transition-colors">
                   ۰۹۳۸۷۲۷۹۹۷۵
                 </a>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-primary" />
-                <a href="mailto:se1azaban@gmail.com" className="text-sm hover:text-white transition-colors">
+              </motion.li>
+              <motion.li 
+                className="flex items-center space-x-3 group"
+                whileHover={{ x: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                  <Mail className="w-4 h-4 text-white" />
+                </div>
+                <a href="mailto:se1azaban@gmail.com" className="text-sm text-gray-300 hover:text-white transition-colors">
                   se1azaban@gmail.com
                 </a>
-              </li>
+              </motion.li>
             </ul>
           </motion.div>
 
-          {/* شبکه‌های اجتماعی */}
+          {/* Social Media */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-white text-lg font-semibold mb-4">شبکه‌های اجتماعی</h3>
+            <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
+              <Sparkles className="w-5 h-5 mr-2 text-primary" />
+              شبکه‌های اجتماعی
+            </h3>
+            <p className="text-sm text-gray-400 mb-6">
+              ما را در شبکه‌های اجتماعی دنبال کنید و از آخرین اخبار و مطالب آموزشی باخبر شوید.
+            </p>
             <div className="flex space-x-4">
-              <a
-                href="#"
-                className="bg-gray-800 p-2 rounded-full hover:bg-primary hover:text-white transition-colors"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-gray-800 p-2 rounded-full hover:bg-primary hover:text-white transition-colors"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="bg-gray-800 p-2 rounded-full hover:bg-primary hover:text-white transition-colors"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
+              {socialLinks.map((social, index) => (
+                <motion.a
+                  key={social.name}
+                  href={social.href}
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.1, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`bg-gray-800 p-3 rounded-xl hover:text-white transition-all duration-300 shadow-lg ${social.color}`}
+                  title={social.name}
+                >
+                  <social.icon className="w-5 h-5" />
+                </motion.a>
+              ))}
             </div>
           </motion.div>
         </div>
 
-        {/* خط جداکننده */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-center md:text-right">
-              © {new Date().getFullYear()} SE1A. تمامی حقوق محفوظ است.
+        {/* Newsletter Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          viewport={{ once: true }}
+          className="mt-16 p-8 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-2xl border border-primary/20"
+        >
+          <div className="text-center">
+            <h3 className="text-white text-xl font-semibold mb-4">خبرنامه ما</h3>
+            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+              برای دریافت آخرین اخبار، تخفیف‌ها و مطالب آموزشی در خبرنامه ما عضو شوید.
             </p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-              <Link href="/privacy" className="text-sm hover:text-white transition-colors">
+            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="ایمیل خود را وارد کنید"
+                className="flex-1 px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-primary transition-colors"
+              />
+              <button className="px-6 py-3 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105">
+                عضویت
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Bottom Bar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          viewport={{ once: true }}
+          className="border-t border-gray-800 mt-16 pt-8"
+        >
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-sm text-gray-400 text-center md:text-right">
+              © {currentYear} SE1A. تمامی حقوق محفوظ است.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
                 حریم خصوصی
               </Link>
-              <Link href="/terms" className="text-sm hover:text-white transition-colors">
+              <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
                 شرایط استفاده
+              </Link>
+              <Link href="/sitemap" className="text-sm text-gray-400 hover:text-white transition-colors">
+                نقشه سایت
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   );
