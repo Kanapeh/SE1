@@ -66,17 +66,17 @@ export default function Footer() {
                 />
               </div>
               <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                  SE1A
+                <h3 className="text-2xl font-bold text-white">
+                  <span className="text-white">SE1A</span>
                 </h3>
-                <p className="text-xs text-gray-400">آکادمی زبان</p>
+                <p className="text-xs text-white">آکادمی زبان</p>
               </div>
             </div>
-            <p className="text-sm leading-relaxed text-gray-300 mb-6">
+            <p className="text-sm leading-relaxed text-white mb-6">
               مرکز تخصصی آموزش زبان انگلیسی SE1A با بیش از ۱۰ سال تجربه در زمینه آموزش زبان،
               با استفاده از اساتید مجرب و متدهای نوین آموزشی، در خدمت شما عزیزان است.
             </p>
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <div className="flex items-center space-x-2 text-sm text-white">
               <Heart className="w-4 h-4 text-red-500" />
               <span>طراح و بنیانگذار: سپنتا علیزاده</span>
             </div>
@@ -90,8 +90,8 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-primary" />
-              دسترسی سریع
+              <Sparkles className="w-5 h-5 mr-2 text-white" />
+              <span className="text-white">دسترسی سریع</span>
             </h3>
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
@@ -104,11 +104,11 @@ export default function Footer() {
                 >
                   <Link 
                     href={link.href} 
-                    className="flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-300 group"
+                    className="flex items-center space-x-3 text-white hover:text-gray-200 transition-all duration-300 group"
                   >
-                    <link.icon className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                    <link.icon className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
                     <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
-                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                    <ArrowRight className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
                   </Link>
                 </motion.li>
               ))}
@@ -123,8 +123,8 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
-              <MessageCircle className="w-5 h-5 mr-2 text-primary" />
-              اطلاعات تماس
+              <MessageCircle className="w-5 h-5 mr-2 text-white" />
+              <span className="text-white">اطلاعات تماس</span>
             </h3>
             <ul className="space-y-4">
               <motion.li 
@@ -136,8 +136,8 @@ export default function Footer() {
                   <MapPin className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <span className="text-sm text-gray-300 block">آدرس:</span>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-white block">آدرس:</span>
+                  <span className="text-sm text-white">
                     پاسداران، نزدیک سام فود هال<br />
                     بوستان سوم
                   </span>
@@ -151,7 +151,7 @@ export default function Footer() {
                 <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
                   <Phone className="w-4 h-4 text-white" />
                 </div>
-                <a href="tel:09387279975" className="text-sm text-gray-300 hover:text-white transition-colors">
+                <a href="tel:09387279975" className="text-sm text-white hover:text-gray-200 transition-colors">
                   ۰۹۳۸۷۲۷۹۹۷۵
                 </a>
               </motion.li>
@@ -163,7 +163,7 @@ export default function Footer() {
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
                   <Mail className="w-4 h-4 text-white" />
                 </div>
-                <a href="mailto:se1azaban@gmail.com" className="text-sm text-gray-300 hover:text-white transition-colors">
+                <a href="mailto:se1azaban@gmail.com" className="text-sm text-white hover:text-gray-200 transition-colors">
                   se1azaban@gmail.com
                 </a>
               </motion.li>
@@ -178,10 +178,10 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-primary" />
-              شبکه‌های اجتماعی
+              <Sparkles className="w-5 h-5 mr-2 text-white" />
+              <span className="text-white">شبکه‌های اجتماعی</span>
             </h3>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-white mb-6">
               ما را در شبکه‌های اجتماعی دنبال کنید و از آخرین اخبار و مطالب آموزشی باخبر شوید.
             </p>
             <div className="flex space-x-4">
@@ -214,8 +214,10 @@ export default function Footer() {
           className="mt-16 p-8 bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-2xl border border-primary/20"
         >
           <div className="text-center">
-            <h3 className="text-white text-xl font-semibold mb-4">خبرنامه ما</h3>
-            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+            <h3 className="text-white text-xl font-semibold mb-4">
+              <span className="text-white">خبرنامه ما</span>
+            </h3>
+            <p className="text-white mb-6 max-w-md mx-auto">
               برای دریافت آخرین اخبار، تخفیف‌ها و مطالب آموزشی در خبرنامه ما عضو شوید.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
@@ -240,17 +242,17 @@ export default function Footer() {
           className="border-t border-gray-800 mt-16 pt-8"
         >
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-400 text-center md:text-right">
+            <p className="text-sm text-white text-center md:text-right">
               © {currentYear} SE1A. تمامی حقوق محفوظ است.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+              <Link href="/privacy" className="text-sm text-white hover:text-gray-200 transition-colors">
                 حریم خصوصی
               </Link>
-              <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+              <Link href="/terms" className="text-sm text-white hover:text-gray-200 transition-colors">
                 شرایط استفاده
               </Link>
-              <Link href="/sitemap" className="text-sm text-gray-400 hover:text-white transition-colors">
+              <Link href="/sitemap" className="text-sm text-white hover:text-gray-200 transition-colors">
                 نقشه سایت
               </Link>
             </div>

@@ -101,6 +101,20 @@
     color: hsl(var(--foreground));
   }
   
+  /* Force footer text to be white */
+  footer p, footer span, footer h3, footer a, footer li {
+    color: white !important;
+  }
+  
+  footer .text-white {
+    color: white !important;
+  }
+  
+  /* Force footer icons to be white */
+  footer svg, footer .lucide {
+    color: white !important;
+  }
+  
   /* Ensure proper dark mode support for form elements */
   input, textarea, select {
     color: hsl(var(--foreground));

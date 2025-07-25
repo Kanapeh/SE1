@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { 
-  Menu, 
-  X, 
   Sun, 
   Moon, 
   Home, 
@@ -23,7 +21,6 @@ import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -49,11 +46,12 @@ export default function Header() {
   if (!mounted) return null;
 
   return (
-    <header className={`sticky top-0 z-50 transition-all duration-300 ${
-      scrolled 
-        ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b shadow-lg' 
-        : 'bg-transparent'
-    }`}>
+    <>
+      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b shadow-lg' 
+          : 'bg-transparent'
+      }`}>
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo with animation */}
@@ -129,59 +127,15 @@ export default function Header() {
             </motion.button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-foreground hover:scale-110 transition-all duration-300"
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
+
         </div>
 
-        {/* Mobile Menu Dropdown */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden mt-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl border overflow-hidden"
-            >
-              <div className="py-4 space-y-2">
-                {navItems.map((item, index) => (
-                  <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-3 text-foreground/70 hover:text-foreground hover:bg-primary/10 transition-all duration-300"
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.name}</span>
-                    </Link>
-                  </motion.div>
-                ))}
-                <div className="px-4 pt-2">
-                  <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      شروع کنید
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
       </nav>
 
-      {/* Mobile Bottom Navigation Bar - Enhanced */}
+      </header>
+
+      {/* Mobile Bottom Navigation Bar - Fixed */}
       <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 lg:hidden bg-white/95 dark:bg-gray-900/95 border shadow-2xl flex justify-around items-center py-3 px-4 rounded-3xl w-[92vw] max-w-md mx-auto backdrop-blur-md">
         {navItems.slice(0, 4).map((item, idx) => (
           <motion.div
@@ -216,6 +170,6 @@ export default function Header() {
           {theme === "light" ? "تاریک" : "روشن"}
         </motion.button>
       </nav>
-    </header>
+    </>
   );
 }

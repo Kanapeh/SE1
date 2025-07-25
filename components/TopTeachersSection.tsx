@@ -44,7 +44,7 @@ const topTeachers = [
 
 export default function TopTeachersSection() {
   return (
-    <section className="py-20 px-4 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20">
+    <section className="py-20 px-4 bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -68,7 +68,7 @@ export default function TopTeachersSection() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="p-6 text-center hover:shadow-xl transition-all duration-300 border-0 bg-white dark:bg-gray-800">
+              <Card className="p-6 text-center hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm dark:from-gray-800/90 dark:to-gray-900/70 shadow-lg hover:shadow-2xl hover:-translate-y-1">
                 <Avatar className="w-20 h-20 mx-auto mb-4">
                   <AvatarImage src={teacher.avatar} alt={teacher.name} />
                   <AvatarFallback className="text-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">

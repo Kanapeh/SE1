@@ -39,7 +39,7 @@ const popularCourses = [
 
 export default function PopularCoursesSection() {
   return (
-    <section className="py-20 px-4">
+    <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -63,7 +63,7 @@ export default function PopularCoursesSection() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white dark:bg-gray-800">
+              <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white/95 to-white/85 backdrop-blur-sm dark:from-gray-800/95 dark:to-gray-900/85 shadow-lg hover:shadow-2xl hover:-translate-y-1">
                 <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-600 relative">
                   <div className="absolute inset-0 bg-black/20"></div>
                   <div className="absolute top-4 right-4">

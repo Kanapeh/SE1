@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import Footer from "@/app/components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import Sidebar from "@/app/components/Sidebar";
+
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Head from "next/head";
 
@@ -49,7 +49,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header />
-          <Sidebar />
           <main className="min-h-screen">{children}</main>
           <Footer />
           <FloatingWhatsApp />
