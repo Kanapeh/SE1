@@ -88,7 +88,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-20 px-4 bg-gray-500">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold mb-12 text-center">
             سوالات متداول

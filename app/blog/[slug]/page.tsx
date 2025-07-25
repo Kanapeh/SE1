@@ -22,10 +22,18 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
 
   useEffect(() => {
     fetchPost();
   }, [resolvedParams.slug]);
+
+  useEffect(() => {
+    if (post) {
+      fetchComments(post.id);
+    }
+  }, [post]);
 
   const fetchPost = async () => {
     try {
@@ -41,11 +49,23 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
       setPost(data);
     } catch (error: any) {
-      console.error("Error fetching blog post:", error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchComments = async (postId: string) => {
+    setCommentsLoading(true);
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('status', 'approved') // فقط کامنت‌های تایید شده
+      .order('created_at', { ascending: false });
+
+    if (!error) setComments(data);
+    setCommentsLoading(false);
   };
 
   if (loading) {
@@ -117,6 +137,25 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
               </div>
             </div>
           )}
+
+          {/* Comments Section */}
+          <div className="mt-8 pt-8 border-t">
+            <h2 className="text-xl font-semibold mb-4">نظرات کاربران</h2>
+            {commentsLoading ? (
+              <div>در حال بارگذاری نظرات...</div>
+            ) : comments.length === 0 ? (
+              <div>هنوز نظری ثبت نشده است.</div>
+            ) : (
+              <ul className="space-y-4">
+                {comments.map((comment) => (
+                  <li key={comment.id} className="bg-gray-50 p-4 rounded shadow">
+                    <div className="text-sm text-gray-700 mb-2">{comment.content}</div>
+                    <div className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString('fa-IR')}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </article>
     </>

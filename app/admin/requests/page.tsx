@@ -16,20 +16,20 @@ import { Button } from "@/components/ui/button";
 import { Search, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import { faIR } from "date-fns/locale";
+import { Eye } from "lucide-react";
 
 interface Request {
   id: string;
-  student_id: string;
-  course_id: string;
-  status: 'pending' | 'approved' | 'rejected';
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  language: string;
+  level: string;
+  class_type: string;
+  preferred_time: string;
+  status: string;
   created_at: string;
-  student: {
-    full_name: string;
-    email: string;
-  };
-  course: {
-    name: string;
-  };
 }
 
 export default function RequestsPage() {
@@ -38,25 +38,22 @@ export default function RequestsPage() {
   const [error, setError] = useState<string | null>(null);
   const supabase = createClientComponentClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [studentsEmails, setStudentsEmails] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRequests();
+    fetchStudentsEmails();
   }, []);
 
   const fetchRequests = async () => {
     try {
       const { data, error } = await supabase
         .from('requests')
-        .select(`
-          *,
-          student:students(full_name, email),
-          course:courses(name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      console.log('Fetched requests:', data);
       setRequests(data || []);
     } catch (err) {
       console.error('Error fetching requests:', err);
@@ -66,14 +63,66 @@ export default function RequestsPage() {
     }
   };
 
+  const fetchStudentsEmails = async () => {
+    const { data, error } = await supabase
+      .from('students')
+      .select('email');
+    if (!error && data) {
+      setStudentsEmails(data.map((s: { email: string }) => s.email));
+    }
+  };
+
   const handleApproveRequest = async (requestId: string) => {
     try {
-      const { error } = await supabase
+      // 1. دریافت اطلاعات درخواست
+      const { data: requestData, error: fetchError } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
+
+      if (fetchError || !requestData) {
+        setError('خطا در دریافت اطلاعات درخواست');
+        return;
+      }
+
+      // 2. افزودن به جدول students
+      const { error: insertError } = await supabase
+        .from('students')
+        .insert([{
+          first_name: requestData.first_name,
+          last_name: requestData.last_name,
+          email: requestData.email,
+          phone: requestData.phone,
+          gender: null,
+          birthdate: null,
+          national_id: null,
+          address: null,
+          parent_name: null,
+          parent_phone: null,
+          language: requestData.language,
+          level: requestData.level,
+          class_type: requestData.class_type,
+          preferred_time: requestData.preferred_time,
+          status: 'active',
+          notes: null,
+        }]);
+
+      if (insertError) {
+        setError('خطا در افزودن دانش‌آموز');
+        return;
+      }
+
+      // 3. آپدیت وضعیت درخواست
+      const { error: updateError } = await supabase
         .from('requests')
         .update({ status: 'approved' })
         .eq('id', requestId);
 
-      if (error) throw error;
+      if (updateError) {
+        setError('خطا در بروزرسانی وضعیت درخواست');
+        return;
+      }
 
       await fetchRequests();
     } catch (err) {
@@ -98,14 +147,22 @@ export default function RequestsPage() {
     }
   };
 
-  const filteredRequests = requests.filter((request) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      request.student.full_name.toLowerCase().includes(searchLower) ||
-      request.student.email.toLowerCase().includes(searchLower) ||
-      request.course.name.toLowerCase().includes(searchLower)
-    );
-  });
+  const filteredRequests = requests
+    .filter((request) => request.status === 'pending')
+    .filter((request) => !studentsEmails.includes(request.email))
+    .filter((request) => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        request.first_name.toLowerCase().includes(searchLower) ||
+        request.last_name.toLowerCase().includes(searchLower) ||
+        request.email.toLowerCase().includes(searchLower) ||
+        request.phone.includes(searchLower) ||
+        request.language.toLowerCase().includes(searchLower) ||
+        request.level.toLowerCase().includes(searchLower) ||
+        request.class_type.toLowerCase().includes(searchLower) ||
+        request.preferred_time.toLowerCase().includes(searchLower)
+      );
+    });
 
   if (loading) {
     return (
@@ -156,8 +213,13 @@ export default function RequestsPage() {
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نام خانوادگی</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">ایمیل</TableHead>
-                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">دوره</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">تلفن</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">زبان</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">سطح</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">نوع کلاس</TableHead>
+                      <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">زمان ترجیحی</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">تاریخ درخواست</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">وضعیت</TableHead>
                       <TableHead className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">عملیات</TableHead>
@@ -166,9 +228,14 @@ export default function RequestsPage() {
                   <TableBody className="divide-y divide-gray-200">
                     {filteredRequests.map((request) => (
                       <TableRow key={request.id} className="hover:bg-gray-50">
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.student.full_name}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.student.email}</TableCell>
-                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.course.name}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.first_name}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.last_name}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.email}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.phone}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.language}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.level}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.class_type}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{request.preferred_time}</TableCell>
                         <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
                           {format(new Date(request.created_at), "PPP", {
                             locale: faIR,

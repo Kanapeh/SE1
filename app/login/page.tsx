@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { ClipLoader } from "react-spinners";
+import bcrypt from "bcryptjs";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,41 +20,30 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      console.log("در حال تلاش برای ورود...");
-
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
-        console.error("خطا در احراز هویت:", authError);
-        throw authError;
-      }
-
-      if (!authData.user) throw new Error("اطلاعات کاربر دریافت نشد");
-
-      console.log("ورود موفق. بررسی نقش کاربر...");
-
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("is_admin")
-        .eq("id", authData.user.id)
+      // جستجوی کاربر ادمین در جدول auth-users
+      const { data: user, error: userError } = await supabase
+        .from("auth-users")
+        .select("*")
+        .eq("email", email)
+        .eq("is_admin", true)
         .single();
 
-      if (userError) {
-        console.error("خطا در دریافت اطلاعات نقش:", userError);
-        throw userError;
+      if (userError || !user) {
+        setError("کاربر ادمین یافت نشد یا اطلاعات اشتباه است");
+        setLoading(false);
+        return;
       }
 
-      console.log("نقش کاربر:", userData?.is_admin ? "ادمین" : "کاربر معمولی");
-
-      if (userData?.is_admin) {
-        window.location.href = "/admin/requests";
-      } else {
-        window.location.href = "/dashboard";
+      // بررسی پسورد هش‌شده
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        setError("رمز عبور اشتباه است");
+        setLoading(false);
+        return;
       }
 
+      // ورود موفق: می‌توانی اینجا توکن یا session ست کنی یا ریدایرکت کنی
+      window.location.href = "/admin/requests";
     } catch (error: any) {
       setError(error.message || "خطا در ورود به سیستم");
     } finally {

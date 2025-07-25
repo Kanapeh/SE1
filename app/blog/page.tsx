@@ -17,6 +17,7 @@ interface BlogPost {
   published_at: string;
   status: string;
   tags: string[];
+  excerpt?: string;
 }
 
 export default function BlogPage() {
@@ -107,9 +108,8 @@ export default function BlogPage() {
                     </span>
                   </div>
                   <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                  <p className="text-muted-foreground mb-4">
-                    {post.content.substring(0, 150)}...
-                  </p>
+                  <div className="text-muted-foreground mb-4" 
+                    dangerouslySetInnerHTML={{ __html: post.excerpt || post.content.substring(0, 150) }} />
                   <div className="flex flex-wrap gap-2 mb-4">
                     {post.tags.map((tag, index) => (
                       <span

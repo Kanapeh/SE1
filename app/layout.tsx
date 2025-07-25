@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Sidebar from "./components/Sidebar";
+import Head from "next/head";
 
 const vazirmatn = Vazirmatn({
   subsets: ["arabic"],
@@ -25,6 +26,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "SE1A",
+              "url": "https://www.se1a.org",
+              "logo": "https://www.se1a.org/images/logo.png"
+            }),
+          }}
+        />
+      </Head>
       <body className={`${vazirmatn.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
