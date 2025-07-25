@@ -24,7 +24,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { format } from "date-fns";
-import { fa } from "date-fns/locale";
+import { faIR } from "date-fns/locale";
 
 interface Teacher {
   id: string;
@@ -275,7 +275,7 @@ export default function BookSessionPage() {
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {bookingForm.date ? (
-                            format(bookingForm.date, "PPP", { locale: fa })
+                            format(bookingForm.date, "PPP", { locale: faIR })
                           ) : (
                             "انتخاب تاریخ"
                           )}
