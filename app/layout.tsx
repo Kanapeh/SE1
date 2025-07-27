@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Vazirmatn } from "next/font/google";
+import { Vazirmatn, Noto_Sans_Arabic, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Footer from "@/app/components/Footer";
@@ -9,10 +9,28 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Head from "next/head";
 
+// فونت اصلی - Vazirmatn (بهترین فونت فارسی)
 const vazirmatn = Vazirmatn({
   subsets: ["arabic"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   variable: "--font-vazirmatn",
+  display: "swap",
+});
+
+// فونت جایگزین - Noto Sans Arabic
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-noto-sans",
+  display: "swap",
+});
+
+// فونت جایگزین - IBM Plex Sans Arabic
+const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  variable: "--font-ibm-plex",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -41,7 +59,7 @@ export default function RootLayout({
           }}
         />
       </Head>
-      <body className={`${vazirmatn.variable} font-sans`}>
+      <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
