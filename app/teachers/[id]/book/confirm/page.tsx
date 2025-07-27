@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import { motion } from 'framer-motion';
@@ -65,7 +65,7 @@ interface PaymentForm {
   notes: string;
 }
 
-export default function ConfirmBookingPage() {
+function ConfirmBookingContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -642,5 +642,13 @@ export default function ConfirmBookingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmBookingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ConfirmBookingContent />
+    </Suspense>
   );
 } 
