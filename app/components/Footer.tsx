@@ -15,7 +15,9 @@ import {
   MessageCircle,
   ArrowRight,
   Heart,
-  Sparkles
+  Sparkles,
+  MessageSquare,
+  Smartphone
 } from "lucide-react";
 import Image from "next/image";
 import imageLogo from "@/components/images/logo.png";
@@ -33,7 +35,8 @@ export default function Footer() {
   ];
 
   const socialLinks = [
-    { name: "اینستاگرام", href: "#", icon: Instagram, color: "hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-600" },
+    { name: "واتساپ", href: "https://wa.me/989387279975", icon: Smartphone, color: "hover:bg-gradient-to-r hover:from-green-500 hover:to-green-600" },
+    { name: "اینستاگرام", href: "https://www.instagram.com/se1academy?igsh=Y2lkeXNpbXE4eHVz&utm_source=qr", icon: Instagram, color: "hover:bg-gradient-to-r hover:from-pink-500 hover:to-purple-600" },
     { name: "فیسبوک", href: "#", icon: Facebook, color: "hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-700" },
     { name: "توییتر", href: "#", icon: Twitter, color: "hover:bg-gradient-to-r hover:from-sky-500 hover:to-sky-700" },
   ];
@@ -58,7 +61,7 @@ export default function Footer() {
           >
             <div className="flex items-center space-x-3 mb-6">
               <div className="relative">
-                <Image src={imageLogo} alt="لوگو" className="h-12 w-12" />
+                <Image src={imageLogo} alt="لوگو" className="h-12 w-12 logo-image" />
                 <motion.div
                   className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
                   animate={{ scale: [1, 1.2, 1] }}
@@ -67,13 +70,13 @@ export default function Footer() {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white">
-                  <span className="text-white">SE1A</span>
+                  <span className="text-white">سِ وان</span>
                 </h3>
                 <p className="text-xs text-white">آکادمی زبان</p>
               </div>
             </div>
             <p className="text-sm leading-relaxed text-white mb-6">
-              مرکز تخصصی آموزش زبان انگلیسی SE1A با بیش از ۱۰ سال تجربه در زمینه آموزش زبان،
+              مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان،
               با استفاده از اساتید مجرب و متدهای نوین آموزشی، در خدمت شما عزیزان است.
             </p>
             <div className="flex items-center space-x-2 text-sm text-white">
@@ -82,93 +85,108 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            viewport={{ once: true }}
-          >
-            <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-white" />
-              <span className="text-white">دسترسی سریع</span>
-            </h3>
-            <ul className="space-y-3">
-              {quickLinks.map((link, index) => (
-                <motion.li
-                  key={link.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Link 
-                    href={link.href} 
-                    className="flex items-center space-x-3 text-white hover:text-gray-200 transition-all duration-300 group"
+          {/* Quick Links and Contact Info - Side by Side on Mobile */}
+          <div className="grid grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+            {/* Quick Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
+                <Sparkles className="w-5 h-5 mr-2 text-white" />
+                <span className="text-white">دسترسی سریع</span>
+              </h3>
+              <ul className="space-y-3">
+                {quickLinks.map((link, index) => (
+                  <motion.li
+                    key={link.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    viewport={{ once: true }}
                   >
-                    <link.icon className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                    <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
-                    <ArrowRight className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
+                    <Link 
+                      href={link.href} 
+                      className="flex items-center space-x-3 space-x-reverse text-white hover:text-gray-200 transition-all duration-300 group"
+                    >
+                      <link.icon className="w-4 h-4 text-white group-hover:scale-110 transition-transform ml-2" />
+                      <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
+                      <ArrowRight className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                    </Link>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
 
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
-              <MessageCircle className="w-5 h-5 mr-2 text-white" />
-              <span className="text-white">اطلاعات تماس</span>
-            </h3>
-            <ul className="space-y-4">
-              <motion.li 
-                className="flex items-start space-x-3 group"
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="bg-gradient-to-r from-primary to-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                  <MapPin className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <span className="text-sm text-white block">آدرس:</span>
-                  <span className="text-sm text-white">
-                    پاسداران، نزدیک سام فود هال<br />
-                    بوستان سوم
-                  </span>
-                </div>
-              </motion.li>
-              <motion.li 
-                className="flex items-center space-x-3 group"
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                  <Phone className="w-4 h-4 text-white" />
-                </div>
-                <a href="tel:09387279975" className="text-sm text-white hover:text-gray-200 transition-colors">
-                  ۰۹۳۸۷۲۷۹۹۷۵
-                </a>
-              </motion.li>
-              <motion.li 
-                className="flex items-center space-x-3 group"
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                  <Mail className="w-4 h-4 text-white" />
-                </div>
-                <a href="mailto:se1azaban@gmail.com" className="text-sm text-white hover:text-gray-200 transition-colors">
-                  se1azaban@gmail.com
-                </a>
-              </motion.li>
-            </ul>
-          </motion.div>
+            {/* Contact Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-white text-lg font-semibold mb-6 flex items-center">
+                <MessageCircle className="w-5 h-5 mr-2 text-white" />
+                <span className="text-white">اطلاعات تماس</span>
+              </h3>
+              <ul className="space-y-4">
+                <motion.li 
+                  className="flex items-start space-x-3 space-x-reverse group"
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-gradient-to-r from-primary to-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform ml-3">
+                    <MapPin className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-white block">آدرس:</span>
+                    <span className="text-sm text-white">
+                      پاسداران، نزدیک سام فود هال<br />
+                      بوستان سوم
+                    </span>
+                  </div>
+                </motion.li>
+                <motion.li 
+                  className="flex items-center space-x-3 space-x-reverse group"
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform ml-3">
+                    <Phone className="w-4 h-4 text-white" />
+                  </div>
+                  <a href="tel:09387279975" className="text-sm text-white hover:text-gray-200 transition-colors">
+                    ۰۹۳۸۷۲۷۹۹۷۵
+                  </a>
+                </motion.li>
+                <motion.li 
+                  className="flex items-center space-x-3 space-x-reverse group"
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 rounded-lg group-hover:scale-110 transition-transform ml-3">
+                    <Mail className="w-4 h-4 text-white" />
+                  </div>
+                  <a href="mailto:se1azaban@gmail.com" className="text-sm text-white hover:text-gray-200 transition-colors">
+                    se1azaban@gmail.com
+                  </a>
+                </motion.li>
+                <motion.li 
+                  className="flex items-center space-x-3 space-x-reverse group"
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform ml-3">
+                    <Smartphone className="w-4 h-4 text-white" />
+                  </div>
+                  <a href="https://wa.me/989387279975" target="_blank" rel="noopener noreferrer" className="text-sm text-white hover:text-gray-200 transition-colors">
+                    ۰۰۹۸۹۳۸۷۲۷۹۹۷۵
+                  </a>
+                </motion.li>
+              </ul>
+            </motion.div>
+          </div>
 
           {/* Social Media */}
           <motion.div
@@ -184,11 +202,13 @@ export default function Footer() {
             <p className="text-sm text-white mb-6">
               ما را در شبکه‌های اجتماعی دنبال کنید و از آخرین اخبار و مطالب آموزشی باخبر شوید.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 space-x-reverse">
               {socialLinks.map((social, index) => (
                 <motion.a
                   key={social.name}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -245,7 +265,7 @@ export default function Footer() {
             <p className="text-sm text-white text-center md:text-right">
               © {currentYear} SE1A. تمامی حقوق محفوظ است.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="flex space-x-6 space-x-reverse mt-4 md:mt-0">
               <Link href="/privacy" className="text-sm text-white hover:text-gray-200 transition-colors">
                 حریم خصوصی
               </Link>

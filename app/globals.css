@@ -137,6 +137,17 @@
   .lucide {
     color: hsl(var(--foreground));
   }
+
+  /* Logo styling with rotation animation */
+  .logo-image {
+    transition: transform 0.3s ease;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .logo-image:hover {
+    transform: rotate(360deg);
+  }
 }
 
 /* RTL Support */

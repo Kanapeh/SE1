@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { Smartphone } from "lucide-react";
 
 export default function FloatingWhatsApp() {
   const [isHovered, setIsHovered] = useState(false);
-  const phoneNumber = "00989387279975";
+  const phoneNumber = "989387279975";
   const whatsappUrl = `https://wa.me/${phoneNumber}`;
 
   const handleClick = () => {
@@ -31,11 +31,7 @@ export default function FloatingWhatsApp() {
         className="bg-green-500 hover:bg-green-600 text-white rounded-full w-16 h-16 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
         title="ارتباط از طریق WhatsApp"
       >
-        <img 
-          src="/whatsapp-icon.svg" 
-          alt="WhatsApp" 
-          className="w-8 h-8"
-        />
+        <Smartphone className="w-8 h-8" />
       </Button>
     </div>
   );

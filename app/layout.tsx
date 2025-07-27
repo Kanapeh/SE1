@@ -16,8 +16,8 @@ const vazirmatn = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "SE1A - مرکز تخصصی آموزش زبان انگلیسی",
-  description: "مرکز تخصصی آموزش زبان انگلیسی SE1A با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+  title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+  description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              "name": "SE1A",
+              "name": "سِ وان",
               "url": "https://www.se1a.org",
               "logo": "https://www.se1a.org/images/logo.png"
             }),

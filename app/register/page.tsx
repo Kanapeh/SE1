@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const userType = searchParams.get('type') || 'student';
 
   // Validate email format
   const isValidEmail = (email: string) => {
@@ -49,7 +51,7 @@ export default function RegisterPage() {
         throw new Error("نام و نام خانوادگی باید حداقل 3 کاراکتر باشد");
       }
 
-      // Register user
+      // Register user in auth.users only
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -57,6 +59,7 @@ export default function RegisterPage() {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: fullName,
+            user_type: userType,
           }
         }
       });
@@ -64,24 +67,49 @@ export default function RegisterPage() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create user profile
-        const { error: userError } = await supabase.from("users").insert({
-          id: authData.user.id,
-          email: authData.user.email,
-          full_name: fullName,
-          is_admin: false,
-          created_at: new Date().toISOString(),
-        });
-
-        if (userError) throw userError;
-
-        toast.success("ثبت‌نام با موفقیت انجام شد. لطفا ایمیل خود را بررسی کنید.");
-        router.push("/login");
+        // Store user type and email in session storage for later use
+        sessionStorage.setItem('userType', userType);
+        sessionStorage.setItem('userEmail', email);
+        
+        // Check if email confirmation is required
+        if (authData.user.email_confirmed_at) {
+          // Email already confirmed, redirect to profile completion
+          if (userType === 'teacher') {
+            toast.success("ثبت‌نام با موفقیت انجام شد. لطفا پروفایل معلم خود را تکمیل کنید.");
+            router.push("/complete-profile?type=teacher");
+          } else {
+            toast.success("ثبت‌نام با موفقیت انجام شد. لطفا پروفایل دانش‌آموز خود را تکمیل کنید.");
+            router.push("/complete-profile?type=student");
+          }
+        } else {
+          // Email confirmation required
+          toast.success("ثبت‌نام با موفقیت انجام شد. لطفاً ایمیل خود را تایید کنید.");
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        }
       }
     } catch (error: any) {
       console.error("Register error:", error);
-      setError(error.message || "خطا در ثبت‌نام");
-      toast.error(error.message || "خطا در ثبت‌نام");
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      let errorMessage = "خطا در ثبت‌نام";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.code === '23505') {
+        errorMessage = "این ایمیل قبلاً ثبت شده است";
+      } else if (error.code === '42P01') {
+        errorMessage = "خطا در دسترسی به پایگاه داده";
+      } else if (error.code === '23502') {
+        errorMessage = "لطفاً تمام فیلدهای ضروری را پر کنید";
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -92,8 +120,14 @@ export default function RegisterPage() {
       <Card className="max-w-md w-full space-y-8 p-8">
         <div>
           <h2 className="text-center text-2xl font-bold text-foreground">
-            ثبت‌نام در سایت
+            {userType === 'teacher' ? 'ثبت‌نام معلم' : 'ثبت‌نام دانش‌آموز'}
           </h2>
+          <p className="text-center text-sm text-gray-600 mt-2">
+            {userType === 'teacher' 
+              ? 'به عنوان معلم در سایت ثبت‌نام کنید' 
+              : 'به عنوان دانش‌آموز در سایت ثبت‌نام کنید'
+            }
+          </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

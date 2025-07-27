@@ -15,7 +15,7 @@ export default function AppDownloadSection() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">اپلیکیشن موبایل SE1A</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">اپلیکیشن موبایل سِ وان</h2>
             <p className="text-lg text-muted-foreground mb-8">
               یادگیری زبان را با خود همراه داشته باشید. اپلیکیشن ما را دانلود کنید و در هر زمان و مکان زبان یاد بگیرید.
             </p>
@@ -58,7 +58,7 @@ export default function AppDownloadSection() {
           >
             <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-2xl inline-block">
               <Smartphone className="h-32 w-32 mx-auto text-primary mb-4" />
-              <div className="text-2xl font-bold mb-2">SE1A App</div>
+              <div className="text-2xl font-bold mb-2">سِ وان App</div>
               <div className="text-muted-foreground">در دسترس برای iOS و Android</div>
             </div>
           </motion.div>

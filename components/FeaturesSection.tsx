@@ -38,7 +38,7 @@ export default function FeaturesSection() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">چرا SE1A؟</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">چرا سِ وان؟</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             ما بهترین تجربه یادگیری زبان را با استفاده از تکنولوژی‌های مدرن و معلمان متخصص ارائه می‌دهیم
           </p>

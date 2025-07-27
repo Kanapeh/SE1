@@ -94,7 +94,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
   return (
     <>
       <Head>
-        <title>{post.title} | آکادمی زبان SE1A</title>
+        <title>{post.title} | آکادمی زبان سِ وان</title>
         <meta name="description" content={post.content.substring(0, 160)} />
       </Head>
       <article className="container mx-auto px-4 py-12">

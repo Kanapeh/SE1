@@ -62,7 +62,7 @@ export default function Header() {
           >
             <Link href="/" className="flex items-center space-x-4 group">
               <div className="relative">
-                <Image src={imageLogo} alt="لوگو" className="h-12 w-12 transition-transform group-hover:scale-110" />
+                <Image src={imageLogo} alt="لوگو" className="h-12 w-12 transition-transform group-hover:scale-110 logo-image" />
                 <motion.div
                   className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
                   animate={{ scale: [1, 1.2, 1] }}
@@ -71,7 +71,7 @@ export default function Header() {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                  SE1A
+                  سِ وان
                 </span>
                 <span className="text-xs text-muted-foreground -mt-1">آکادمی زبان</span>
               </div>

@@ -60,7 +60,7 @@ export default function Home() {
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-md">
               به آکادمی زبان{" "}
-              <span className="text-cyan-600 font-bold"> SE1A </span> بپیوندید و
+              <span className="text-cyan-600 font-bold"> سِ وان </span> بپیوندید و
               با مربیان متخصص و روش‌های نوین یادگیری، سفر خود را به سوی تسلط
               زبانی آغاز کنید.
             </p>
@@ -106,36 +106,99 @@ export default function Home() {
       <FAQSection />
 
       {/* Call to Action Section */}
-      <section
-        className="py-20 px-4 text-white text-center bg-cover bg-center relative"
-        style={{
-          backgroundImage: "url('/images/cta-background.jpg')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/60"></div>
+      <section className="py-20 px-4 relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"></div>
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse"></div>
+          <div className="absolute top-32 right-20 w-16 h-16 bg-white/10 rounded-full animate-pulse delay-1000"></div>
+          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-white/10 rounded-full animate-pulse delay-2000"></div>
+          <div className="absolute bottom-32 right-1/3 w-12 h-12 bg-white/10 rounded-full animate-pulse delay-1500"></div>
+        </div>
+
         <div className="container mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="bg-black/30 p-8 rounded-2xl backdrop-blur-sm"
+            className="text-center"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">آماده‌اید شروع کنید؟</h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto">
-              همین حالا ثبت‌نام کنید و یادگیری زبان را آغاز کنید. آینده شما منتظر است!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register">
-                <Button size="lg" className="bg-white text-black hover:bg-gray-100">
-                  ثبت‌نام رایگان
-                </Button>
-              </Link>
-              <Link href="/contact">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-black">
-                  تماس با ما
-                </Button>
-              </Link>
+            {/* Main Content */}
+            <div className="bg-white/10 backdrop-blur-md p-8 md:p-12 rounded-3xl border border-white/20 shadow-2xl">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="mb-8"
+              >
+                <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                  آماده‌اید شروع کنید؟
+                </h2>
+                <div className="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto mb-6 rounded-full"></div>
+                <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+                  همین حالا ثبت‌نام کنید و یادگیری زبان را آغاز کنید. 
+                  <span className="text-yellow-300 font-bold">آینده شما منتظر است!</span>
+                </p>
+              </motion.div>
+
+              {/* Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                viewport={{ once: true }}
+                className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+              >
+                <Link href="/register">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold text-lg px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    <span className="mr-2">🚀</span>
+                    ثبت‌نام رایگان
+                    <span className="ml-2">✨</span>
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="border-2 border-white/50 text-white hover:bg-white hover:text-purple-600 font-bold text-lg px-8 py-4 rounded-2xl backdrop-blur-sm transition-all duration-300 transform hover:scale-105"
+                  >
+                    <span className="mr-2">📞</span>
+                    تماس با ما
+                    <span className="ml-2">💬</span>
+                  </Button>
+                </Link>
+              </motion.div>
+
+              {/* Additional Info */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                viewport={{ once: true }}
+                className="mt-8 pt-8 border-t border-white/20"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white/80">
+                  <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                    <span className="text-2xl">🎯</span>
+                    <span className="text-sm">یادگیری تضمینی</span>
+                  </div>
+                  <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                    <span className="text-2xl">⭐</span>
+                    <span className="text-sm">معلمان متخصص</span>
+                  </div>
+                  <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                    <span className="text-2xl">💎</span>
+                    <span className="text-sm">کیفیت برتر</span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>

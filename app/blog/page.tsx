@@ -63,10 +63,10 @@ export default function BlogPage() {
   return (
     <>
       <Head>
-        <title>بلاگ | آکادمی زبان SE1A</title>
+        <title>بلاگ | آکادمی زبان سِ وان</title>
         <meta
           name="description"
-          content="مطالب آموزشی و مقالات مرتبط با یادگیری زبان در آکادمی زبان SE1A"
+          content="مطالب آموزشی و مقالات مرتبط با یادگیری زبان در آکادمی زبان سِ وان"
         />
       </Head>
       <div className="container mx-auto px-4 py-12">

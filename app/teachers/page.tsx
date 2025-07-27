@@ -17,21 +17,39 @@ import {
   Languages,
   Award
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface Teacher {
   id: string;
-  name: string;
-  avatar: string;
-  specialty: string;
-  experience: number;
-  rating: number;
-  students: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  gender: string | null;
+  birthdate: string | null;
+  national_id: string | null;
+  address: string | null;
   languages: string[];
-  bio: string;
-  hourlyRate: number;
-  location: string;
+  levels: string[] | null;
+  class_types: string[];
+  available_days: string[] | null;
+  available_hours: string[] | null;
+  max_students_per_class: number | null;
+  bio: string | null;
+  experience_years: number | null;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  certificates: string[] | null;
+  teaching_methods: string[] | null;
+  achievements: string[] | null;
+  avatar: string | null;
+  hourly_rate: number | null;
+  location: string | null;
   available: boolean;
-  certificates: string[];
+  education: string | null;
+  preferred_time: string[] | null;
 }
 
 export default function TeachersPage() {
@@ -41,79 +59,32 @@ export default function TeachersPage() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // Mock data - در آینده از API دریافت می‌شود
-  const mockTeachers: Teacher[] = [
-    {
-      id: "1",
-      name: "سپنتا علیزاده",
-      avatar: "/images/teacher1.jpg",
-      specialty: "مکالمه انگلیسی",
-      experience: 8,
-      rating: 4.9,
-      students: 156,
-      languages: ["انگلیسی", "فارسی"],
-      bio: "معلم با تجربه در زمینه آموزش مکالمه انگلیسی با روش‌های مدرن و تعاملی",
-      hourlyRate: 250000,
-      location: "تهران",
-      available: true,
-      certificates: ["CELTA", "TESOL", "IELTS Trainer"]
-    },
-    {
-      id: "2",
-      name: "پارمیدا معصومی",
-      avatar: "/images/teacher2.jpg",
-      specialty: "گرامر پیشرفته",
-      experience: 12,
-      rating: 4.8,
-      students: 203,
-      languages: ["انگلیسی", "فارسی", "عربی"],
-      bio: "متخصص در آموزش گرامر پیشرفته و آمادگی برای آزمون‌های بین‌المللی",
-      hourlyRate: 300000,
-      location: "اصفهان",
-      available: true,
-      certificates: ["DELTA", "Cambridge Trainer", "TOEFL Expert"]
-    },
-    {
-      id: "3",
-      name: "نجمه کریمی",
-      avatar: "/images/teacher3.jpg",
-      specialty: "آیلتس",
-      experience: 6,
-      rating: 4.7,
-      students: 89,
-      languages: ["انگلیسی", "فارسی"],
-      bio: "مدرس تخصصی آیلتس با نمره 8.5 و تجربه موفق در آماده‌سازی دانش‌آموزان",
-      hourlyRate: 280000,
-      location: "شیراز",
-      available: false,
-      certificates: ["IELTS 8.5", "TESOL", "Academic Writing"]
-    },
-    {
-      id: "4",
-      name: "نجمه بهاری",
-      avatar: "/images/teacher4.jpg",
-      specialty: "مکالمه تجاری",
-      experience: 10,
-      rating: 4.9,
-      students: 134,
-      languages: ["انگلیسی", "فارسی", "آلمانی"],
-      bio: "متخصص در آموزش انگلیسی تجاری و آمادگی برای مصاحبه‌های کاری",
-      hourlyRate: 320000,
-      location: "مشهد",
-      available: true,
-      certificates: ["Business English", "MBA", "Corporate Trainer"]
+  // Fetch teachers from Supabase
+  const fetchTeachers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching teachers:', error);
+        return;
+      }
+
+      setTeachers(data || []);
+      setFilteredTeachers(data || []);
+    } catch (error) {
+      console.error('Error in fetchTeachers:', error);
+    } finally {
+      setLoading(false);
     }
-    
-   
-  ];
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setTeachers(mockTeachers);
-      setFilteredTeachers(mockTeachers);
-      setLoading(false);
-    }, 1000);
+    fetchTeachers();
   }, []);
 
   useEffect(() => {
@@ -126,21 +97,23 @@ export default function TeachersPage() {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(teacher =>
-        teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.languages.some(lang => lang.toLowerCase().includes(searchTerm.toLowerCase()))
+        `${teacher.first_name} ${teacher.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.languages.some(lang => lang.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (teacher.bio && teacher.bio.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Filter by specialty
+    // Filter by levels (instead of specialty)
     if (selectedSpecialty !== "all") {
-      filtered = filtered.filter(teacher => teacher.specialty === selectedSpecialty);
+      filtered = filtered.filter(teacher => 
+        teacher.levels && teacher.levels.includes(selectedSpecialty)
+      );
     }
 
     setFilteredTeachers(filtered);
   };
 
-  const specialties = ["all", "مکالمه انگلیسی", "گرامر پیشرفته", "آیلتس", "مکالمه تجاری", "تافل", "انگلیسی کودکان"];
+  const specialties = ["all", "مبتدی", "متوسط", "پیشرفته", "آیلتس", "تافل", "مکالمه", "گرامر"];
 
   const handleSelectTeacher = (teacherId: string) => {
     // هدایت به صفحه جزئیات معلم
@@ -224,29 +197,29 @@ export default function TeachersPage() {
               <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                 <CardHeader className="text-center pb-4">
                   <div className="relative mx-auto mb-4">
-                    <Avatar className="w-24 h-24 mx-auto">
-                      <AvatarImage src={teacher.avatar} alt={teacher.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                        {teacher.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
+                                      <Avatar className="w-24 h-24 mx-auto">
+                    <AvatarImage src={teacher.avatar || ''} alt={`${teacher.first_name} ${teacher.last_name}`} />
+                    <AvatarFallback className="text-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                      {teacher.first_name[0]}{teacher.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
                     {teacher.available && (
                       <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
                     )}
                   </div>
                   
                   <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                    {teacher.name}
+                    {teacher.first_name} {teacher.last_name}
                   </CardTitle>
                   
                   <div className="flex items-center justify-center gap-1 mb-2">
                     <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="text-sm font-medium">{teacher.rating}</span>
-                    <span className="text-sm text-gray-500">({teacher.students} دانش‌آموز)</span>
+                    <span className="text-sm font-medium">4.8</span>
+                    <span className="text-sm text-gray-500">(دانش‌آموز)</span>
                   </div>
 
                   <Badge variant="secondary" className="mb-2">
-                    {teacher.specialty}
+                    {teacher.levels && teacher.levels.length > 0 ? teacher.levels[0] : 'معلم زبان'}
                   </Badge>
                 </CardHeader>
 
@@ -267,7 +240,7 @@ export default function TeachersPage() {
                   <div className="flex items-center gap-2">
                     <Award className="w-4 h-4 text-green-500" />
                     <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {teacher.experience} سال تجربه
+                      {teacher.experience_years || 0} سال تجربه
                     </span>
                   </div>
 
@@ -275,34 +248,36 @@ export default function TeachersPage() {
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-red-500" />
                     <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {teacher.location}
+                      {teacher.location || 'نامشخص'}
                     </span>
                   </div>
 
                   {/* Bio */}
                   <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                    {teacher.bio}
+                    {teacher.bio || 'توضیحات در دسترس نیست'}
                   </p>
 
                   {/* Certificates */}
-                  <div className="flex flex-wrap gap-1">
-                    {teacher.certificates.slice(0, 2).map((cert, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {cert}
-                      </Badge>
-                    ))}
-                    {teacher.certificates.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{teacher.certificates.length - 2} بیشتر
-                      </Badge>
-                    )}
-                  </div>
+                  {teacher.certificates && teacher.certificates.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {teacher.certificates.slice(0, 2).map((cert, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {cert}
+                        </Badge>
+                      ))}
+                      {teacher.certificates.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{teacher.certificates.length - 2} بیشتر
+                        </Badge>
+                      )}
+                    </div>
+                  )}
 
                   {/* Price and Action */}
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="text-left">
                       <span className="text-lg font-bold text-primary">
-                        {teacher.hourlyRate.toLocaleString()} تومان
+                        {teacher.hourly_rate ? teacher.hourly_rate.toLocaleString() : 'نامشخص'} تومان
                       </span>
                       <span className="text-sm text-gray-500 block">در ساعت</span>
                     </div>

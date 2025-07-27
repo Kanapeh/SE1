@@ -85,7 +85,7 @@ export default function GetStartedPage() {
             شروع یادگیری زبان
           </h1>
           <p className="text-lg text-gray-600">
-            فرم زیر را پر کنید تا مسیر خود را با آکادمی زبان SE1A آغاز کنید.
+            فرم زیر را پر کنید تا مسیر خود را با آکادمی زبان سِ وان آغاز کنید.
           </p>
         </motion.div>
 
