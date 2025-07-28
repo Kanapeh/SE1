@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpen, Users, Settings, FileText, DollarSign, MessageSquare } from "lucide-react";
+import { Home, BookOpen, Users, Settings, FileText, DollarSign, MessageSquare, MessageCircle } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -14,6 +14,7 @@ export default function AdminSidebar() {
     { href: "/admin/requests", label: "درخواست‌ها", icon: FileText },
     { href: "/admin/pricing", label: "مدیریت قیمت‌ها", icon: DollarSign },
     { href: "/admin/messages", label: "پیام‌ها", icon: MessageSquare },
+    { href: "/admin/comments", label: "نظرات مقالات", icon: MessageCircle },
     { href: "/admin/settings", label: "تنظیمات", icon: Settings },
   ];
 

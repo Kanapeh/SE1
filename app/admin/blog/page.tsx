@@ -16,6 +16,12 @@ interface BlogPost {
   published_at: string;
   status: string;
   tags: string[];
+  video_url?: string;
+  chart_data?: any;
+  table_data?: any;
+  has_chart?: boolean;
+  has_video?: boolean;
+  has_table?: boolean;
 }
 
 export default function BlogPage() {
@@ -106,6 +112,28 @@ export default function BlogPage() {
       const author = formData.get('author')?.toString().trim() || 'مدیر سیستم';
       const status = formData.get('status')?.toString() || 'draft';
       const tags = formData.get('tags')?.toString().split(',').map(tag => tag.trim()) || [];
+      const video_url = formData.get('video_url')?.toString().trim() || '';
+      const has_video = formData.get('has_video') === 'on';
+      const has_chart = formData.get('has_chart') === 'on';
+      const has_table = formData.get('has_table') === 'on';
+      
+      // Parse chart and table data
+      let chart_data = null;
+      let table_data = null;
+      
+      try {
+        const chartDataStr = formData.get('chart_data')?.toString();
+        if (chartDataStr && has_chart) {
+          chart_data = JSON.parse(chartDataStr);
+        }
+        
+        const tableDataStr = formData.get('table_data')?.toString();
+        if (tableDataStr && has_table) {
+          table_data = JSON.parse(tableDataStr);
+        }
+      } catch (error) {
+        console.error('Error parsing JSON data:', error);
+      }
       
       // Validation
       if (!title) throw new Error('عنوان مقاله الزامی است');
@@ -124,7 +152,13 @@ export default function BlogPage() {
           author,
           published_at: new Date().toISOString(),
           status,
-          tags
+          tags,
+          video_url: has_video ? video_url : null,
+          chart_data: has_chart ? chart_data : null,
+          table_data: has_table ? table_data : null,
+          has_video,
+          has_chart,
+          has_table
         }])
         .select();
 
@@ -153,6 +187,28 @@ export default function BlogPage() {
     const tags = formData.get('tags')?.toString().split(',').map(tag => tag.trim()) || [];
     const slug = formData.get('title')?.toString().toLowerCase().replace(/\s+/g, '-') || '';
     const content = editorRef.current?.getContent() || '';
+    const video_url = formData.get('video_url')?.toString().trim() || '';
+    const has_video = formData.get('has_video') === 'on';
+    const has_chart = formData.get('has_chart') === 'on';
+    const has_table = formData.get('has_table') === 'on';
+    
+    // Parse chart and table data
+    let chart_data = null;
+    let table_data = null;
+    
+    try {
+      const chartDataStr = formData.get('chart_data')?.toString();
+      if (chartDataStr && has_chart) {
+        chart_data = JSON.parse(chartDataStr);
+      }
+      
+      const tableDataStr = formData.get('table_data')?.toString();
+      if (tableDataStr && has_table) {
+        table_data = JSON.parse(tableDataStr);
+      }
+    } catch (error) {
+      console.error('Error parsing JSON data:', error);
+    }
     
     try {
       const { data, error } = await supabase
@@ -164,7 +220,13 @@ export default function BlogPage() {
           image_url: formData.get('image_url'),
           author: formData.get('author'),
           status: formData.get('status'),
-          tags
+          tags,
+          video_url: has_video ? video_url : null,
+          chart_data: has_chart ? chart_data : null,
+          table_data: has_table ? table_data : null,
+          has_video,
+          has_chart,
+          has_table
         })
         .eq('id', editingPost.id)
         .select();
@@ -405,6 +467,78 @@ export default function BlogPage() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
+              
+              {/* Video Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    name="has_video"
+                    id="has_video"
+                    className="mr-2"
+                  />
+                  <label htmlFor="has_video" className="text-sm font-medium text-gray-700">
+                    شامل ویدیو
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">آدرس ویدیو (YouTube, Vimeo)</label>
+                  <input
+                    type="url"
+                    name="video_url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Chart Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    name="has_chart"
+                    id="has_chart"
+                    className="mr-2"
+                  />
+                  <label htmlFor="has_chart" className="text-sm font-medium text-gray-700">
+                    شامل نمودار
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">داده‌های نمودار (JSON)</label>
+                  <textarea
+                    name="chart_data"
+                    rows={6}
+                    placeholder='{"type": "bar", "data": {"labels": ["A", "B", "C"], "datasets": [{"label": "مثال", "data": [1, 2, 3]}]}}'
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Table Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    name="has_table"
+                    id="has_table"
+                    className="mr-2"
+                  />
+                  <label htmlFor="has_table" className="text-sm font-medium text-gray-700">
+                    شامل جدول
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">داده‌های جدول (JSON)</label>
+                  <textarea
+                    name="table_data"
+                    rows={6}
+                    placeholder='{"headers": ["ستون 1", "ستون 2"], "rows": [["داده 1", "داده 2"], ["داده 3", "داده 4"]]}'
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
@@ -492,6 +626,84 @@ export default function BlogPage() {
                   placeholder="مثال: آموزش, زبان انگلیسی, گرامر"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
+              </div>
+              
+              {/* Video Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    name="has_video"
+                    id="edit_has_video"
+                    defaultChecked={editingPost.has_video}
+                    className="mr-2"
+                  />
+                  <label htmlFor="edit_has_video" className="text-sm font-medium text-gray-700">
+                    شامل ویدیو
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">آدرس ویدیو (YouTube, Vimeo)</label>
+                  <input
+                    type="url"
+                    name="video_url"
+                    defaultValue={editingPost.video_url || ''}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Chart Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    name="has_chart"
+                    id="edit_has_chart"
+                    defaultChecked={editingPost.has_chart}
+                    className="mr-2"
+                  />
+                  <label htmlFor="edit_has_chart" className="text-sm font-medium text-gray-700">
+                    شامل نمودار
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">داده‌های نمودار (JSON)</label>
+                  <textarea
+                    name="chart_data"
+                    rows={6}
+                    defaultValue={editingPost.chart_data ? JSON.stringify(editingPost.chart_data, null, 2) : ''}
+                    placeholder='{"type": "bar", "data": {"labels": ["A", "B", "C"], "datasets": [{"label": "مثال", "data": [1, 2, 3]}]}}'
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Table Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    name="has_table"
+                    id="edit_has_table"
+                    defaultChecked={editingPost.has_table}
+                    className="mr-2"
+                  />
+                  <label htmlFor="edit_has_table" className="text-sm font-medium text-gray-700">
+                    شامل جدول
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">داده‌های جدول (JSON)</label>
+                  <textarea
+                    name="table_data"
+                    rows={6}
+                    defaultValue={editingPost.table_data ? JSON.stringify(editingPost.table_data, null, 2) : ''}
+                    placeholder='{"headers": ["ستون 1", "ستون 2"], "rows": [["داده 1", "داده 2"], ["داده 3", "داده 4"]]}'
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-4">
                 <button

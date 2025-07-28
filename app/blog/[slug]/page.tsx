@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Head from "next/head";
+import CommentForm from "@/app/components/CommentForm";
+import VideoPlayer from "@/app/components/VideoPlayer";
+import ChartDisplay from "@/app/components/ChartDisplay";
+import DataTable from "@/app/components/DataTable";
 
 interface BlogPost {
   id: string;
@@ -15,19 +19,43 @@ interface BlogPost {
   published_at: string;
   status: string;
   tags: string[];
+  video_url?: string;
+  chart_data?: any;
+  table_data?: any;
+  has_chart?: boolean;
+  has_video?: boolean;
+  has_table?: boolean;
 }
 
 export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = use(params);
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<{
+    id: string;
+    post_id: string;
+    name: string;
+    email: string;
+    content: string;
+    status: string;
+    created_at: string;
+  }[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
+  const [slug, setSlug] = useState<string>('');
 
   useEffect(() => {
-    fetchPost();
-  }, [resolvedParams.slug]);
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setSlug(resolvedParams.slug);
+    };
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (slug) {
+      fetchPost();
+    }
+  }, [slug]);
 
   useEffect(() => {
     if (post) {
@@ -40,7 +68,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
-        .eq('slug', resolvedParams.slug)
+        .eq('slug', slug)
         .eq('status', 'published')
         .single();
 
@@ -57,15 +85,20 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
   const fetchComments = async (postId: string) => {
     setCommentsLoading(true);
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*')
-      .eq('post_id', postId)
-      .eq('status', 'approved') // فقط کامنت‌های تایید شده
-      .order('created_at', { ascending: false });
-
-    if (!error) setComments(data);
-    setCommentsLoading(false);
+    try {
+      const response = await fetch(`/api/comments?postId=${postId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setComments(data);
+      } else {
+        console.error('Error fetching comments:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setCommentsLoading(false);
+    }
   };
 
   if (loading) {
@@ -122,6 +155,41 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             <div dangerouslySetInnerHTML={{ __html: post.content }} />
           </div>
 
+          {/* Video Section */}
+          {(post.has_video || post.video_url) && post.video_url && (
+            <div className="mt-8">
+              <VideoPlayer 
+                videoUrl={post.video_url} 
+                title="ویدیو مرتبط"
+              />
+            </div>
+          )}
+          
+
+
+          {/* Chart Section */}
+          {(post.has_chart || post.chart_data) && post.chart_data && (
+            <div className="mt-8">
+              <ChartDisplay 
+                chartData={post.chart_data}
+                title="نمودار داده‌ها"
+              />
+            </div>
+          )}
+
+          {/* Table Section */}
+          {(post.has_table || post.table_data) && post.table_data && (
+            <div className="mt-8">
+              <DataTable 
+                tableData={post.table_data}
+                sortable={true}
+                searchable={true}
+                pagination={true}
+                itemsPerPage={5}
+              />
+            </div>
+          )}
+
           {post.tags && post.tags.length > 0 && (
             <div className="mt-8 pt-8 border-t">
               <h2 className="text-xl font-semibold mb-4">برچسب‌ها:</h2>
@@ -140,20 +208,38 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
           {/* Comments Section */}
           <div className="mt-8 pt-8 border-t">
-            <h2 className="text-xl font-semibold mb-4">نظرات کاربران</h2>
+            <h2 className="text-xl font-semibold mb-6">نظرات کاربران</h2>
+            
+            {/* Comment Form */}
+            <div className="mb-8">
+              <CommentForm 
+                postId={post.id} 
+                onCommentSubmitted={() => fetchComments(post.id)}
+              />
+            </div>
+
+            {/* Comments List */}
             {commentsLoading ? (
-              <div>در حال بارگذاری نظرات...</div>
+              <div className="text-center py-8">در حال بارگذاری نظرات...</div>
             ) : comments.length === 0 ? (
-              <div>هنوز نظری ثبت نشده است.</div>
+              <div className="text-center py-8 text-muted-foreground">
+                هنوز نظری ثبت نشده است. اولین نفری باشید که نظر می‌دهد!
+              </div>
             ) : (
-              <ul className="space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium mb-4">نظرات ({comments.length})</h3>
                 {comments.map((comment) => (
-                  <li key={comment.id} className="bg-muted p-4 rounded shadow">
-                    <div className="text-sm text-foreground mb-2">{comment.content}</div>
-                    <div className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString('fa-IR')}</div>
-                  </li>
+                  <div key={comment.id} className="bg-muted p-4 rounded-lg border">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="font-medium text-foreground">{comment.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(comment.created_at).toLocaleDateString('fa-IR')}
+                      </div>
+                    </div>
+                    <div className="text-foreground leading-relaxed">{comment.content}</div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </div>
