@@ -222,6 +222,7 @@ export default function Header() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
+                  className="mb-4"
                 >
                   <Link href="/register?type=student" onClick={() => setIsSidebarOpen(false)}>
                     <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-300 group">
@@ -231,6 +232,45 @@ export default function Header() {
                       <div>
                         <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">دانش‌آموز هستم</h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">ثبت‌نام به عنوان دانش‌آموز</p>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+
+                {/* About Us Option */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-4"
+                >
+                  <Link href="/about" onClick={() => setIsSidebarOpen(false)}>
+                    <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-300 group">
+                      <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">درباره ما</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">آشنایی با آکادمی سِ وان</p>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+
+                {/* Contact Us Option */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Link href="/contact" onClick={() => setIsSidebarOpen(false)}>
+                    <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 group">
+                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                        <Phone className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">تماس با ما</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">ارتباط با تیم پشتیبانی</p>
                       </div>
                     </div>
                   </Link>
