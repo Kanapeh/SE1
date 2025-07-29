@@ -22,6 +22,8 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      console.log("Attempting login for:", email);
+      
       // Login with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -45,38 +47,72 @@ export default function LoginPage() {
       if (data.user) {
         console.log("Login successful:", data.user);
         
-        // Check if user has a profile in teachers or students table
+        // Check if user is admin first
+        const { data: adminData } = await supabase
+          .from("admins")
+          .select("user_id, role")
+          .eq("user_id", data.user.id)
+          .single();
+
+        if (adminData) {
+          console.log("User is admin:", adminData);
+          toast.success("خوش آمدید ادمین!");
+          router.push("/admin");
+          return;
+        }
+
+        // Check if user has admin role in auth-users table
+        const { data: authUserData } = await supabase
+          .from("auth-users")
+          .select("id, role, is_admin")
+          .eq("id", data.user.id)
+          .single();
+
+        if (authUserData && (authUserData.role === 'admin' || authUserData.is_admin === true)) {
+          console.log("User is admin by role:", authUserData);
+          toast.success("خوش آمدید ادمین!");
+          router.push("/admin");
+          return;
+        }
+
+        // Check if user has a profile in teachers table
         const { data: teacherData } = await supabase
           .from("teachers")
           .select("id, status")
           .eq("id", data.user.id)
           .single();
 
+        if (teacherData) {
+          if (teacherData.status === 'active') {
+            toast.success("خوش آمدید معلم!");
+            router.push("/admin"); // یا صفحه معلم
+          } else {
+            setError("حساب کاربری شما هنوز تایید نشده است. لطفاً منتظر تایید ادمین باشید.");
+          }
+          return;
+        }
+
+        // Check if user has a profile in students table
         const { data: studentData } = await supabase
           .from("students")
           .select("id, status")
           .eq("id", data.user.id)
           .single();
 
-        if (teacherData) {
-          if (teacherData.status === 'active') {
-            toast.success("خوش آمدید!");
-            router.push("/admin"); // یا صفحه معلم
-          } else {
-            setError("حساب کاربری شما هنوز تایید نشده است. لطفاً منتظر تایید ادمین باشید.");
-          }
-        } else if (studentData) {
+        if (studentData) {
           if (studentData.status === 'active') {
-            toast.success("خوش آمدید!");
+            toast.success("خوش آمدید دانشجو!");
             router.push("/dashboard");
           } else {
             setError("حساب کاربری شما غیرفعال است.");
           }
-        } else {
-          // User exists in auth but no profile - redirect to complete profile
-          toast.success("لطفاً پروفایل خود را تکمیل کنید");
-          router.push("/complete-profile");
+          return;
         }
+
+        // User exists in auth but no profile - redirect to complete profile
+        console.log("User has no profile, redirecting to complete profile");
+        toast.success("لطفاً پروفایل خود را تکمیل کنید");
+        router.push("/complete-profile");
       }
     } catch (error: any) {
       console.error("Unexpected error:", error);

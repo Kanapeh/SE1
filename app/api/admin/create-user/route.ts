@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { checkAdminAccessAPI } from '@/lib/api-utils';
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { email, password, role } = await request.json();
+    // Check admin access first
+    const { error: adminError, user } = await checkAdminAccessAPI();
+    if (adminError) {
+      return adminError;
+    }
+
+    const { email, password, role, first_name, last_name, phone } = await request.json();
 
     // Create user in Supabase
-    const { data: userData, error: userError } = await supabase.auth.admin.createUser({
+    const { data: userData, error: userError } = await createRouteHandlerClient({ cookies }).auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -22,15 +28,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert user data into users table
-    const { error: profileError } = await supabase
-      .from('users')
+    // Insert user data into auth-users table
+    const { error: profileError } = await createRouteHandlerClient({ cookies })
+      .from('auth-users')
       .insert([
         {
           id: userData.user.id,
           email: email,
           role: role || 'student',
+          is_admin: role === 'admin',
+          first_name: first_name || null,
+          last_name: last_name || null,
+          phone: phone || null,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ]);
 

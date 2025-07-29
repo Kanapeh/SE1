@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { Request } from "@/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 export default function AdminDashboard() {
+  const { isAdmin, loading } = useAdminAccess();
+
   const sections = [
     {
       title: 'درخواست‌ها',
@@ -43,6 +46,23 @@ export default function AdminDashboard() {
       color: 'bg-gray-50',
     },
   ];
+
+  // Show loading state while checking admin access
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">در حال بررسی دسترسی...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not admin, this should not render (redirect should have happened)
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">

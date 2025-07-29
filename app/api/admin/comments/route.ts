@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { checkAdminAccessAPI } from '@/lib/api-utils';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check admin access first
+    const { error: adminError } = await checkAdminAccessAPI();
+    if (adminError) {
+      return adminError;
+    }
+
     // Get all comments with post information
     const { data, error } = await supabase
       .from('comments')

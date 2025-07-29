@@ -1,10 +1,14 @@
 import AdminSidebar from './AdminSidebar';
+import { checkAdminAccess } from '@/lib/auth-utils';
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Check admin access - this will redirect if user is not admin
+  await checkAdminAccess();
+
   return (
     <div className="min-h-screen bg-background">
       <AdminSidebar />

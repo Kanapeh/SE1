@@ -34,6 +34,38 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Get session
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // Check if accessing admin routes
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // If no session, redirect to login
+    if (!session) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If session exists, check if user is admin
+    if (session.user) {
+      try {
+        const { data: adminProfile } = await supabase
+          .from('admins')
+          .select('user_id')
+          .eq('user_id', session.user.id)
+          .single();
+
+        // If user is not in admins table, redirect to dashboard
+        if (!adminProfile) {
+          return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+      } catch (error) {
+        console.error('Error checking admin access in middleware:', error);
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    }
+  }
+
   await supabase.auth.getSession();
 
   return response;

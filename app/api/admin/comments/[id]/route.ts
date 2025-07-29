@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { checkAdminAccessAPI } from '@/lib/api-utils';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check admin access first
+    const { error: adminError } = await checkAdminAccessAPI();
+    if (adminError) {
+      return adminError;
+    }
+
     const resolvedParams = await params;
     const body = await request.json();
     const { status } = body;
@@ -45,6 +52,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check admin access first
+    const { error: adminError } = await checkAdminAccessAPI();
+    if (adminError) {
+      return adminError;
+    }
+
     const resolvedParams = await params;
     const { error } = await supabase
       .from('comments')
