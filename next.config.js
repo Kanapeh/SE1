@@ -8,9 +8,7 @@ const nextConfig = {
     domains: ['localhost', 'https://www.se1a.org/'], // دامنه‌های مجاز برای تصاویر
   },
   // تنظیمات SSR
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/ssr'],
-  },
+  serverExternalPackages: ['@supabase/ssr'],
   // تنظیمات برای deployment
   output: 'standalone',
   // تنظیمات برای performance
