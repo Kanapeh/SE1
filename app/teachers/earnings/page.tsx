@@ -1,281 +1,217 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   DollarSign,
   TrendingUp,
+  TrendingDown,
   Calendar,
-  ArrowLeft,
+  Clock,
+  Users,
+  Star,
   Download,
   Filter,
   BarChart3,
   PieChart,
-  Clock,
-  Users,
-  Star,
-  Eye
-} from "lucide-react";
+  LineChart,
+  ArrowLeft,
+  Eye,
+  MoreHorizontal,
+  Target,
+  Award,
+  Zap,
+  Activity,
+  Heart,
+  Smile,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  BookOpen,
+  GraduationCap,
+  Languages,
+  MapPin,
+  Clock3,
+  UserCheck,
+  UserX,
+  CalendarDays,
+  Clock4,
+  DollarSign as DollarSignIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  BarChart,
+  PieChart as PieChartIcon,
+  LineChart as LineChartIcon
+} from 'lucide-react';
 
-interface Teacher {
+interface EarningRecord {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  hourly_rate: number | null;
-}
-
-interface Class {
-  id: string;
-  teacher_id: string;
-  student_id: string;
-  class_date: string;
-  class_time: string;
-  duration: number;
-  status: string;
+  date: string;
   amount: number;
-  notes: string | null;
-  created_at: string;
-  student: {
-    first_name: string;
-    last_name: string;
-    avatar: string | null;
-  };
+  studentName: string;
+  language: string;
+  duration: number;
+  status: 'completed' | 'pending' | 'cancelled';
+  rating: number;
 }
 
-interface EarningsStats {
-  totalEarnings: number;
-  thisMonthEarnings: number;
-  lastMonthEarnings: number;
-  totalClasses: number;
-  completedClasses: number;
-  averagePerClass: number;
+interface MonthlyEarnings {
+  month: string;
+  total: number;
+  classes: number;
+  students: number;
   averageRating: number;
-  topStudents: Array<{
-    student_id: string;
-    student_name: string;
-    totalSpent: number;
-    classCount: number;
-  }>;
-  monthlyData: Array<{
-    month: string;
-    earnings: number;
-    classes: number;
-  }>;
+}
+
+interface LanguageEarnings {
+  language: string;
+  total: number;
+  percentage: number;
+  classes: number;
 }
 
 export default function TeacherEarningsPage() {
   const router = useRouter();
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [stats, setStats] = useState<EarningsStats | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [earnings, setEarnings] = useState<EarningRecord[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyEarnings[]>([]);
+  const [languageData, setLanguageData] = useState<LanguageEarnings[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<'all' | 'this_month' | 'last_month' | 'this_year'>('all');
-
-  // Get current teacher
-  const getCurrentTeacher = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return null;
-      }
-
-      const { data: teacherData, error } = await supabase
-        .from('teachers')
-        .select('id, first_name, last_name, email, hourly_rate')
-        .eq('email', user.email)
-        .single();
-
-      if (error) {
-        console.error('Error getting teacher:', error);
-        router.push('/register');
-        return null;
-      }
-
-      setTeacher(teacherData);
-      return teacherData;
-    } catch (error) {
-      console.error('Error in getCurrentTeacher:', error);
-      return null;
-    }
-  };
-
-  // Fetch classes
-  const fetchClasses = async (teacherId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('classes')
-        .select(`
-          *,
-          student:students!classes_student_id_fkey (
-            first_name,
-            last_name,
-            avatar
-          )
-        `)
-        .eq('teacher_id', teacherId)
-        .order('class_date', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-      return [];
-    }
-  };
-
-  // Calculate earnings statistics
-  const calculateStats = (classesData: Class[]): EarningsStats => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
-    let totalEarnings = 0;
-    let thisMonthEarnings = 0;
-    let lastMonthEarnings = 0;
-    let totalClasses = 0;
-    let completedClasses = 0;
-
-    // Monthly data for chart
-    const monthlyData: { [key: string]: { earnings: number; classes: number } } = {};
-
-    classesData.forEach(cls => {
-      const classDate = new Date(cls.class_date);
-      const classMonth = classDate.getMonth();
-      const classYear = classDate.getFullYear();
-      const monthKey = `${classYear}-${(classMonth + 1).toString().padStart(2, '0')}`;
-
-      totalEarnings += cls.amount;
-      totalClasses++;
-
-      if (cls.status === 'completed') {
-        completedClasses++;
-      }
-
-      // This month
-      if (classMonth === thisMonth && classYear === thisYear) {
-        thisMonthEarnings += cls.amount;
-      }
-
-      // Last month
-      if (classMonth === lastMonth && classYear === lastMonthYear) {
-        lastMonthEarnings += cls.amount;
-      }
-
-      // Monthly data
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { earnings: 0, classes: 0 };
-      }
-      monthlyData[monthKey].earnings += cls.amount;
-      monthlyData[monthKey].classes++;
-    });
-
-    // Top students
-    const studentStats: { [key: string]: { name: string; spent: number; count: number } } = {};
-    classesData.forEach(cls => {
-      const studentKey = cls.student_id;
-      if (!studentStats[studentKey]) {
-        studentStats[studentKey] = {
-          name: `${cls.student.first_name} ${cls.student.last_name}`,
-          spent: 0,
-          count: 0
-        };
-      }
-      studentStats[studentKey].spent += cls.amount;
-      studentStats[studentKey].count++;
-    });
-
-    const topStudents = Object.entries(studentStats)
-      .map(([student_id, data]) => ({
-        student_id,
-        student_name: data.name,
-        totalSpent: data.spent,
-        classCount: data.count
-      }))
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 5);
-
-    // Convert monthly data to array
-    const monthlyDataArray = Object.entries(monthlyData)
-      .map(([month, data]) => ({
-        month,
-        earnings: data.earnings,
-        classes: data.classes
-      }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-
-    return {
-      totalEarnings,
-      thisMonthEarnings,
-      lastMonthEarnings,
-      totalClasses,
-      completedClasses,
-      averagePerClass: totalClasses > 0 ? totalEarnings / totalClasses : 0,
-      averageRating: 4.8, // Placeholder
-      topStudents,
-      monthlyData: monthlyDataArray
-    };
-  };
-
-  // Filter classes by period
-  const getFilteredClasses = () => {
-    if (selectedPeriod === 'all') return classes;
-
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-    const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
-    return classes.filter(cls => {
-      const classDate = new Date(cls.class_date);
-      const classMonth = classDate.getMonth();
-      const classYear = classDate.getFullYear();
-
-      switch (selectedPeriod) {
-        case 'this_month':
-          return classMonth === thisMonth && classYear === thisYear;
-        case 'last_month':
-          return classMonth === lastMonth && classYear === lastMonthYear;
-        case 'this_year':
-          return classYear === thisYear;
-        default:
-          return true;
-      }
-    });
-  };
 
   useEffect(() => {
-    const initialize = async () => {
-      const teacherData = await getCurrentTeacher();
-      if (!teacherData) return;
+    // Mock earnings data
+    const mockEarnings: EarningRecord[] = [
+      {
+        id: '1',
+        date: '2024-01-15',
+        amount: 200000,
+        studentName: 'سارا محمدی',
+        language: 'انگلیسی',
+        duration: 60,
+        status: 'completed',
+        rating: 5
+      },
+      {
+        id: '2',
+        date: '2024-01-14',
+        amount: 180000,
+        studentName: 'احمد رضایی',
+        language: 'فرانسه',
+        duration: 60,
+        status: 'completed',
+        rating: 4
+      },
+      {
+        id: '3',
+        date: '2024-01-13',
+        amount: 220000,
+        studentName: 'فاطمه کریمی',
+        language: 'انگلیسی',
+        duration: 90,
+        status: 'completed',
+        rating: 5
+      },
+      {
+        id: '4',
+        date: '2024-01-12',
+        amount: 160000,
+        studentName: 'علی احمدی',
+        language: 'آلمانی',
+        duration: 60,
+        status: 'completed',
+        rating: 4
+      },
+      {
+        id: '5',
+        date: '2024-01-11',
+        amount: 200000,
+        studentName: 'سارا محمدی',
+        language: 'انگلیسی',
+        duration: 60,
+        status: 'completed',
+        rating: 5
+      },
+      {
+        id: '6',
+        date: '2024-01-10',
+        amount: 180000,
+        studentName: 'احمد رضایی',
+        language: 'فرانسه',
+        duration: 60,
+        status: 'pending',
+        rating: 0
+      }
+    ];
 
-      const classesData = await fetchClasses(teacherData.id);
-      setClasses(classesData);
+    // Mock monthly data
+    const mockMonthlyData: MonthlyEarnings[] = [
+      { month: 'دی 1402', total: 2400000, classes: 12, students: 4, averageRating: 4.8 },
+      { month: 'آذر 1402', total: 2200000, classes: 11, students: 4, averageRating: 4.7 },
+      { month: 'آبان 1402', total: 2000000, classes: 10, students: 3, averageRating: 4.6 },
+      { month: 'مهر 1402', total: 1800000, classes: 9, students: 3, averageRating: 4.5 }
+    ];
 
-      const statsData = calculateStats(classesData);
-      setStats(statsData);
-      
-      setLoading(false);
-    };
+    // Mock language data
+    const mockLanguageData: LanguageEarnings[] = [
+      { language: 'انگلیسی', total: 1200000, percentage: 50, classes: 6 },
+      { language: 'فرانسه', total: 720000, percentage: 30, classes: 4 },
+      { language: 'آلمانی', total: 480000, percentage: 20, classes: 2 }
+    ];
 
-    initialize();
-  }, [router]);
+    setEarnings(mockEarnings);
+    setMonthlyData(mockMonthlyData);
+    setLanguageData(mockLanguageData);
+    setLoading(false);
+  }, []);
+
+  const totalEarnings = earnings.reduce((sum, record) => sum + record.amount, 0);
+  const completedEarnings = earnings.filter(r => r.status === 'completed').reduce((sum, record) => sum + record.amount, 0);
+  const pendingEarnings = earnings.filter(r => r.status === 'pending').reduce((sum, record) => sum + record.amount, 0);
+  const totalClasses = earnings.length;
+  const completedClasses = earnings.filter(r => r.status === 'completed').length;
+  const averageRating = earnings.filter(r => r.rating > 0).reduce((sum, record) => sum + record.rating, 0) / earnings.filter(r => r.rating > 0).length;
+  const uniqueStudents = new Set(earnings.map(r => r.studentName)).size;
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">تکمیل شده</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">در انتظار</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">لغو شده</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const getPeriodLabel = (period: string) => {
+    switch (period) {
+      case 'week':
+        return 'هفته جاری';
+      case 'month':
+        return 'ماه جاری';
+      case 'quarter':
+        return 'سه ماهه';
+      case 'year':
+        return 'سال جاری';
+      default:
+        return 'ماه جاری';
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-500 mx-auto mb-6"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-200 border-t-green-500 mx-auto mb-6"></div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری</h3>
           <p className="text-gray-600 dark:text-gray-400">گزارش درآمد در حال آماده‌سازی است...</p>
         </div>
@@ -283,32 +219,8 @@ export default function TeacherEarningsPage() {
     );
   }
 
-  if (!teacher || !stats) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-10 h-10 text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">دسترسی محدود</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">فقط معلمان می‌توانند به این صفحه دسترسی داشته باشند</p>
-            <Button 
-              onClick={() => router.push('/register?type=teacher')}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-            >
-              ثبت‌نام به عنوان معلم
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const filteredClasses = getFilteredClasses();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -320,24 +232,35 @@ export default function TeacherEarningsPage() {
             <div className="flex items-center gap-4">
               <Button 
                 variant="outline" 
-                onClick={() => router.back()}
+                onClick={() => router.push('/dashboard/teacher')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                بازگشت
+                بازگشت به داشبورد
               </Button>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   گزارش درآمد
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  {teacher.first_name} {teacher.last_name}
+                  تحلیل کامل درآمد و عملکرد مالی شما
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
+            <div className="flex items-center gap-4">
+              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">هفته جاری</SelectItem>
+                  <SelectItem value="month">ماه جاری</SelectItem>
+                  <SelectItem value="quarter">سه ماهه</SelectItem>
+                  <SelectItem value="year">سال جاری</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
                 دانلود گزارش
               </Button>
             </div>
@@ -349,238 +272,252 @@ export default function TeacherEarningsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
         >
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <DollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">درآمد کل</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.totalEarnings.toLocaleString()} تومان
-                  </p>
+                  <p className="text-green-100 text-sm">درآمد کل</p>
+                  <p className="text-2xl font-bold">{totalEarnings.toLocaleString()}</p>
+                  <p className="text-green-100 text-sm">تومان</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <DollarSign className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">این ماه</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.thisMonthEarnings.toLocaleString()} تومان
-                  </p>
+                  <p className="text-blue-100 text-sm">کلاس‌های تکمیل شده</p>
+                  <p className="text-2xl font-bold">{completedClasses}</p>
+                  <p className="text-blue-100 text-sm">از {totalClasses} کلاس</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <BookOpen className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                  <Users className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">کل کلاس‌ها</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalClasses}</p>
+                  <p className="text-purple-100 text-sm">امتیاز متوسط</p>
+                  <p className="text-2xl font-bold">{averageRating.toFixed(1)}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <Star className="w-4 h-4" />
+                    <span className="text-sm text-purple-100">از 5</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <Star className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+          <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white border-0 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                  <Star className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">میانگین هر کلاس</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {Math.round(stats.averagePerClass).toLocaleString()} تومان
-                  </p>
+                  <p className="text-orange-100 text-sm">دانش‌آموزان فعال</p>
+                  <p className="text-2xl font-bold">{uniqueStudents}</p>
+                  <p className="text-orange-100 text-sm">دانش‌آموز</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <Users className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Filters */}
+        {/* Main Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-8"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <Filter className="w-5 h-5 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">فیلتر بر اساس:</span>
-                <div className="flex gap-2">
-                  {[
-                    { value: 'all', label: 'همه' },
-                    { value: 'this_month', label: 'این ماه' },
-                    { value: 'last_month', label: 'ماه گذشته' },
-                    { value: 'this_year', label: 'امسال' }
-                  ].map((period) => (
-                    <Button
-                      key={period.value}
-                      variant={selectedPeriod === period.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedPeriod(period.value as any)}
-                    >
-                      {period.label}
-                    </Button>
-                  ))}
+          {/* Earnings Overview */}
+          <div className="lg:col-span-2">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  روند درآمد - {getPeriodLabel(selectedPeriod)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Monthly Chart Placeholder */}
+                  <div className="h-64 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border-2 border-dashed border-green-200 dark:border-green-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <LineChart className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        نمودار روند درآمد
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        نمایش روند درآمد در {getPeriodLabel(selectedPeriod)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Language Distribution */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4">توزیع درآمد بر اساس زبان</h4>
+                    <div className="space-y-3">
+                      {languageData.map((lang) => (
+                        <div key={lang.language} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-600"></div>
+                            <span className="font-medium">{lang.language}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {lang.classes} کلاس
+                            </span>
+                            <span className="font-semibold text-green-600 dark:text-green-400">
+                              {lang.total.toLocaleString()} تومان
+                            </span>
+                            <Badge variant="outline">{lang.percentage}%</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="lg:col-span-1">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  آمار سریع
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Completion Rate */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">نرخ تکمیل کلاس‌ها</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {Math.round((completedClasses / totalClasses) * 100)}%
+                    </span>
+                  </div>
+                  <Progress value={(completedClasses / totalClasses) * 100} className="h-2" />
+                </div>
+
+                {/* Pending vs Completed */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">تکمیل شده</span>
+                    </div>
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      {completedEarnings.toLocaleString()} تومان
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-500" />
+                      <span className="text-sm">در انتظار</span>
+                    </div>
+                    <span className="font-semibold text-yellow-600 dark:text-yellow-400">
+                      {pendingEarnings.toLocaleString()} تومان
+                    </span>
+                  </div>
+                </div>
+
+                {/* Top Languages */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3">محبوب‌ترین زبان‌ها</h4>
+                  <div className="space-y-2">
+                    {languageData.slice(0, 3).map((lang, index) => (
+                      <div key={lang.language} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                            index === 0 ? 'bg-yellow-500' : 
+                            index === 1 ? 'bg-gray-400' : 'bg-orange-500'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <span className="text-sm">{lang.language}</span>
+                        </div>
+                        <span className="text-sm font-medium">{lang.total.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </motion.div>
 
-        {/* Analytics Grid */}
+        {/* Recent Transactions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"
+          className="mt-8"
         >
-          {/* Top Students */}
           <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                برترین دانش‌آموزان
+                <Clock className="w-5 h-5" />
+                تراکنش‌های اخیر
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {stats.topStudents.map((student, index) => (
-                  <div key={student.student_id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {index + 1}
+                {earnings.slice(0, 6).map((record) => (
+                  <motion.div
+                    key={record.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {student.student_name}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {student.classCount} کلاس
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          {record.studentName}
+                        </h4>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                          <span>{record.language}</span>
+                          <span>{record.duration} دقیقه</span>
+                          <span>{record.date}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-gray-900 dark:text-white">
-                        {student.totalSpent.toLocaleString()} تومان
-                      </div>
+                    <div className="flex items-center gap-4">
+                      {record.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                          <span className="text-sm font-medium">{record.rating}</span>
+                        </div>
+                      )}
+                      {getStatusBadge(record.status)}
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        {record.amount.toLocaleString()} تومان
+                      </span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Monthly Chart Placeholder */}
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                نمودار ماهانه
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center">
-                <div className="text-center">
-                  <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">نمودار ماهانه درآمد</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">به زودی اضافه خواهد شد</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Recent Classes */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  کلاس‌های اخیر
-                </CardTitle>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  مشاهده همه
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {filteredClasses.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">کلاسی یافت نشد</h3>
-                  <p className="text-gray-600 dark:text-gray-400">در این بازه زمانی کلاسی وجود ندارد</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredClasses.slice(0, 10).map((cls) => (
-                    <div key={cls.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={cls.student.avatar || ''} alt={cls.student.first_name} />
-                            <AvatarFallback className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                              {cls.student.first_name[0]}{cls.student.last_name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white">
-                              {cls.student.first_name} {cls.student.last_name}
-                            </h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                <span>{new Date(cls.class_date).toLocaleDateString('fa-IR')}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                <span>{cls.class_time}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <DollarSign className="w-4 h-4" />
-                                <span>{cls.amount.toLocaleString()} تومان</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant={cls.status === 'completed' ? 'default' : 'secondary'}>
-                            {cls.status === 'completed' ? 'تکمیل شده' : cls.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </CardContent>
           </Card>
         </motion.div>

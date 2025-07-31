@@ -1,257 +1,178 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Calendar,
   Clock,
-  Save,
-  ArrowLeft,
   Plus,
+  Edit,
   Trash2,
-  CheckCircle,
+  Save,
+  X,
+  Check,
   AlertCircle,
-  Settings
-} from "lucide-react";
+  Settings,
+  ArrowLeft,
+  CalendarDays,
+  Clock3,
+  MapPin,
+  Users,
+  BookOpen,
+  Zap,
+  Target,
+  Star,
+  DollarSign
+} from 'lucide-react';
 
-interface ScheduleSlot {
-  id?: string;
-  teacher_id: string;
-  day: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  created_at?: string;
-}
-
-interface Teacher {
+interface TimeSlot {
   id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  maxStudents: number;
+  price: number;
 }
 
-const DAYS_OF_WEEK = [
-  { value: 'saturday', label: 'شنبه' },
-  { value: 'sunday', label: 'یکشنبه' },
-  { value: 'monday', label: 'دوشنبه' },
-  { value: 'tuesday', label: 'سه‌شنبه' },
-  { value: 'wednesday', label: 'چهارشنبه' },
-  { value: 'thursday', label: 'پنج‌شنبه' },
-  { value: 'friday', label: 'جمعه' }
-];
-
-const TIME_SLOTS = [
-  '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
-  '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
-];
+interface ScheduleDay {
+  day: string;
+  persianName: string;
+  timeSlots: TimeSlot[];
+}
 
 export default function TeacherSchedulePage() {
   const router = useRouter();
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [schedule, setSchedule] = useState<ScheduleSlot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<string>('saturday');
+  const [schedule, setSchedule] = useState<ScheduleDay[]>([]);
+  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [newTimeSlot, setNewTimeSlot] = useState({
+    startTime: '09:00',
+    endTime: '10:00',
+    maxStudents: 1,
+    price: 200000
+  });
 
-  // Get current teacher
-  const getCurrentTeacher = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return null;
-      }
-
-      const { data: teacherData, error } = await supabase
-        .from('teachers')
-        .select('id, first_name, last_name, email')
-        .eq('email', user.email)
-        .single();
-
-      if (error) {
-        console.error('Error getting teacher:', error);
-        router.push('/register');
-        return null;
-      }
-
-      setTeacher(teacherData);
-      return teacherData;
-    } catch (error) {
-      console.error('Error in getCurrentTeacher:', error);
-      return null;
-    }
-  };
-
-  // Fetch current schedule
-  const fetchSchedule = async (teacherId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('teacher_schedule')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .order('day', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching schedule:', error);
-      return [];
-    }
-  };
-
-  // Initialize schedule for all days
-  const initializeSchedule = (teacherId: string) => {
-    const initialSchedule: ScheduleSlot[] = [];
-    
-    DAYS_OF_WEEK.forEach(day => {
-      TIME_SLOTS.forEach(time => {
-        initialSchedule.push({
-          teacher_id: teacherId,
-          day: day.value,
-          start_time: time,
-          end_time: getNextHour(time),
-          is_available: false
-        });
-      });
-    });
-
-    return initialSchedule;
-  };
-
-  // Get next hour for end time
-  const getNextHour = (time: string): string => {
-    const [hour, minute] = time.split(':');
-    const nextHour = (parseInt(hour) + 1) % 24;
-    return `${nextHour.toString().padStart(2, '0')}:${minute}`;
-  };
-
-  // Toggle availability for a time slot
-  const toggleAvailability = (day: string, startTime: string) => {
-    setSchedule(prev => prev.map(slot => 
-      slot.day === day && slot.start_time === startTime
-        ? { ...slot, is_available: !slot.is_available }
-        : slot
-    ));
-  };
-
-  // Save schedule
-  const saveSchedule = async () => {
-    if (!teacher) return;
-
-    setSaving(true);
-    try {
-      // Delete existing schedule
-      await supabase
-        .from('teacher_schedule')
-        .delete()
-        .eq('teacher_id', teacher.id);
-
-      // Insert new schedule (only available slots)
-      const availableSlots = schedule.filter(slot => slot.is_available);
-      
-      if (availableSlots.length > 0) {
-        const { error } = await supabase
-          .from('teacher_schedule')
-          .insert(availableSlots);
-
-        if (error) throw error;
-      }
-
-      // Show success message
-      alert('برنامه با موفقیت ذخیره شد!');
-    } catch (error) {
-      console.error('Error saving schedule:', error);
-      alert('خطا در ذخیره برنامه');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Quick actions for common schedules
-  const setCommonSchedule = (type: 'morning' | 'afternoon' | 'evening' | 'full') => {
-    const timeRanges = {
-      morning: ['08:00', '09:00', '10:00', '11:00', '12:00'],
-      afternoon: ['13:00', '14:00', '15:00', '16:00', '17:00'],
-      evening: ['18:00', '19:00', '20:00', '21:00', '22:00'],
-      full: TIME_SLOTS
-    };
-
-    setSchedule(prev => prev.map(slot => ({
-      ...slot,
-      is_available: timeRanges[type].includes(slot.start_time)
-    })));
-  };
+  const daysOfWeek = [
+    { key: 'saturday', name: 'شنبه' },
+    { key: 'sunday', name: 'یکشنبه' },
+    { key: 'monday', name: 'دوشنبه' },
+    { key: 'tuesday', name: 'سه‌شنبه' },
+    { key: 'wednesday', name: 'چهارشنبه' },
+    { key: 'thursday', name: 'پنج‌شنبه' },
+    { key: 'friday', name: 'جمعه' }
+  ];
 
   useEffect(() => {
-    const initialize = async () => {
-      const teacherData = await getCurrentTeacher();
-      if (!teacherData) return;
+    // Initialize schedule with mock data
+    const initialSchedule = daysOfWeek.map(day => ({
+      day: day.key,
+      persianName: day.name,
+      timeSlots: [
+        {
+          id: `${day.key}-1`,
+          day: day.key,
+          startTime: '09:00',
+          endTime: '10:00',
+          isAvailable: true,
+          maxStudents: 1,
+          price: 200000
+        },
+        {
+          id: `${day.key}-2`,
+          day: day.key,
+          startTime: '14:00',
+          endTime: '15:00',
+          isAvailable: true,
+          maxStudents: 1,
+          price: 200000
+        }
+      ]
+    }));
+    setSchedule(initialSchedule);
+    setSelectedDay('saturday');
+  }, []);
 
-      const existingSchedule = await fetchSchedule(teacherData.id);
-      
-      if (existingSchedule.length > 0) {
-        // Merge existing schedule with full schedule
-        const fullSchedule = initializeSchedule(teacherData.id);
-        const mergedSchedule = fullSchedule.map(slot => {
-          const existing = existingSchedule.find(es => 
-            es.day === slot.day && es.start_time === slot.start_time
-          );
-          return existing || slot;
-        });
-        setSchedule(mergedSchedule);
-      } else {
-        setSchedule(initializeSchedule(teacherData.id));
+  const toggleTimeSlotAvailability = (dayKey: string, slotId: string) => {
+    setSchedule(prev => prev.map(day => {
+      if (day.day === dayKey) {
+        return {
+          ...day,
+          timeSlots: day.timeSlots.map(slot => 
+            slot.id === slotId 
+              ? { ...slot, isAvailable: !slot.isAvailable }
+              : slot
+          )
+        };
       }
-      
-      setLoading(false);
+      return day;
+    }));
+  };
+
+  const addTimeSlot = () => {
+    if (!selectedDay) return;
+
+    const newSlot: TimeSlot = {
+      id: `${selectedDay}-${Date.now()}`,
+      day: selectedDay,
+      startTime: newTimeSlot.startTime,
+      endTime: newTimeSlot.endTime,
+      isAvailable: true,
+      maxStudents: newTimeSlot.maxStudents,
+      price: newTimeSlot.price
     };
 
-    initialize();
-  }, [router]);
+    setSchedule(prev => prev.map(day => {
+      if (day.day === selectedDay) {
+        return {
+          ...day,
+          timeSlots: [...day.timeSlots, newSlot]
+        };
+      }
+      return day;
+    }));
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-500 mx-auto mb-6"></div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری</h3>
-          <p className="text-gray-600 dark:text-gray-400">برنامه در حال آماده‌سازی است...</p>
-        </div>
-      </div>
-    );
-  }
+    // Reset form
+    setNewTimeSlot({
+      startTime: '09:00',
+      endTime: '10:00',
+      maxStudents: 1,
+      price: 200000
+    });
+  };
 
-  if (!teacher) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-10 h-10 text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">دسترسی محدود</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">فقط معلمان می‌توانند به این صفحه دسترسی داشته باشند</p>
-            <Button 
-              onClick={() => router.push('/register?type=teacher')}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-            >
-              ثبت‌نام به عنوان معلم
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const deleteTimeSlot = (dayKey: string, slotId: string) => {
+    setSchedule(prev => prev.map(day => {
+      if (day.day === dayKey) {
+        return {
+          ...day,
+          timeSlots: day.timeSlots.filter(slot => slot.id !== slotId)
+        };
+      }
+      return day;
+    }));
+  };
 
-  const currentDaySchedule = schedule.filter(slot => slot.day === selectedDay);
-  const availableSlots = schedule.filter(slot => slot.is_available).length;
+  const getSelectedDaySchedule = () => {
+    return schedule.find(day => day.day === selectedDay);
+  };
+
+  const totalAvailableSlots = schedule.reduce((total, day) => 
+    total + day.timeSlots.filter(slot => slot.isAvailable).length, 0
+  );
+
+  const totalWeeklyEarnings = schedule.reduce((total, day) => 
+    total + day.timeSlots.filter(slot => slot.isAvailable).reduce((dayTotal, slot) => 
+      dayTotal + slot.price, 0
+    ), 0
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -266,135 +187,119 @@ export default function TeacherSchedulePage() {
             <div className="flex items-center gap-4">
               <Button 
                 variant="outline" 
-                onClick={() => router.back()}
+                onClick={() => router.push('/dashboard/teacher')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                بازگشت
+                بازگشت به داشبورد
               </Button>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  مدیریت برنامه
+                  مدیریت برنامه زمانی
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  {teacher.first_name} {teacher.last_name}
+                  برنامه زمانی خود را تنظیم و مدیریت کنید
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-4">
               <Button 
-                onClick={saveSchedule}
-                disabled={saving}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                onClick={() => setIsEditing(!isEditing)}
+                className="flex items-center gap-2"
               >
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? 'در حال ذخیره...' : 'ذخیره برنامه'}
+                {isEditing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+                {isEditing ? 'ذخیره تغییرات' : 'ویرایش برنامه'}
               </Button>
             </div>
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
         >
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                تنظیمات سریع
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCommonSchedule('morning')}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <Clock className="w-5 h-5" />
-                  <span>صبح</span>
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => setCommonSchedule('afternoon')}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <Clock className="w-5 h-5" />
-                  <span>ظهر</span>
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => setCommonSchedule('evening')}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <Clock className="w-5 h-5" />
-                  <span>عصر</span>
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => setCommonSchedule('full')}
-                  className="h-16 flex flex-col items-center justify-center gap-2"
-                >
-                  <Calendar className="w-5 h-5" />
-                  <span>تمام روز</span>
-                </Button>
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm">کلاس‌های فعال</p>
+                  <p className="text-2xl font-bold">{totalAvailableSlots}</p>
+                  <p className="text-green-100 text-sm">در هفته</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <BookOpen className="w-8 h-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">درآمد بالقوه</p>
+                  <p className="text-2xl font-bold">{totalWeeklyEarnings.toLocaleString()}</p>
+                  <p className="text-blue-100 text-sm">تومان در هفته</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <DollarSign className="w-8 h-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm">روزهای فعال</p>
+                  <p className="text-2xl font-bold">{schedule.filter(day => day.timeSlots.some(slot => slot.isAvailable)).length}</p>
+                  <p className="text-purple-100 text-sm">از 7 روز</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <CalendarDays className="w-8 h-8" />
+                </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Schedule Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 lg:grid-cols-4 gap-8"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Days Selection */}
-          <div className="lg:col-span-1">
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  روزهای هفته
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {DAYS_OF_WEEK.map((day) => {
-                    const daySlots = schedule.filter(slot => slot.day === day.value);
-                    const availableCount = daySlots.filter(slot => slot.is_available).length;
-                    
-                    return (
-                      <button
-                        key={day.value}
-                        onClick={() => setSelectedDay(day.value)}
-                        className={`w-full p-3 rounded-lg text-right transition-all duration-200 ${
-                          selectedDay === day.value
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{day.label}</span>
-                          <Badge variant={selectedDay === day.value ? "secondary" : "outline"}>
-                            {availableCount} ساعت
-                          </Badge>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                روزهای هفته
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {daysOfWeek.map((day) => (
+                <button
+                  key={day.key}
+                  onClick={() => setSelectedDay(day.key)}
+                  className={`w-full p-3 rounded-lg text-right transition-all duration-200 ${
+                    selectedDay === day.key
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{day.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">
+                        {schedule.find(d => d.day === day.key)?.timeSlots.filter(slot => slot.isAvailable).length || 0}
+                      </span>
+                      <Clock3 className="w-4 h-4" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
 
           {/* Time Slots */}
           <div className="lg:col-span-3">
@@ -403,86 +308,137 @@ export default function TeacherSchedulePage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="w-5 h-5" />
-                    زمان‌های {DAYS_OF_WEEK.find(d => d.value === selectedDay)?.label}
+                    برنامه {getSelectedDaySchedule()?.persianName}
                   </CardTitle>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>{availableSlots} ساعت انتخاب شده</span>
-                  </div>
+                  {isEditing && (
+                    <Button onClick={addTimeSlot} className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      افزودن زمان
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {currentDaySchedule.map((slot) => (
-                    <div
-                      key={`${slot.day}-${slot.start_time}`}
-                      className={`p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
-                        slot.is_available
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                      }`}
-                      onClick={() => toggleAvailability(slot.day, slot.start_time)}
-                    >
-                      <div className="text-center">
-                        <div className="font-semibold text-gray-900 dark:text-white">
-                          {slot.start_time} - {slot.end_time}
-                        </div>
-                        <div className="mt-2">
-                          <Switch
-                            checked={slot.is_available}
-                            onCheckedChange={() => toggleAvailability(slot.day, slot.start_time)}
-                          />
-                        </div>
-                        <div className="mt-2 text-sm">
-                          {slot.is_available ? (
-                            <span className="text-green-600 dark:text-green-400">در دسترس</span>
-                          ) : (
-                            <span className="text-gray-500">غیرفعال</span>
-                          )}
-                        </div>
+                {isEditing && (
+                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3">افزودن زمان جدید</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <Label htmlFor="startTime">زمان شروع</Label>
+                        <Input
+                          id="startTime"
+                          type="time"
+                          value={newTimeSlot.startTime}
+                          onChange={(e) => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="endTime">زمان پایان</Label>
+                        <Input
+                          id="endTime"
+                          type="time"
+                          value={newTimeSlot.endTime}
+                          onChange={(e) => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="maxStudents">حداکثر دانش‌آموز</Label>
+                        <Input
+                          id="maxStudents"
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={newTimeSlot.maxStudents}
+                          onChange={(e) => setNewTimeSlot(prev => ({ ...prev, maxStudents: parseInt(e.target.value) }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="price">قیمت (تومان)</Label>
+                        <Input
+                          id="price"
+                          type="number"
+                          value={newTimeSlot.price}
+                          onChange={(e) => setNewTimeSlot(prev => ({ ...prev, price: parseInt(e.target.value) }))}
+                        />
                       </div>
                     </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {getSelectedDaySchedule()?.timeSlots.map((slot) => (
+                    <motion.div
+                      key={slot.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`p-4 rounded-lg border transition-all duration-200 ${
+                        slot.isAvailable
+                          ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                          : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-blue-500" />
+                            <span className="font-medium">
+                              {slot.startTime} - {slot.endTime}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-purple-500" />
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              حداکثر {slot.maxStudents} دانش‌آموز
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-green-500" />
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                              {slot.price.toLocaleString()} تومان
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isEditing && (
+                            <>
+                              <Switch
+                                checked={slot.isAvailable}
+                                onCheckedChange={() => toggleTimeSlotAvailability(selectedDay, slot.id)}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deleteTimeSlot(selectedDay, slot.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Badge className={slot.isAvailable ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                            {slot.isAvailable ? 'فعال' : 'غیرفعال'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
+
+                {getSelectedDaySchedule()?.timeSlots.length === 0 && (
+                  <div className="text-center py-8">
+                    <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      هیچ زمانی تنظیم نشده
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      برای شروع، زمان‌های تدریس خود را اضافه کنید
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
-        </motion.div>
-
-        {/* Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8"
-        >
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {availableSlots}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">ساعت در دسترس</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {Math.round((availableSlots / schedule.length) * 100)}%
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">درصد دسترسی</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {DAYS_OF_WEEK.filter(day => 
-                      schedule.filter(slot => slot.day === day.value && slot.is_available).length > 0
-                    ).length}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">روز فعال</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
