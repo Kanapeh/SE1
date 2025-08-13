@@ -43,8 +43,7 @@ import {
   Medal,
   Ribbon,
   Flag,
-  Fire,
-  Lightning,
+  Flame,
   Sparkles
 } from 'lucide-react';
 
@@ -411,7 +410,7 @@ export default function RewardsPage() {
                   <p className="text-green-100 text-sm">روز</p>
                 </div>
                 <div className="p-3 bg-white/20 rounded-lg">
-                  <Fire className="w-8 h-8" />
+                  <Flame className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
@@ -443,7 +442,7 @@ export default function RewardsPage() {
                 className="h-3"
               />
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {stats?.experienceToNextLevel - (stats?.currentExperience || 0)} XP تا سطح بعدی
+                {(stats?.experienceToNextLevel || 0) - (stats?.currentExperience || 0)} XP تا سطح بعدی
               </p>
             </CardContent>
           </Card>

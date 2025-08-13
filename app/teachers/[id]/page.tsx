@@ -17,7 +17,8 @@ import {
   Languages,
   BookOpen,
   Users,
-  CheckCircle
+  CheckCircle,
+  Video
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -334,6 +335,15 @@ export default function TeacherDetailPage() {
                     >
                       <Calendar className="w-4 h-4 ml-2" />
                       {teacher.available ? "رزرو کلاس" : "غیرفعال"}
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => router.push(`/teachers/${teacher.id}/video-call`)}
+                      disabled={!teacher.available}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    >
+                      <Video className="w-4 h-4 ml-2" />
+                      {teacher.available ? "شروع کلاس آنلاین" : "غیرفعال"}
                     </Button>
                   </div>
                 </CardContent>

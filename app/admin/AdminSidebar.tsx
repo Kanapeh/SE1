@@ -16,6 +16,7 @@ export default function AdminSidebar() {
     { href: "/admin/messages", label: "پیام‌ها", icon: MessageSquare },
     { href: "/admin/comments", label: "نظرات مقالات", icon: MessageCircle },
     { href: "/admin/settings", label: "تنظیمات", icon: Settings },
+    { href: "/admin/test-admin", label: "🧪 تست دسترسی", icon: Settings },
   ];
 
   return (

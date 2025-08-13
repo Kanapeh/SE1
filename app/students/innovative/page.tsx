@@ -50,8 +50,7 @@ import {
   Award,
   Trophy,
   Crown,
-  Fire,
-  Lightning,
+  Flame,
   Sparkles,
   Coffee,
   Bed,
@@ -94,8 +93,8 @@ import {
   Award as AwardIcon,
   Trophy as TrophyIcon,
   Crown as CrownIcon,
-  Fire as FireIcon,
-  Lightning as LightningIcon,
+  Flame as FireIcon,
+  Zap as LightningIcon,
   Sparkles as SparklesIcon,
   Coffee as CoffeeIcon,
   Bed as BedIcon,
@@ -497,7 +496,7 @@ export default function InnovativePage() {
                   <p className="text-green-100 text-sm">روز</p>
                 </div>
                 <div className="p-3 bg-white/20 rounded-lg">
-                  <Fire className="w-8 h-8" />
+                  <Flame className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>

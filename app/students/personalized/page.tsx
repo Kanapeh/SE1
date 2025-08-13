@@ -48,8 +48,7 @@ import {
   Award,
   Trophy,
   Crown,
-  Fire,
-  Lightning,
+  Flame,
   Sparkles,
   Target as TargetIcon,
   TrendingUp as TrendingUpIcon,
@@ -85,8 +84,8 @@ import {
   Award as AwardIcon,
   Trophy as TrophyIcon,
   Crown as CrownIcon,
-  Fire as FireIcon,
-  Lightning as LightningIcon,
+  Flame as FireIcon,
+  Zap as LightningIcon,
   Sparkles as SparklesIcon
 } from 'lucide-react';
 

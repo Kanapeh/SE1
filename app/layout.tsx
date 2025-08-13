@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import Footer from "@/app/components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import PKCEDebugger from "@/components/PKCEDebugger";
 
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Head from "next/head";
@@ -71,6 +72,7 @@ export default function RootLayout({
           <Footer />
           <FloatingWhatsApp />
           <Toaster position="top-center" />
+          {process.env.NODE_ENV === 'development' && <PKCEDebugger />}
         </ThemeProvider>
       </body>
     </html>

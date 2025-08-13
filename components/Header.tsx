@@ -118,7 +118,21 @@ export default function Header() {
               </motion.div>
             ))}
             
-            {/* CTA Button */}
+            {/* Login Button */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Link href="/login">
+                <Button variant="outline" className="border-primary/20 hover:bg-primary/10 transition-all duration-300 group font-header">
+                  <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                  ورود
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* Register Button */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -127,7 +141,7 @@ export default function Header() {
               <Link href="/register">
                 <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg hover:shadow-xl transition-all duration-300 group font-header">
                   <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" />
-                  شروع کنید
+                  ثبت‌نام
                 </Button>
               </Link>
             </motion.div>
@@ -283,7 +297,7 @@ export default function Header() {
 
       {/* Mobile Bottom Navigation Bar - Fixed */}
       <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 lg:hidden bg-white/95 dark:bg-gray-900/95 border shadow-2xl flex justify-around items-center py-3 px-4 rounded-3xl w-[92vw] max-w-md mx-auto backdrop-blur-md">
-        {navItems.slice(0, 4).map((item, idx) => (
+        {navItems.slice(0, 3).map((item, idx) => (
           <motion.div
             key={item.name}
             whileHover={{ scale: 1.1 }}
@@ -298,14 +312,27 @@ export default function Header() {
             </Link>
           </motion.div>
         ))}
+        
+        {/* Login Button */}
+        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+          <Link href="/login">
+            <Button size="sm" variant="outline" className="px-3 py-2 flex flex-col items-center rounded-xl border-primary/20 hover:bg-primary/10 font-header">
+              <User className="w-5 h-5 mb-1" />
+              ورود
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Register Button */}
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
           <Link href="/register">
             <Button size="sm" className="px-3 py-2 flex flex-col items-center rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg font-header">
               <Plus className="w-5 h-5 mb-1" />
-              شروع کنید
+              ثبت‌نام
             </Button>
           </Link>
         </motion.div>
+
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}

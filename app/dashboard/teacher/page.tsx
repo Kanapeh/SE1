@@ -626,7 +626,7 @@ export default function TeacherDashboardPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Trophy className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-medium">سطح {teacher.experience_years > 3 ? 'متخصص' : 'حرفه‌ای'}</span>
+                    <span className="text-sm font-medium">سطح {teacher.experience_years && teacher.experience_years > 3 ? 'متخصص' : 'حرفه‌ای'}</span>
                   </div>
                 </div>
               </div>

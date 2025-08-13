@@ -1,219 +1,258 @@
-# راه‌حل کامل مشکل Email Rate Limit Exceeded
+# راه‌حل مشکل Email Rate Limit در Supabase
 
-## مشکل چیست؟
+## 🚨 **مشکل: Email Rate Limit Exceeded**
 
-خطای "Email rate limit exceeded" زمانی رخ می‌دهد که:
-- بیش از 10 درخواست ایمیل در ساعت برای یک ایمیل ارسال شده
-- Supabase محدودیت Rate Limiting دارد
-- تنظیمات SMTP نادرست است
-
-## راه‌حل‌های فوری:
-
-### 1. صبر کنید (سریع‌ترین راه‌حل)
 ```
-⏰ 60 دقیقه صبر کنید
-📧 Supabase محدودیت 10 درخواست در ساعت دارد
-🔄 پس از 60 دقیقه دوباره امتحان کنید
+Console AuthApiError: email rate limit exceeded
 ```
 
-### 2. از ایمیل دیگری استفاده کنید
-```
-📧 از ایمیل‌های مختلف استفاده کنید
-🔧 برای تست از سرویس‌های موقت استفاده کنید
-📱 از ایمیل موبایل خود استفاده کنید
-```
+این خطا نشان می‌دهد که Supabase محدودیت ارسال ایمیل را اعمال کرده است.
 
-### 3. تنظیمات SMTP خود را اضافه کنید
+## 📊 **محدودیت‌های Supabase:**
 
-#### مرحله 1: به Supabase Dashboard بروید
-1. **Authentication** > **Email Templates**
-2. **SMTP Settings** را کلیک کنید
-3. **Enable Custom SMTP** را فعال کنید
+- **Free Plan**: 10 درخواست ایمیل در ساعت
+- **Pro Plan**: 100 درخواست ایمیل در ساعت
+- **Team Plan**: 1000 درخواست ایمیل در ساعت
 
-#### مرحله 2: تنظیمات Gmail SMTP
-```
-Host: smtp.gmail.com
-Port: 587
-Security: TLS
-Username: your-email@gmail.com
-Password: your-app-password
-```
+## ✅ **راه‌حل‌های سریع:**
 
-#### مرحله 3: ایجاد App Password برای Gmail
-1. **Google Account** > **Security**
-2. **2-Step Verification** را فعال کنید
-3. **App Passwords** > **Generate**
-4. **Mail** و **Other (Custom name)** را انتخاب کنید
-5. **16-character password** را کپی کنید
+### **1. استفاده از Google OAuth (توصیه شده)**
+Google OAuth نیازی به ارسال ایمیل تایید ندارد.
 
-## راه‌حل‌های پیشرفته:
-
-### 1. تنظیمات Rate Limiting در Supabase
-```
-📍 Authentication > Settings > Rate Limiting
-🔧 Email rate limits را بررسی کنید
-⚙️ در صورت نیاز تنظیمات را تغییر دهید
+```typescript
+// در فرم ثبت‌نام، از دکمه Google OAuth استفاده کنید
+const handleGoogleSignIn = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback?user_type=teacher`,
+    }
+  });
+};
 ```
 
-### 2. استفاده از SMTP شخصی
-```javascript
-// تنظیمات SMTP برای Gmail
-{
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-app-password'
+### **2. تنظیم SMTP خود**
+در Supabase، SMTP settings خود را اضافه کنید:
+
+1. **به Supabase Dashboard بروید**
+2. **Authentication > Settings > SMTP**
+3. **تنظیمات SMTP خود را وارد کنید:**
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_SENDER=your-email@gmail.com
+```
+
+### **3. استفاده از سرویس‌های خارجی**
+- **SendGrid**
+- **Mailgun**
+- **Amazon SES**
+
+## 🔧 **رفع مشکل در کد:**
+
+### **بهبود Error Handling:**
+
+```typescript
+} catch (error: any) {
+  console.error('Registration error:', error);
+  let errorMessage = 'خطا در ثبت‌نام';
+  let showRateLimitInfo = false;
+  
+  if (error.message) {
+    if (error.message.includes('email rate limit exceeded')) {
+      errorMessage = 'تعداد درخواست‌های ایمیل بیش از حد مجاز است';
+      showRateLimitInfo = true;
+    } else if (error.message.includes('User already registered')) {
+      errorMessage = 'این ایمیل قبلاً ثبت شده است';
+    } else {
+      errorMessage = error.message;
+    }
+  }
+  
+  toast.error(errorMessage);
+  
+  if (showRateLimitInfo) {
+    toast.error('لطفاً 60 دقیقه صبر کنید یا از Google OAuth استفاده کنید', {
+      duration: 5000
+    });
   }
 }
 ```
 
-### 3. تست ایمیل بدون Rate Limit
+### **تغییر Redirect URL:**
+
+```typescript
+const redirectUrl = `${window.location.origin}/auth/callback?user_type=teacher&email=${encodeURIComponent(formData.email)}`;
+
+const { data: authData, error: authError } = await supabase.auth.signUp({
+  email: formData.email,
+  password: formData.password,
+  options: {
+    emailRedirectTo: redirectUrl,
+    data: {
+      full_name: `${formData.firstName} ${formData.lastName}`,
+      user_type: 'teacher',
+    }
+  }
+});
+```
+
+## 🚀 **راه‌حل‌های پیشرفته:**
+
+### **1. Implement Retry Logic:**
+
+```typescript
+const signUpWithRetry = async (email: string, password: string, options: any) => {
+  const maxRetries = 3;
+  let lastError;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options
+      });
+      
+      if (error) throw error;
+      return { data, error: null };
+      
+    } catch (error: any) {
+      lastError = error;
+      
+      if (error.message.includes('rate limit exceeded')) {
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 60000)); // 1 minute
+        continue;
+      }
+      
+      // Other errors, don't retry
+      break;
+    }
+  }
+  
+  return { data: null, error: lastError };
+};
+```
+
+### **2. Queue System:**
+
+```typescript
+class EmailQueue {
+  private queue: Array<{email: string, password: string, options: any}> = [];
+  private processing = false;
+  
+  add(email: string, password: string, options: any) {
+    this.queue.push({ email, password, options });
+    this.process();
+  }
+  
+  private async process() {
+    if (this.processing || this.queue.length === 0) return;
+    
+    this.processing = true;
+    
+    while (this.queue.length > 0) {
+      const item = this.queue.shift();
+      if (!item) continue;
+      
+      try {
+        await supabase.auth.signUp({
+          email: item.email,
+          password: item.password,
+          options: item.options
+        });
+        
+        // Wait between requests to avoid rate limit
+        await new Promise(resolve => setTimeout(resolve, 6000)); // 6 seconds
+        
+      } catch (error) {
+        console.error('Email queue error:', error);
+        // Re-add to queue if it's a rate limit error
+        if (error.message.includes('rate limit exceeded')) {
+          this.queue.unshift(item);
+          break;
+        }
+      }
+    }
+    
+    this.processing = false;
+  }
+}
+
+const emailQueue = new EmailQueue();
+```
+
+## 📋 **مراحل راه‌اندازی:**
+
+### **مرحله 1: بررسی تنظیمات Supabase**
 ```sql
--- تایید دستی ایمیل (فقط برای تست)
-UPDATE auth.users 
-SET email_confirmed_at = NOW() 
-WHERE email = 'your-email@example.com';
+-- بررسی تنظیمات SMTP
+SELECT * FROM auth.config;
 ```
 
-## مراحل عیب‌یابی:
+### **مرحله 2: تنظیم SMTP**
+1. **Gmail App Password ایجاد کنید**
+2. **تنظیمات را در Supabase وارد کنید**
+3. **تست کنید**
 
-### مرحله 1: بررسی وضعیت فعلی
-```sql
--- اجرا در Supabase SQL Editor
-SELECT 
-  email,
-  created_at,
-  email_confirmed_at,
-  EXTRACT(EPOCH FROM (NOW() - created_at))/60 as minutes_ago
-FROM auth.users 
-WHERE created_at > NOW() - INTERVAL '1 hour'
-ORDER BY created_at DESC;
+### **مرحله 3: تست سیستم**
+```typescript
+// تست ارسال ایمیل
+const testEmail = async () => {
+  const { data, error } = await supabase.auth.signUp({
+    email: 'test@example.com',
+    password: 'testpassword123'
+  });
+  
+  if (error) {
+    console.error('Email test error:', error);
+  } else {
+    console.log('Email sent successfully');
+  }
+};
 ```
 
-### مرحله 2: بررسی تنظیمات SMTP
-1. **Supabase Dashboard** > **Authentication**
-2. **Email Templates** > **SMTP Settings**
-3. **Test Connection** را کلیک کنید
+## 🎯 **بهترین روش‌ها:**
 
-### مرحله 3: بررسی Environment Variables
-```env
-# فایل .env.local
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+### **1. اولویت‌بندی:**
+1. **Google OAuth** - سریع و بدون محدودیت
+2. **SMTP خود** - کنترل کامل
+3. **Supabase SMTP** - فقط برای تست
 
-## راه‌حل‌های جایگزین:
+### **2. User Experience:**
+- **راهنمای واضح** برای کاربران
+- **گزینه‌های جایگزین** ارائه دهید
+- **پیام‌های خطای مفید** نمایش دهید
 
-### 1. استفاده از سرویس‌های ایمیل موقت
-```
-📧 temp-mail.org
-📧 10minutemail.com
-📧 mailinator.com
-```
+### **3. Monitoring:**
+- **Rate limit errors** را log کنید
+- **SMTP delivery status** را بررسی کنید
+- **User feedback** جمع‌آوری کنید
 
-### 2. تنظیمات SMTP برای سرویس‌های دیگر
+## 📞 **پشتیبانی:**
 
-#### Outlook/Hotmail:
-```
-Host: smtp-mail.outlook.com
-Port: 587
-Security: STARTTLS
-```
-
-#### Yahoo:
-```
-Host: smtp.mail.yahoo.com
-Port: 587
-Security: STARTTLS
-```
-
-#### Custom SMTP:
-```
-Host: your-smtp-server.com
-Port: 587
-Security: TLS
-```
-
-## تست و بررسی:
-
-### تست 1: بررسی اتصال SMTP
-```javascript
-// در کنسول مرورگر
-console.log('SMTP Status:', 'Check Supabase Dashboard');
-console.log('Email Provider:', 'Should be enabled');
-```
-
-### تست 2: تست ثبت‌نام
-1. **صفحه ثبت‌نام** را باز کنید
-2. **ایمیل جدید** وارد کنید
-3. **فرم را پر کنید**
-4. **ثبت‌نام کنید**
-5. **ایمیل تایید** را بررسی کنید
-
-### تست 3: بررسی لاگ‌ها
-```javascript
-// لاگ‌های کنسول را بررسی کنید
-console.log("Registration process started");
-console.log("Email rate limit check");
-console.log("SMTP connection status");
-```
-
-## نکات مهم:
-
-### ✅ کارهایی که باید انجام دهید:
-- **60 دقیقه صبر کنید** قبل از تلاش مجدد
-- **از ایمیل‌های مختلف** استفاده کنید
-- **تنظیمات SMTP** را بررسی کنید
-- **Environment Variables** را چک کنید
-
-### ❌ کارهایی که نباید انجام دهید:
-- **تکرار مداوم** درخواست‌های ایمیل
-- **استفاده از ایمیل‌های تکراری**
-- **نادیده گرفتن** تنظیمات SMTP
-- **استفاده از** ایمیل‌های نامعتبر
-
-## راه‌حل‌های نهایی:
-
-### اگر مشکل همچنان ادامه دارد:
-
-1. **SMTP شخصی** تنظیم کنید
-2. **Rate Limiting** را بررسی کنید
-3. **Environment Variables** را چک کنید
+### **در صورت مشکل:**
+1. **Supabase Status Page** را بررسی کنید
+2. **Console logs** را چک کنید
+3. **Network tab** را بررسی کنید
 4. **Supabase Support** تماس بگیرید
 
-### تنظیمات پیشنهادی:
+### **اطلاعات مورد نیاز:**
+- Error message کامل
+- Supabase project ID
+- Plan type (Free/Pro/Team)
+- Steps to reproduce
 
-```javascript
-// تنظیمات بهینه برای SMTP
-{
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-app-password'
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-}
-```
+## 🎉 **نتیجه:**
 
-## خلاصه:
+پس از اعمال این راه‌حل‌ها:
+- ✅ مشکل rate limit حل می‌شود
+- ✅ کاربران می‌توانند ثبت‌نام کنند
+- ✅ سیستم پایدار می‌شود
+- ✅ تجربه کاربری بهبود می‌یابد
 
-مشکل "Email rate limit exceeded" یک مشکل رایج در Supabase است که با:
-- **صبر کردن 60 دقیقه**
-- **استفاده از ایمیل‌های مختلف**
-- **تنظیم SMTP شخصی**
-
-قابل حل است. مهم‌ترین نکته این است که **عجله نکنید** و **تنظیمات را درست انجام دهید**.
-
-## پشتیبانی:
-
-اگر مشکل حل نشد:
-1. **لاگ‌های کنسول** را کپی کنید
-2. **تنظیمات SMTP** را بررسی کنید
-3. **Supabase Dashboard** را چک کنید
-4. **با تیم پشتیبانی** تماس بگیرید
+**توصیه نهایی:** از Google OAuth استفاده کنید تا از مشکلات ایمیل جلوگیری کنید!

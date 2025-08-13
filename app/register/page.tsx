@@ -6,13 +6,16 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Mail, Lock, User, Chrome, GraduationCap } from "lucide-react";
 
 function RegisterContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimitInfo, setRateLimitInfo] = useState<string | null>(null);
   const router = useRouter();
@@ -33,6 +36,56 @@ function RegisterContent() {
            /[0-9]/.test(password);
   };
 
+  // Handle Google OAuth
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError(null);
+    
+    try {
+      console.log("Starting Google OAuth sign in...");
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        }
+      });
+
+      if (error) {
+        console.error("Google OAuth error:", error);
+        
+        // Handle specific OAuth errors
+        if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
+          setError("ورود با گوگل در حال حاضر غیرفعال است. لطفاً از ثبت‌نام با ایمیل استفاده کنید.");
+          toast.error("Google OAuth غیرفعال است. از ایمیل استفاده کنید.");
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      console.log("Google OAuth initiated successfully");
+      toast.success("در حال انتقال به گوگل...");
+      
+    } catch (error: any) {
+      console.error("Google sign in error:", error);
+      
+      if (error.message?.includes("Unsupported provider") || error.message?.includes("provider is not enabled")) {
+        setError("ورود با گوگل در حال حاضر غیرفعال است. لطفاً از ثبت‌نام با ایمیل استفاده کنید.");
+        toast.error("Google OAuth غیرفعال است. از ایمیل استفاده کنید.");
+      } else {
+        setError(error.message || "خطا در ورود با گوگل");
+        toast.error("خطا در ورود با گوگل");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,10 +96,6 @@ function RegisterContent() {
       console.log("Starting registration process...");
       console.log("Email:", email);
       console.log("User type:", userType);
-      console.log("Supabase config:", {
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Not set",
-        anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Not set"
-      });
 
       // Validate inputs
       if (!isValidEmail(email)) {
@@ -68,7 +117,7 @@ function RegisterContent() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`,
           data: {
             full_name: fullName,
             user_type: userType,
@@ -118,14 +167,6 @@ function RegisterContent() {
       }
     } catch (error: any) {
       console.error("Register error:", error);
-      console.error("Error details:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        status: error.status,
-        name: error.name
-      });
       
       let errorMessage = "خطا در ثبت‌نام";
       let rateLimitMessage = null;
@@ -140,7 +181,7 @@ function RegisterContent() {
           errorMessage = "رمز عبور باید حداقل 6 کاراکتر باشد";
         } else if (error.message.includes("Email rate limit exceeded")) {
           errorMessage = "تعداد درخواست‌های شما بیش از حد مجاز است";
-          rateLimitMessage = "لطفاً 60 دقیقه صبر کنید یا از ایمیل دیگری استفاده کنید. Supabase محدودیت 10 درخواست ایمیل در ساعت دارد.";
+          rateLimitMessage = "لطفاً 60 دقیقه صبر کنید یا از ایمیل دیگری استفاده کنید.";
         } else if (error.message.includes("Email provider not enabled")) {
           errorMessage = "ارسال ایمیل در حال حاضر غیرفعال است. لطفاً با پشتیبانی تماس بگیرید";
         } else if (error.message.includes("Too many requests")) {
@@ -149,12 +190,6 @@ function RegisterContent() {
         } else {
           errorMessage = error.message;
         }
-      } else if (error.code === '23505') {
-        errorMessage = "این ایمیل قبلاً ثبت شده است";
-      } else if (error.code === '42P01') {
-        errorMessage = "خطا در دسترسی به پایگاه داده";
-      } else if (error.code === '23502') {
-        errorMessage = "لطفاً تمام فیلدهای ضروری را پر کنید";
       }
       
       setError(errorMessage);
@@ -168,54 +203,101 @@ function RegisterContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4">
-      <Card className="max-w-md w-full space-y-8 p-8">
-        <div>
-          <h2 className="text-center text-2xl font-bold text-foreground">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
+      <Card className="max-w-md w-full space-y-8 p-8 shadow-xl">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             {userType === 'teacher' ? 'ثبت‌نام معلم' : 'ثبت‌نام دانش‌آموز'}
           </h2>
-          <p className="text-center text-sm text-gray-600 mt-2">
+          <p className="text-gray-600">
             {userType === 'teacher' 
               ? 'به عنوان معلم در سایت ثبت‌نام کنید' 
               : 'به عنوان دانش‌آموز در سایت ثبت‌نام کنید'
             }
           </p>
+          
+          {userType === 'teacher' && (
+            <div className="mt-4">
+              <a 
+                href="/register/teacher" 
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <GraduationCap className="w-4 h-4 ml-2" />
+                ثبت‌نام کامل معلم (فرم چند مرحله‌ای)
+              </a>
+              <p className="text-xs text-gray-500 mt-2">
+                برای ثبت‌نام کامل با تمام جزئیات، روی دکمه بالا کلیک کنید
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Google OAuth Button */}
+        <div className="space-y-4">
+          <Button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            variant="outline"
+            className="w-full h-12 bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 font-medium"
+          >
+            <Chrome className="w-5 h-5 mr-2" />
+            {googleLoading ? "در حال انتقال..." : "ادامه با گوگل"}
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">یا</span>
+            </div>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Input
-              placeholder="نام و نام خانوادگی"
-              required
-              minLength={3}
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="text-right"
-            />
+          <div className="space-y-4">
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                placeholder="نام و نام خانوادگی"
+                required
+                minLength={3}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="pl-10 text-right"
+              />
+            </div>
+            
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                type="email"
+                placeholder="ایمیل"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 text-right"
+              />
+            </div>
+            
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                type="password"
+                placeholder="رمز عبور"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 text-right"
+              />
+            </div>
           </div>
-          <div>
-            <Input
-              type="email"
-              placeholder="ایمیل"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="text-right"
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="رمز عبور"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="text-right"
-            />
-            <p className="text-xs text-gray-500 mt-1 text-right">
-              حداقل 8 کاراکتر شامل حروف بزرگ، کوچک و اعداد
-            </p>
-          </div>
+          
+          <p className="text-xs text-gray-500 text-right">
+            حداقل 8 کاراکتر شامل حروف بزرگ، کوچک و اعداد
+          </p>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -228,23 +310,15 @@ function RegisterContent() {
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
               <div className="font-semibold mb-1">راهنمایی:</div>
               {rateLimitInfo}
-              <div className="mt-2 text-xs">
-                <strong>راه‌حل‌های سریع:</strong>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>60 دقیقه صبر کنید</li>
-                  <li>از ایمیل دیگری استفاده کنید</li>
-                  <li>تنظیمات SMTP را بررسی کنید</li>
-                </ul>
-              </div>
             </div>
           )}
 
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium"
           >
-            {loading ? "در حال ثبت‌نام..." : "ثبت‌نام"}
+            {loading ? "در حال ثبت‌نام..." : "ثبت‌نام با ایمیل"}
           </Button>
         </form>
 
@@ -261,9 +335,19 @@ function RegisterContent() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
           <div className="font-semibold text-blue-800 mb-2">💡 نکته مهم:</div>
           <div className="text-blue-700 space-y-1">
+            <p>• برای ورود سریع‌تر، از گوگل استفاده کنید</p>
             <p>• Supabase محدودیت 10 درخواست ایمیل در ساعت دارد</p>
-            <p>• برای تست، از ایمیل‌های مختلف استفاده کنید</p>
             <p>• در صورت نیاز، تنظیمات SMTP خود را اضافه کنید</p>
+          </div>
+        </div>
+
+        {/* راهنمای Google OAuth */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+          <div className="font-semibold text-yellow-800 mb-2">🔧 تنظیمات Google OAuth:</div>
+          <div className="text-yellow-700 space-y-1">
+            <p>• اگر دکمه گوگل کار نمی‌کند، در Supabase فعال کنید</p>
+            <p>• Authentication {'>>'} Providers {'>>'} Google {'>>'} Enable</p>
+            <p>• Client ID و Secret را از Google Cloud Console وارد کنید</p>
           </div>
         </div>
       </Card>

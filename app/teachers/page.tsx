@@ -15,8 +15,10 @@ import {
   MessageCircle, 
   BookOpen,
   Languages,
-  Award
+  Award,
+  Video
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface Teacher {
@@ -53,6 +55,7 @@ interface Teacher {
 }
 
 export default function TeachersPage() {
+  const router = useRouter();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -274,22 +277,34 @@ export default function TeachersPage() {
                   )}
 
                   {/* Price and Action */}
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="text-left">
+                  <div className="pt-4 border-t space-y-3">
+                    <div className="text-center">
                       <span className="text-lg font-bold text-primary">
                         {teacher.hourly_rate ? teacher.hourly_rate.toLocaleString() : 'نامشخص'} تومان
                       </span>
                       <span className="text-sm text-gray-500 block">در ساعت</span>
                     </div>
                     
-                    <Button
-                      onClick={() => handleSelectTeacher(teacher.id)}
-                      disabled={!teacher.available}
-                      className="flex items-center gap-2"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      {teacher.available ? "انتخاب معلم" : "غیرفعال"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => handleSelectTeacher(teacher.id)}
+                        disabled={!teacher.available}
+                        className="flex-1 flex items-center gap-2"
+                        variant="outline"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        {teacher.available ? "انتخاب" : "غیرفعال"}
+                      </Button>
+                      
+                      <Button
+                        onClick={() => router.push(`/teachers/${teacher.id}/video-call`)}
+                        disabled={!teacher.available}
+                        className="flex-1 flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                      >
+                        <Video className="w-4 h-4" />
+                        کلاس آنلاین
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -1,20 +1,244 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase, clearSupabaseStorage, checkSessionWithRetry } from "@/lib/supabase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Mail, Lock, Chrome, AlertCircle } from "lucide-react";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Helper function to handle redirects
+  const handleRedirect = (defaultPath: string, message: string) => {
+    toast.success(message);
+    
+    // Check if there's a redirectTo parameter
+    const redirectTo = searchParams.get('redirectTo');
+    const targetPath = redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPath;
+    
+    console.log(`🔄 Redirecting to: ${targetPath}`);
+    console.log(`🔄 Current pathname: ${window.location.pathname}`);
+    console.log(`🔄 Target path: ${targetPath}`);
+    
+    // Use Next.js router for navigation
+    try {
+      console.log('🔄 Using Next.js router for navigation...');
+      router.push(targetPath);
+      
+      // Fallback: if router doesn't work, use window.location
+      setTimeout(() => {
+        if (window.location.pathname !== targetPath) {
+          console.log('🔄 Router navigation failed, using window.location fallback...');
+          window.location.href = targetPath;
+        }
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ Router navigation failed:', error);
+      // Fallback to window.location
+      try {
+        console.log('🔄 Using window.location fallback...');
+        window.location.href = targetPath;
+      } catch (windowError) {
+        console.error('❌ Window location also failed:', windowError);
+        // Last resort: reload the page
+        window.location.reload();
+      }
+    }
+  };
+
+  // Check for OAuth errors from URL params
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const detailsParam = searchParams.get('details');
+    
+    if (errorParam) {
+      let errorMessage = '';
+      
+      switch (errorParam) {
+        case 'oauth_access_denied':
+          errorMessage = 'دسترسی به حساب گوگل رد شد. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'oauth_error':
+          errorMessage = detailsParam || 'خطا در احراز هویت گوگل. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'exchange_failed':
+          errorMessage = detailsParam || 'خطا در تبادل کد احراز هویت. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'invalid_grant':
+          errorMessage = 'کد احراز هویت منقضی شده یا نامعتبر است. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'code_already_used':
+          errorMessage = 'کد احراز هویت قبلاً استفاده شده است. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'invalid_code':
+          errorMessage = 'کد احراز هویت نامعتبر است. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'no_code':
+          errorMessage = 'کد احراز هویت دریافت نشد. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'no_user_data':
+          errorMessage = 'اطلاعات کاربر دریافت نشد. لطفاً دوباره تلاش کنید.';
+          break;
+        case 'inactive_teacher':
+          errorMessage = 'حساب معلم شما هنوز فعال نشده است.';
+          break;
+        case 'inactive_student':
+          errorMessage = 'حساب دانشجو شما غیرفعال است.';
+          break;
+        case 'unexpected_error':
+          errorMessage = `خطای غیرمنتظره: ${detailsParam || 'خطای نامشخص'}`;
+          break;
+        default:
+          errorMessage = detailsParam || 'خطا در ورود با گوگل. لطفاً دوباره تلاش کنید.';
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
+      
+      // Clear error from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      newUrl.searchParams.delete('details');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams]);
+
+  // Simple session check - only run once on mount
+  useEffect(() => {
+    const checkSessionOnce = async () => {
+      try {
+        console.log('🔍 Checking session on login page...');
+        const { session, error } = await checkSessionWithRetry(2);
+        
+        if (error) {
+          console.error('❌ Session check failed:', error);
+          return;
+        }
+        
+        if (session?.user) {
+          console.log('✅ Session found, will redirect after login');
+        } else {
+          console.log('ℹ️ No active session found');
+        }
+      } catch (error) {
+        console.error('💥 Session check error:', error);
+        // Don't show error to user for session check failures
+      }
+    };
+    
+    checkSessionOnce();
+  }, []); // Empty dependency array - only runs once
+
+  // Handle Google OAuth
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError(null);
+    
+    try {
+      console.log("🚀 Starting Google OAuth sign in with PKCE...");
+      console.log("Current origin:", window.location.origin);
+      console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      
+      // Validate Supabase connection first
+      try {
+        const { error: healthCheck } = await supabase.auth.getSession();
+        if (healthCheck) {
+          console.error("❌ Supabase health check failed:", healthCheck);
+          throw new Error("اتصال به سرور برقرار نیست. لطفاً اینترنت خود را بررسی کنید.");
+        }
+      } catch (healthError: any) {
+        if (healthError.message?.includes("fetch")) {
+          throw new Error("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
+        }
+        throw healthError;
+      }
+      
+      // Sign out to clear any existing session but preserve PKCE state
+      await supabase.auth.signOut();
+      
+      // Don't clear all storage immediately - let PKCE establish first
+      // We'll clear it after successful OAuth initiation
+      
+      // Wait a bit for cleanup
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        console.error("❌ Google OAuth error:", error);
+        
+        // Handle specific OAuth errors
+        if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
+          setError("ورود با گوگل در حال حاضر غیرفعال است. لطفاً از ورود با ایمیل استفاده کنید.");
+          toast.error("Google OAuth غیرفعال است. از ایمیل استفاده کنید.");
+        } else if (error.message.includes("PKCE") || error.message.includes("code challenge") || error.message.includes("code verifier")) {
+          setError("مشکل در PKCE flow. لطفاً مرورگر را refresh کنید و دوباره تلاش کنید.");
+          toast.error("مشکل در PKCE flow - مرورگر را refresh کنید");
+        } else if (error.message.includes("fetch") || error.message.includes("network")) {
+          setError("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
+          toast.error("خطا در اتصال به سرور");
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      console.log("✅ Google OAuth initiated successfully with PKCE");
+      console.log("OAuth data:", data);
+      console.log("Redirecting to:", data.url);
+      toast.success("در حال انتقال به گوگل...");
+      
+      // Now clear storage after successful OAuth initiation
+      clearSupabaseStorage();
+      
+      // The redirect should happen automatically, but let's ensure it
+      if (data.url) {
+        // Use replace instead of href to avoid navigation issues
+        window.location.replace(data.url);
+      }
+      
+    } catch (error: any) {
+      console.error("💥 Google sign in error:", error);
+      
+      if (error.message?.includes("Unsupported provider") || error.message?.includes("provider is not enabled")) {
+        setError("ورود با گوگل در حال حاضر غیرفعال است. لطفاً از ورود با ایمیل استفاده کنید.");
+        toast.error("Google OAuth غیرفعال است. از ایمیل استفاده کنید.");
+      } else if (error.message?.includes("PKCE") || error.message?.includes("code challenge") || error.message?.includes("code verifier")) {
+        setError("مشکل در PKCE flow. لطفاً مرورگر را refresh کنید و دوباره تلاش کنید.");
+        toast.error("مشکل در PKCE flow - مرورگر را refresh کنید");
+      } else if (error.message?.includes("fetch") || error.message?.includes("network") || error.message?.includes("اتصال")) {
+        setError("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
+        toast.error("خطا در اتصال به سرور");
+      } else {
+        setError(error.message || "خطا در ورود با گوگل");
+        toast.error("خطا در ورود با گوگل");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +247,20 @@ export default function LoginPage() {
 
     try {
       console.log("Attempting login for:", email);
+      
+      // Validate Supabase connection first
+      try {
+        const { error: healthCheck } = await supabase.auth.getSession();
+        if (healthCheck) {
+          console.error("❌ Supabase health check failed:", healthCheck);
+          throw new Error("اتصال به سرور برقرار نیست. لطفاً اینترنت خود را بررسی کنید.");
+        }
+      } catch (healthError: any) {
+        if (healthError.message?.includes("fetch")) {
+          throw new Error("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
+        }
+        throw healthError;
+      }
       
       // Login with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -38,6 +276,8 @@ export default function LoginPage() {
           setError("ایمیل یا رمز عبور اشتباه است");
         } else if (error.message.includes("Email not confirmed")) {
           setError("لطفاً ابتدا ایمیل خود را تایید کنید");
+        } else if (error.message.includes("fetch") || error.message.includes("network")) {
+          setError("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
         } else {
           setError(error.message || "خطا در ورود به سیستم");
         }
@@ -46,158 +286,448 @@ export default function LoginPage() {
 
       if (data.user) {
         console.log("Login successful:", data.user);
+        console.log("User ID:", data.user.id);
+        console.log("User email:", data.user.email);
         
-        // Check if user is admin first
-        const { data: adminData } = await supabase
+        // Enhanced admin check with better debugging
+        console.log("🔍 Starting admin access check...");
+        
+        // Check if user is admin first (admins table)
+        console.log("🔍 Checking admins table...");
+        const { data: adminData, error: adminError } = await supabase
           .from("admins")
-          .select("user_id, role")
+          .select("user_id, role, full_name, email")
           .eq("user_id", data.user.id)
           .single();
 
+        if (adminError && adminError.code !== 'PGRST116') {
+          console.error("❌ Admin table check error:", adminError);
+        }
+
         if (adminData) {
-          console.log("User is admin:", adminData);
-          toast.success("خوش آمدید ادمین!");
-          router.push("/admin");
+          console.log("✅ User found in admins table:", adminData);
+          console.log("🎯 User is admin, redirecting to admin panel");
+          console.log("🎯 About to call handleRedirect with /admin");
+          
+          // Force immediate redirect
+          handleRedirect("/admin", "خوش آمدید ادمین!");
+          
+          // Additional fallback
+          setTimeout(() => {
+            console.log("🔄 Fallback redirect attempt...");
+            if (window.location.pathname !== "/admin") {
+              console.log("🔄 Force redirect to admin...");
+              window.location.href = "/admin";
+            }
+          }, 1000);
+          
+          // Direct redirect without toast (for testing)
+          setTimeout(() => {
+            console.log("🔄 Direct redirect attempt...");
+            router.push("/admin");
+          }, 500);
+          
+          // Test redirect to dashboard first
+          setTimeout(() => {
+            console.log("🔄 Test redirect to dashboard...");
+            router.push("/dashboard");
+          }, 2000);
+          
+          // Test admin page accessibility
+          setTimeout(async () => {
+            console.log("🔄 Testing admin page accessibility...");
+            try {
+              const response = await fetch("/admin");
+              console.log("🔄 Admin page response:", response.status, response.ok);
+            } catch (error) {
+              console.error("🔄 Admin page test failed:", error);
+            }
+          }, 2500);
+          
+          // Test direct admin access
+          setTimeout(() => {
+            console.log("🔄 Testing direct admin access...");
+            // Try to access admin page directly
+            const adminUrl = `${window.location.origin}/admin`;
+            console.log("🔄 Admin URL:", adminUrl);
+            window.open(adminUrl, '_blank');
+          }, 3000);
+          
           return;
+        } else {
+          console.log("ℹ️ User not found in admins table");
         }
 
         // Check if user has admin role in auth-users table
-        const { data: authUserData } = await supabase
+        console.log("🔍 Checking auth-users table...");
+        const { data: authUserData, error: authUserError } = await supabase
           .from("auth-users")
-          .select("id, role, is_admin")
+          .select("id, role, is_admin, email, full_name")
           .eq("id", data.user.id)
           .single();
 
-        if (authUserData && (authUserData.role === 'admin' || authUserData.is_admin === true)) {
-          console.log("User is admin by role:", authUserData);
-          toast.success("خوش آمدید ادمین!");
-          router.push("/admin");
-          return;
+        if (authUserError && authUserError.code !== 'PGRST116') {
+          console.error("❌ Auth-users table check error:", authUserError);
+        }
+
+        if (authUserData) {
+          console.log("✅ User found in auth-users table:", authUserData);
+          
+          if (authUserData.role === 'admin' || authUserData.is_admin === true) {
+            console.log("🎯 User is admin by role in auth-users table");
+            handleRedirect("/admin", "خوش آمدید ادمین!");
+            return;
+          } else {
+            console.log("ℹ️ User is not admin in auth-users table");
+          }
+        } else {
+          console.log("ℹ️ User not found in auth-users table");
         }
 
         // Check if user has a profile in teachers table
-        const { data: teacherData } = await supabase
+        console.log("🔍 Checking teachers table...");
+        const { data: teacherData, error: teacherError } = await supabase
           .from("teachers")
           .select("id, status")
           .eq("id", data.user.id)
           .single();
 
+        if (teacherError && teacherError.code !== 'PGRST116') {
+          console.error("❌ Teachers table check error:", teacherError);
+        }
+
         if (teacherData) {
+          console.log("✅ User found in teachers table:", teacherData);
           if (teacherData.status === 'active') {
-            toast.success("خوش آمدید معلم!");
-            router.push("/admin"); // یا صفحه معلم
+            console.log("🎯 User is active teacher, redirecting to admin panel");
+            handleRedirect("/admin", "خوش آمدید معلم!");
           } else {
+            console.log("⚠️ User is inactive teacher");
             setError("حساب کاربری شما هنوز تایید نشده است. لطفاً منتظر تایید ادمین باشید.");
           }
           return;
+        } else {
+          console.log("ℹ️ User not found in teachers table");
         }
 
         // Check if user has a profile in students table
-        const { data: studentData } = await supabase
+        console.log("🔍 Checking students table...");
+        const { data: studentData, error: studentError } = await supabase
           .from("students")
           .select("id, status")
           .eq("id", data.user.id)
           .single();
 
+        if (studentError && studentError.code !== 'PGRST116') {
+          console.error("❌ Students table check error:", studentError);
+        }
+
         if (studentData) {
+          console.log("✅ User found in students table:", studentData);
           if (studentData.status === 'active') {
-            toast.success("خوش آمدید دانشجو!");
-            router.push("/dashboard");
+            console.log("🎯 User is active student, redirecting to dashboard");
+            handleRedirect("/dashboard", "خوش آمدید دانشجو!");
           } else {
-            setError("حساب کاربری شما غیرفعال است.");
+            console.log("⚠️ User is inactive student");
+            setError("حساب کاربری دانشجو شما غیرفعال است.");
           }
           return;
+        } else {
+          console.log("ℹ️ User not found in students table");
         }
 
         // User exists in auth but no profile - redirect to complete profile
-        console.log("User has no profile, redirecting to complete profile");
-        toast.success("لطفاً پروفایل خود را تکمیل کنید");
-        router.push("/complete-profile");
+        console.log("ℹ️ User has no profile in any table, redirecting to complete profile");
+        handleRedirect("/complete-profile", "لطفاً پروفایل خود را تکمیل کنید");
       }
     } catch (error: any) {
       console.error("Unexpected error:", error);
-      setError("خطای غیرمنتظره رخ داد");
+      
+      if (error.message?.includes("fetch") || error.message?.includes("network") || error.message?.includes("اتصال")) {
+        setError("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
+      } else {
+        setError("خطای غیرمنتظره رخ داد");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
-      <Card className="max-w-md w-full space-y-8 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
+      <Card className="max-w-md w-full space-y-8 p-8 shadow-xl">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             ورود به حساب کاربری
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             ایمیل و رمز عبور خود را وارد کنید
           </p>
         </div>
 
+        {/* Google OAuth Button */}
+        <div className="space-y-4">
+          <Button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            variant="outline"
+            className="w-full h-12 bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 font-medium"
+          >
+            <Chrome className="w-5 h-5 mr-2" />
+            {googleLoading ? "در حال انتقال..." : "ورود با گوگل"}
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">یا</span>
+            </div>
+          </div>
+        </div>
+
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm">
-            {error}
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start space-x-2 space-x-reverse">
+            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="font-medium">خطا در ورود:</div>
+              <div>{error}</div>
+              
+              {/* Error-specific solutions */}
+              {error.includes("اتصال به سرور") && (
+                <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
+                  <div className="font-semibold">🔧 راه‌حل:</div>
+                  <ul className="list-disc list-inside space-y-1 mt-1">
+                    <li>اینترنت خود را بررسی کنید</li>
+                    <li>مرورگر را refresh کنید</li>
+                    <li>از VPN استفاده نکنید</li>
+                    <li>DNS خود را تغییر دهید (8.8.8.8)</li>
+                  </ul>
+                </div>
+              )}
+              
+              {error.includes("PKCE") && (
+                <div className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded">
+                  <div className="font-semibold">🔧 راه‌حل:</div>
+                  <ul className="list-disc list-inside space-y-1 mt-1">
+                    <li>مرورگر را کاملاً ببندید و باز کنید</li>
+                    <li>Cache مرورگر را پاک کنید</li>
+                    <li>از مرورگر دیگری استفاده کنید</li>
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              ایمیل
-            </label>
-            <Input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@email.com"
-              className="text-right"
-              disabled={loading}
-            />
-          </div>
+          <div className="space-y-4">
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@email.com"
+                className="pl-10 text-right"
+                disabled={loading}
+                autoComplete="email"
+              />
+            </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              رمز عبور
-            </label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="رمز عبور خود را وارد کنید"
-              className="text-right"
-              disabled={loading}
-            />
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="رمز عبور خود را وارد کنید"
+                className="pl-10 text-right"
+                disabled={loading}
+                autoComplete="current-password"
+              />
+            </div>
           </div>
 
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+            className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium"
           >
-            {loading ? "در حال ورود..." : "ورود"}
+            {loading ? "در حال ورود..." : "ورود با ایمیل"}
           </Button>
         </form>
 
         <div className="text-center space-y-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-sm text-gray-600">
             حساب کاربری ندارید؟{" "}
             <Link href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
               ثبت‌نام کنید
             </Link>
           </div>
           
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-sm text-gray-600">
             رمز عبور خود را فراموش کرده‌اید؟{" "}
             <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500 font-medium">
               بازیابی رمز عبور
             </Link>
           </div>
         </div>
+
+        {/* راهنمای ورود */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+          <div className="font-semibold text-blue-800 mb-2">💡 نکته مهم:</div>
+          <div className="text-blue-700 space-y-1">
+            <p>• برای ورود سریع‌تر، از گوگل استفاده کنید</p>
+            <p>• اگر حساب کاربری ندارید، ابتدا ثبت‌نام کنید</p>
+            <p>• در صورت فراموشی رمز عبور، از گزینه بازیابی استفاده کنید</p>
+          </div>
+        </div>
+
+        {/* راهنمای Google OAuth */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+          <div className="font-semibold text-yellow-800 mb-2">🔧 تنظیمات Google OAuth:</div>
+          <div className="text-yellow-700 space-y-1">
+            <p>• اگر دکمه گوگل کار نمی‌کند، در Supabase فعال کنید</p>
+            <p>• Authentication {'>>'} Providers {'>>'} Google {'>>'} Enable</p>
+            <p>• Client ID و Secret را از Google Cloud Console وارد کنید</p>
+          </div>
+        </div>
+
+        {/* Debug Information */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs font-mono">
+            <div className="font-semibold text-gray-800 mb-2">🐛 Debug Info:</div>
+            <div className="text-gray-700 space-y-1">
+              <p>• Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</p>
+              <p>• Supabase Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</p>
+              <p>• Origin: <ClientOrigin /></p>
+              <p>• Environment: {process.env.NODE_ENV}</p>
+            </div>
+            
+            {/* Admin Test Section */}
+            <div className="mt-3 pt-3 border-t border-gray-300">
+              <div className="font-semibold text-gray-800 mb-2">👑 Admin Access Test:</div>
+              <div className="text-xs text-gray-600 mb-2">
+                <p>• Test admin login: kanapehlife@gmail.com</p>
+                <p>• Check if user exists in admins table</p>
+                <p>• Check if user has admin role in auth-users</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Testing admin access...');
+                    
+                    // Test admins table
+                    const { data: adminTest, error: adminError } = await supabase
+                      .from('admins')
+                      .select('*')
+                      .eq('email', 'kanapehlife@gmail.com');
+                    
+                    console.log('🔍 Admins table test:', { data: adminTest, error: adminError });
+                    
+                    // Test auth-users table
+                    const { data: authTest, error: authError } = await supabase
+                      .from('auth-users')
+                      .select('*')
+                      .eq('email', 'kanapehlife@gmail.com');
+                    
+                    console.log('🔍 Auth-users table test:', { data: authTest, error: authError });
+                    
+                    if (adminTest && adminTest.length > 0) {
+                      toast.success('✅ Admin user found in admins table');
+                    } else {
+                      toast.error('❌ Admin user not found in admins table');
+                    }
+                    
+                    if (authTest && authTest.length > 0) {
+                      toast.success('✅ Admin user found in auth-users table');
+                    } else {
+                      toast.error('❌ Admin user not found in auth-users table');
+                    }
+                    
+                  } catch (error: any) {
+                    console.error('❌ Admin test failed:', error);
+                    toast.error(`Admin test failed: ${error.message}`);
+                  }
+                }}
+                className="w-full text-xs"
+              >
+                🧪 Test Admin Access
+              </Button>
+            </div>
+            
+            {/* Network Test Button */}
+            <div className="mt-3 pt-3 border-t border-gray-300">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Testing network connectivity...');
+                    const startTime = Date.now();
+                    
+                    // Test basic fetch
+                    const response = await fetch('https://vyjcwwrhiorbhfitpxdr.supabase.co');
+                    const endTime = Date.now();
+                    
+                    console.log('✅ Network test successful:', {
+                      status: response.status,
+                      responseTime: `${endTime - startTime}ms`
+                    });
+                    
+                    toast.success(`Network test successful! Response time: ${endTime - startTime}ms`);
+                  } catch (error: any) {
+                    console.error('❌ Network test failed:', error);
+                    toast.error(`Network test failed: ${error.message}`);
+                  }
+                }}
+                className="w-full text-xs"
+              >
+                🧪 Test Network Connection
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
+  );
+}
+
+// Client-side only component for origin display
+function ClientOrigin() {
+  const [origin, setOrigin] = useState<string>('Loading...');
+  
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+  
+  return <span>{origin}</span>;
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">
+              در حال بارگذاری...
+            </h2>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

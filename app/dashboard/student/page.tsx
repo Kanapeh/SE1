@@ -46,6 +46,7 @@ import {
   Smile,
   Languages,
   GraduationCap,
+  Video,
   Clock3,
   UserCheck,
   UserX,
@@ -179,6 +180,29 @@ export default function StudentDashboardPage() {
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Helper function for better navigation handling
+  const handleNavigation = (path: string, description: string) => {
+    try {
+      console.log(`🚀 ${description} - Navigating to: ${path}`);
+      
+      // Show visual feedback that button was clicked
+      const button = document.activeElement as HTMLButtonElement;
+      if (button) {
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = '';
+        }, 150);
+      }
+      
+      // Navigate to the page
+      router.push(path);
+    } catch (error) {
+      console.error(`❌ Navigation error to ${path}:`, error);
+      // Fallback - try window location
+      window.location.href = path;
+    }
+  };
 
   useEffect(() => {
     const initializeDashboard = async () => {
@@ -586,26 +610,34 @@ export default function StudentDashboardPage() {
                     <BookOpen className="w-6 h-6" />
                     <span>رزرو کلاس جدید</span>
                   </Button>
+
+                  <Button 
+                    onClick={() => handleNavigation('/students/temp-user-id/video-call', 'پیوستن به کلاس آنلاین')}
+                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                  >
+                    <Video className="w-6 h-6" />
+                    <span>کلاس آنلاین</span>
+                  </Button>
                   
                   <Button 
-                    onClick={() => router.push('/students/progress')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                    onClick={() => handleNavigation('/students/progress', 'مشاهده پیشرفت')}
+                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200"
                   >
                     <BarChart3 className="w-6 h-6" />
                     <span>مشاهده پیشرفت</span>
                   </Button>
                   
                   <Button 
-                    onClick={() => router.push('/students/payments')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                    onClick={() => handleNavigation('/students/payments', 'مدیریت پرداخت‌ها')}
+                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
                   >
                     <CreditCard className="w-6 h-6" />
                     <span>مدیریت پرداخت‌ها</span>
                   </Button>
 
                   <Button 
-                    onClick={() => router.push('/students/profile')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                    onClick={() => handleNavigation('/students/profile', 'ویرایش پروفایل')}
+                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
                   >
                     <Edit className="w-6 h-6" />
                     <span>ویرایش پروفایل</span>
@@ -885,8 +917,8 @@ export default function StudentDashboardPage() {
                       چت با AI و دریافت راهنمایی شخصی
                     </p>
                     <Button 
-                      onClick={() => router.push('/students/ai-coach')}
-                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
+                      onClick={() => handleNavigation('/students/ai-coach', 'مربی هوشمند - شروع چت')}
+                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white transition-all duration-200"
                     >
                       شروع چت
                     </Button>
@@ -906,8 +938,8 @@ export default function StudentDashboardPage() {
                       تبدیل یادگیری به بازی و کسب دستاورد
                     </p>
                     <Button 
-                      onClick={() => router.push('/students/gamification')}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+                      onClick={() => handleNavigation('/students/gamification', 'دنیای گیمیفیکیشن - شروع بازی')}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white transition-all duration-200"
                     >
                       شروع بازی
                     </Button>
@@ -927,8 +959,8 @@ export default function StudentDashboardPage() {
                       کسب امتیاز و تبدیل به پاداش‌های واقعی
                     </p>
                     <Button 
-                      onClick={() => router.push('/students/rewards')}
-                      className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white"
+                      onClick={() => handleNavigation('/students/rewards', 'سیستم پاداش - مشاهده پاداش‌ها')}
+                      className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white transition-all duration-200"
                     >
                       مشاهده پاداش‌ها
                     </Button>
@@ -948,8 +980,8 @@ export default function StudentDashboardPage() {
                       یادگیری گروهی و تعامل با دیگران
                     </p>
                     <Button 
-                      onClick={() => router.push('/students/social')}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                      onClick={() => handleNavigation('/students/social', 'جامعه یادگیری - پیوستن به جامعه')}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white transition-all duration-200"
                     >
                       پیوستن به جامعه
                     </Button>
@@ -969,8 +1001,8 @@ export default function StudentDashboardPage() {
                       تجربه یادگیری با AR و بازی‌های تعاملی
                     </p>
                     <Button 
-                      onClick={() => router.push('/students/interactive')}
-                      className="w-full bg-gradient-to-r from-pink-500 to-red-600 hover:from-pink-600 hover:to-red-700 text-white"
+                      onClick={() => handleNavigation('/students/interactive', 'یادگیری تعاملی - شروع تجربه')}
+                      className="w-full bg-gradient-to-r from-pink-500 to-red-600 hover:from-pink-600 hover:to-red-700 text-white transition-all duration-200"
                     >
                       شروع تجربه
                     </Button>
@@ -990,8 +1022,8 @@ export default function StudentDashboardPage() {
                       تجربه یادگیری منحصر به فرد برای شما
                     </p>
                     <Button 
-                      onClick={() => router.push('/students/personalized')}
-                      className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white"
+                      onClick={() => handleNavigation('/students/personalized', 'یادگیری شخصی - شخصی‌سازی')}
+                      className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white transition-all duration-200"
                     >
                       شخصی‌سازی
                     </Button>
