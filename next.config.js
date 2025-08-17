@@ -10,8 +10,8 @@ const nextConfig = {
     unoptimized: true,
     domains: ['localhost', 'images.unsplash.com', 'via.placeholder.com'], // دامنه‌های مجاز برای تصاویر
   },
-  // تنظیمات SSR
-  serverExternalPackages: ['@supabase/ssr'],
+  // تنظیمات برای Vercel
+  assetPrefix: process.env.NODE_ENV === 'production' ? 'https://se-1-6o2u.vercel.app' : '',
   // تنظیمات برای performance
   compress: true,
   poweredByHeader: false,
