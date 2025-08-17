@@ -12,8 +12,6 @@ const nextConfig = {
   },
   // تنظیمات SSR
   serverExternalPackages: ['@supabase/ssr'],
-  // تنظیمات برای deployment
-  output: 'standalone',
   // تنظیمات برای performance
   compress: true,
   poweredByHeader: false,

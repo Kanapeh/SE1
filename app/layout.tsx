@@ -8,7 +8,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import PKCEDebugger from "@/components/PKCEDebugger";
 
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import Head from "next/head";
 
 // فونت اصلی - Vazirmatn (بهترین فونت فارسی)
 const vazirmatn = Vazirmatn({
@@ -37,6 +36,57 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 export const metadata: Metadata = {
   title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
   description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/site.webmanifest',
+  other: {
+    'msapplication-config': '/browserconfig.xml',
+  },
+  openGraph: {
+    title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+    description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+    url: "https://www.se1a.org",
+    siteName: "سِ وان",
+    images: [
+      {
+        url: "https://www.se1a.org/images/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+      },
+    ],
+    locale: "fa_IR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+    description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+    images: ["https://www.se1a.org/images/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: "your-google-verification-code", // کد تایید گوگل را اینجا قرار دهید
+  },
 };
 
 export default function RootLayout({
@@ -46,20 +96,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
-      <Head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "سِ وان",
-              "url": "https://www.se1a.org",
-              "logo": "https://www.se1a.org/images/logo.png"
-            }),
-          }}
-        />
-      </Head>
       <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
