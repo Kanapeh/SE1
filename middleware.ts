@@ -4,38 +4,17 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Handle static assets with proper MIME types
-  if (pathname.startsWith('/_next/static/css/')) {
-    const response = NextResponse.next();
-    response.headers.set('Content-Type', 'text/css');
-    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    return response;
-  }
-
-  if (pathname.startsWith('/_next/static/js/') || pathname.startsWith('/_next/static/chunks/')) {
-    const response = NextResponse.next();
-    response.headers.set('Content-Type', 'application/javascript');
-    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    return response;
-  }
-
-  if (pathname.startsWith('/_next/static/')) {
-    const response = NextResponse.next();
-    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    return response;
-  }
-
-  // Handle API routes
-  if (pathname.startsWith('/api/')) {
+  // Skip middleware for static assets and API routes
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/auth/') ||
+    pathname.includes('.')
+  ) {
     return NextResponse.next();
   }
 
-  // Handle authentication routes
-  if (pathname.startsWith('/auth/')) {
-    return NextResponse.next();
-  }
-
-  // Default response for other routes
+  // Handle other routes
   return NextResponse.next();
 }
 
@@ -47,7 +26,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - api routes
+     * - auth routes
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api|auth).*)',
   ],
 };
