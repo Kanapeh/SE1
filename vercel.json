@@ -11,5 +11,12 @@
       "src": "/(.*)",
       "dest": "/"
     }
-  ]
+  ],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://vyjcwwrhiorbhfitpxdr.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5amN3d3JoaW9yYmhmaXRweGRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNzEzMzMsImV4cCI6MjA2Mzk0NzMzM30.UvFoCXSTugsQ5UJqokCdM5QIjidK4dags7Papyo6Q7s",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5amN3d3JoaW9yYmhmaXRweGRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODM3MTMzMywiZXhwIjoyMDYzOTQ3MzMzfQ.deZgbbRqc5SaDLetGq9Y6xxn8gYJJnlbNM8a1-ONygg",
+    "NEXT_PUBLIC_GOOGLE_CLIENT_ID": "978819783193-1ah59fft4qg34ru1obf8jcdsnjeg6gl8.apps.googleusercontent.com",
+    "GOOGLE_CLIENT_SECRET": "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"
+  }
 }

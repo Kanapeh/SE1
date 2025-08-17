@@ -5,7 +5,7 @@ const nextConfig = {
   },
   images: { 
     unoptimized: true,
-    domains: ['localhost', 'https://www.se1a.org/'], // دامنه‌های مجاز برای تصاویر
+    domains: ['localhost', 'images.unsplash.com', 'via.placeholder.com'], // دامنه‌های مجاز برای تصاویر
   },
   // تنظیمات SSR
   serverExternalPackages: ['@supabase/ssr'],
