@@ -84,13 +84,28 @@
 }
 
 @layer base {
+  /* Force text visibility in production */
+  body, html {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Ensure all text elements are visible */
+  h1, h2, h3, h4, h5, h6, p, span, div, a, button, label {
+    color: inherit !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     color: hsl(var(--foreground)) !important;
     font-weight: bold !important;
   }
+  
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-vazirmatn), var(--font-noto-sans), var(--font-ibm-plex), 'Tahoma', 'Arial', sans-serif;

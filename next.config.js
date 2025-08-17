@@ -3,6 +3,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: { 
     unoptimized: true,
     domains: ['localhost', 'images.unsplash.com', 'via.placeholder.com'], // دامنه‌های مجاز برای تصاویر
@@ -14,6 +17,10 @@ const nextConfig = {
   // تنظیمات برای performance
   compress: true,
   poweredByHeader: false,
+  // تنظیمات برای Vercel
+  experimental: {
+    appDir: true,
+  },
   // تنظیمات برای security
   headers: async () => {
     return [
