@@ -17,10 +17,6 @@ const nextConfig = {
   // تنظیمات برای performance
   compress: true,
   poweredByHeader: false,
-  // تنظیمات برای Vercel
-  experimental: {
-    appDir: true,
-  },
   // تنظیمات برای security
   headers: async () => {
     return [
