@@ -18,7 +18,13 @@ import {
   X,
   User,
   Shield,
-  GraduationCap as TeacherIcon
+  GraduationCap as TeacherIcon,
+  Globe,
+  Star,
+  Zap,
+  Heart,
+  Award,
+  Target
 } from "lucide-react";
 import Image from "next/image";
 import imageLogo from "./images/logo.png";
@@ -28,6 +34,7 @@ import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -37,6 +44,11 @@ export default function Header() {
     setMounted(true);
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      
+      // Calculate scroll progress
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const currentProgress = (window.scrollY / totalHeight) * 100;
+      setScrollProgress(Math.min(currentProgress, 100));
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -50,134 +62,244 @@ export default function Header() {
   if (!mounted) return null;
 
   const navItems = [
-    { name: "خانه", href: "/", icon: Home },
-    { name: "دوره‌ها", href: "/courses", icon: BookOpen },
-    { name: "معلمان", href: "/teachers", icon: GraduationCap },
-    { name: "وبلاگ", href: "/blog", icon: FileText },
-    { name: "درباره ما", href: "/about", icon: Users },
-    { name: "تماس با ما", href: "/contact", icon: Phone },
+    { name: "خانه", href: "/", icon: Home, description: "صفحه اصلی" },
+    { name: "دوره‌ها", href: "/courses", icon: BookOpen, description: "دوره‌های آموزشی" },
+    { name: "معلمان", href: "/teachers", icon: GraduationCap, description: "اساتید مجرب" },
+    { name: "وبلاگ", href: "/blog", icon: FileText, description: "مقالات آموزشی" },
+    { name: "درباره ما", href: "/about", icon: Users, description: "شناخت بیشتر" },
+    { name: "تماس با ما", href: "/contact", icon: Phone, description: "ارتباط با ما" },
   ];
 
   return (
     <>
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      <header className={`sticky top-0 z-50 transition-all duration-500 ${
         scrolled 
-          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b shadow-lg' 
-          : 'bg-transparent'
+          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-2xl' 
+          : 'bg-gradient-to-r from-white/80 via-white/90 to-white/80 dark:from-gray-900/80 dark:via-gray-900/90 dark:to-gray-900/80 backdrop-blur-xl'
       }`}>
-      <nav className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Hamburger Menu Button - Left Side */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="lg:mr-8"
-          >
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsSidebarOpen(true)}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-foreground hover:scale-110 transition-all duration-300 shadow-md"
-            >
-              <Menu className="h-5 w-5" />
-            </motion.button>
-          </motion.div>
-
-          {/* Logo with animation */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex-1 flex md:justify-start justify-center"
-          >
-            <Link href="/" className="flex items-center space-x-4 group">
-              <div className="relative">
-                <Image src={imageLogo} alt="لوگو" className="h-12 w-12 transition-transform group-hover:scale-110 logo-image" />
-                <motion.div
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-logo">
-                  سِ وان
-                </span>
-                <span className="text-xs font-persian text-muted-foreground -mt-0.5">آکادمی زبان</span>
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-4">
-            {navItems.map((item, index) => (
+        {/* Top accent bar */}
+        <div className="h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+        
+        {/* Compact Status Bar */}
+        <div className="bg-gradient-to-r from-blue-50/60 via-purple-50/60 to-pink-50/60 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10 border-b border-gray-200/20 dark:border-gray-700/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5">
+            <div className="flex items-center justify-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
               <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="flex items-center space-x-1"
               >
-                <Link
-                  href={item.href}
-                  className="relative group text-foreground/70 hover:text-foreground transition-all duration-300 px-3 py-2 rounded-lg hover:bg-primary/10 font-header"
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                <span className="font-medium">آنلاین</span>
+              </motion.div>
+              <span className="text-gray-400">•</span>
+              <span className="font-medium">پشتیبانی 24/7</span>
+              <span className="text-gray-400">•</span>
+              <span className="font-medium">آموزش آنلاین</span>
+              <span className="text-gray-400">•</span>
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="flex items-center space-x-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Globe className="w-3 h-3" />
+                <span className="font-medium">فارسی</span>
+              </motion.div>
+              <span className="text-gray-400">•</span>
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="flex items-center space-x-1 cursor-pointer hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+              >
+                <Star className="w-3 h-3 text-yellow-500" />
+                <span className="font-medium">4.9/5</span>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll Progress Bar */}
+        <motion.div
+          className="h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 origin-left"
+          style={{ width: `${scrollProgress}%` }}
+          transition={{ duration: 0.1 }}
+        />
+        
+        {/* Compact Notification Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="bg-gradient-to-r from-yellow-50/80 via-orange-50/80 to-red-50/80 dark:from-yellow-900/15 dark:via-orange-900/15 dark:to-red-900/15 border-b border-yellow-200/30 dark:border-yellow-700/30"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="flex items-center justify-center space-x-3 text-sm text-yellow-800 dark:text-yellow-200">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Star className="w-4 h-4 text-yellow-500" />
+              </motion.div>
+              <span className="font-medium text-sm">🎉 تخفیف ویژه 20% برای ثبت‌نام ماهانه!</span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-xs font-medium hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                استفاده کنید
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+        
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Hamburger Menu Button - Left Side */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="lg:mr-8"
+            >
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsSidebarOpen(true)}
+                className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 text-foreground hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200/50 dark:border-gray-600/50"
+              >
+                <Menu className="h-5 w-5" />
+              </motion.button>
+            </motion.div>
+
+            {/* Logo with enhanced animation */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex-1 flex justify-center lg:justify-start"
+            >
+              <Link href="/" className="flex items-center space-x-4 group">
+                <div className="relative">
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Image src={imageLogo} alt="لوگو" className="h-10 w-10 transition-transform group-hover:scale-110 logo-image" />
+                  </motion.div>
+                  <motion.div
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-lg"
+                    animate={{ 
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 180, 360]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <motion.span 
+                    className="text-xl font-logo bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    سِ وان
+                  </motion.span>
+                  <span className="text-xs font-persian text-muted-foreground -mt-0.5 flex items-center">
+                    <Globe className="w-3 h-3 mr-1" />
+                    آکادمی زبان
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* Desktop Navigation with enhanced design */}
+            <div className="hidden lg:flex items-center space-x-6">
+              {navItems.map((item, index) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="relative group"
                 >
-                  {item.name}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-purple-600 transition-all duration-300 group-hover:w-full"></span>
+                  <Link
+                    href={item.href}
+                    className="relative flex flex-col items-center text-foreground/70 hover:text-foreground transition-all duration-300 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-header group"
+                  >
+                    <item.icon className="w-4 h-4 mb-1.5 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="text-sm font-medium leading-tight">{item.name}</span>
+                    <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1 text-center leading-tight">
+                      {item.description}
+                    </span>
+                    <motion.span 
+                      className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"
+                      whileHover={{ width: "100%" }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </Link>
+                </motion.div>
+              ))}
+
+              {/* Enhanced Login Button */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mr-3"
+              >
+                <Link href="/login">
+                  <Button variant="outline" className="border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 transition-all duration-300 group font-header px-4 py-2.5 rounded-xl shadow-lg hover:shadow-xl text-sm">
+                    <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    ورود
+                  </Button>
                 </Link>
               </motion.div>
-            ))}
-            
 
+              {/* Enhanced Register Button */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6 }}
+                className="mr-3"
+              >
+                <Link href="/register">
+                  <Button className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 group font-header px-4 py-2.5 rounded-xl relative overflow-hidden text-sm">
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" />
+                    ثبت‌نام
+                  </Button>
+                </Link>
+              </motion.div>
 
-            {/* Login Button */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Link href="/login">
-                <Button variant="outline" className="border-primary/20 hover:bg-primary/10 transition-all duration-300 group font-header">
-                  <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                  ورود
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Register Button */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Link href="/register">
-                <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg hover:shadow-xl transition-all duration-300 group font-header">
-                  <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" />
-                  ثبت‌نام
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Theme Toggle Button */}
-            <motion.button
-              initial={{ opacity: 0, rotate: -180 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              transition={{ delay: 0.7 }}
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-foreground hover:scale-110 transition-all duration-300 shadow-md"
-            >
-              {theme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </motion.button>
+              {/* Enhanced Theme Toggle Button */}
+              <motion.button
+                initial={{ opacity: 0, rotate: -180 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                transition={{ delay: 0.7 }}
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 text-foreground hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200/50 dark:border-gray-600/50"
+              >
+                <motion.div
+                  whileHover={{ rotate: 180 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {theme === "light" ? (
+                    <Moon className="h-5 w-5" />
+                  ) : (
+                    <Sun className="h-5 w-5" />
+                  )}
+                </motion.div>
+              </motion.button>
+            </div>
           </div>
-
-
-        </div>
-
-
-      </nav>
-
+        </nav>
       </header>
 
       {/* Sidebar */}
@@ -193,169 +315,301 @@ export default function Header() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
             />
             
-            {/* Sidebar */}
+            {/* Enhanced Sidebar */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-2xl z-50"
+              className="fixed top-0 right-0 h-full w-88 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 shadow-2xl z-50 border-l border-gray-200/50 dark:border-gray-700/50"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <Image src={imageLogo} alt="لوگو" className="h-8 w-8 logo-image" />
-                  <span className="text-lg font-logo">سِ وان</span>
+              {/* Enhanced Header */}
+              <div className="relative p-6 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <Image src={imageLogo} alt="لوگو" className="h-10 w-10 logo-image" />
+                    </motion.div>
+                    <div>
+                      <span className="text-xl font-logo bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        سِ وان
+                      </span>
+                      <p className="text-xs text-muted-foreground">آکادمی زبان</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-foreground hover:from-red-50 hover:to-pink-50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300 shadow-lg"
+                  >
+                    <X className="h-4 w-4" />
+                  </motion.button>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </motion.button>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-lg font-header text-gray-900 dark:text-white mb-6">انتخاب کنید:</h3>
+              {/* Enhanced Content */}
+              <div className="p-6 space-y-5">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-header text-gray-900 dark:text-white mb-2">🎯 انتخاب کنید</h3>
+                  <p className="text-sm text-muted-foreground">مسیر موفقیت خود را انتخاب کنید</p>
+                </div>
                 
-                {/* Teacher Option */}
+                {/* Enhanced Teacher Option */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="mb-4"
                 >
                   <Link href="/register?type=teacher" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-300 group">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                        <TeacherIcon className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">معلم هستم</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">ثبت‌نام به عنوان معلم</p>
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-blue-200/50 dark:border-blue-700/50 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-500 p-4">
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <TeacherIcon className="w-6 h-6 text-white" />
+                          </div>
+                          <motion.div
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Star className="w-2.5 h-2.5 text-white" />
+                          </motion.div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            معلم هستم
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ثبت‌نام به عنوان معلم و شروع تدریس</p>
+                          <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
+                            <Zap className="w-3 h-3" />
+                            <span>شروع سریع و آسان</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Link>
                 </motion.div>
 
-                {/* Student Option */}
+                {/* Enhanced Student Option */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="mb-4"
                 >
                   <Link href="/register?type=student" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-300 group">
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                        <User className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">دانش‌آموز هستم</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">ثبت‌نام به عنوان دانش‌آموز</p>
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-2 border-green-200/50 dark:border-green-700/50 hover:border-green-300 dark:hover:border-green-600 hover:shadow-2xl transition-all duration-500 p-4">
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <User className="w-6 h-6 text-white" />
+                          </div>
+                          <motion.div
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Heart className="w-2.5 h-2.5 text-white" />
+                          </motion.div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                            دانش‌آموز هستم
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ثبت‌نام به عنوان دانش‌آموز و شروع یادگیری</p>
+                          <div className="flex items-center space-x-2 text-xs text-green-600 dark:text-green-400">
+                            <Target className="w-3 h-3" />
+                            <span>رسیدن به اهداف</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Link>
                 </motion.div>
 
-                {/* About Us Option */}
+                {/* Enhanced About Us Option */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mb-4"
                 >
                   <Link href="/about" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-300 group">
-                      <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                        <Users className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">درباره ما</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">آشنایی با آکادمی سِ وان</p>
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-50 via-red-50 to-pink-50 dark:from-orange-900/20 dark:via-red-900/20 dark:to-pink-900/20 border-2 border-orange-200/50 dark:border-orange-700/50 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-2xl transition-all duration-500 p-4">
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-red-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <Users className="w-6 h-6 text-white" />
+                          </div>
+                          <motion.div
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Award className="w-2.5 h-2.5 text-white" />
+                          </motion.div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                            درباره ما
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">آشنایی با آکادمی سِ وان و تیم ما</p>
+                          <div className="flex items-center space-x-2 text-xs text-orange-600 dark:text-orange-400">
+                            <Star className="w-3 h-3" />
+                            <span>شناخت بیشتر</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Link>
                 </motion.div>
 
-                {/* Contact Us Option */}
+                {/* Enhanced Contact Us Option */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="mb-4"
                 >
                   <Link href="/contact" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 group">
-                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                        <Phone className="w-6 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">تماس با ما</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">ارتباط با تیم پشتیبانی</p>
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-900/20 dark:via-blue-900/20 dark:to-cyan-900/20 border-2 border-indigo-200/50 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-2xl transition-all duration-500 p-4">
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <Phone className="w-6 h-6 text-white" />
+                          </div>
+                          <motion.div
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Zap className="w-2.5 h-2.5 text-white" />
+                          </motion.div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            تماس با ما
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ارتباط با تیم پشتیبانی و مشاوره</p>
+                          <div className="flex items-center space-x-2 text-xs text-indigo-600 dark:text-indigo-400">
+                            <Heart className="w-3 h-3" />
+                            <span>پشتیبانی 24/7</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Link>
                 </motion.div>
-
-
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom Navigation Bar - Fixed */}
-      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 lg:hidden bg-white/95 dark:bg-gray-900/95 border shadow-2xl flex justify-around items-center py-3 px-4 rounded-3xl w-[92vw] max-w-md mx-auto backdrop-blur-md">
+      {/* Enhanced Mobile Bottom Navigation Bar - Fixed */}
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:hidden bg-white/95 dark:bg-gray-900/95 border-2 border-gray-200/50 dark:border-gray-700/50 shadow-2xl flex justify-around items-center py-4 px-6 rounded-3xl w-[94vw] max-w-md mx-auto backdrop-blur-xl">
+        {/* Top accent line */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"></div>
+        
         {navItems.slice(0, 3).map((item, idx) => (
           <motion.div
             key={item.name}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ scale: 1.1, y: -2 }}
             whileTap={{ scale: 0.95 }}
+            className="relative group"
           >
             <Link
               href={item.href}
-              className="flex flex-col items-center text-xs text-foreground/70 hover:text-primary transition-colors px-2 py-1 rounded-xl hover:bg-primary/10 font-persian"
+              className="flex flex-col items-center text-xs text-foreground/70 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 px-3 py-2 rounded-2xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-persian"
             >
-              <item.icon className="w-5 h-5 mb-1" />
-              {item.name}
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <item.icon className="w-5 h-5 mb-2" />
+              </motion.div>
+              <span className="font-medium text-xs leading-tight">{item.name}</span>
+              <motion.span 
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                whileHover={{ width: "80%" }}
+                transition={{ duration: 0.3 }}
+              />
             </Link>
           </motion.div>
         ))}
-        
 
-
-        {/* Login Button */}
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+        {/* Enhanced Login Button */}
+        <motion.div whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.95 }}>
           <Link href="/login">
-            <Button size="sm" variant="outline" className="px-3 py-2 flex flex-col items-center rounded-xl border-primary/20 hover:bg-primary/10 font-header">
-              <User className="w-5 h-5 mb-1" />
-              ورود
+            <Button size="sm" variant="outline" className="px-3 py-2.5 flex flex-col items-center rounded-2xl border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-header shadow-lg">
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <User className="w-5 h-5 mb-1.5" />
+              </motion.div>
+              <span className="text-xs font-medium">ورود</span>
             </Button>
           </Link>
         </motion.div>
 
-        {/* Register Button */}
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+        {/* Enhanced Register Button */}
+        <motion.div whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.95 }}>
           <Link href="/register">
-            <Button size="sm" className="px-3 py-2 flex flex-col items-center rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg font-header">
-              <Plus className="w-5 h-5 mb-1" />
-              ثبت‌نام
+            <Button size="sm" className="px-3 py-2.5 flex flex-col items-center rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl font-header relative overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Plus className="w-5 h-5 mb-1.5" />
+              </motion.div>
+              <span className="text-xs font-medium">ثبت‌نام</span>
             </Button>
           </Link>
         </motion.div>
 
+        {/* Enhanced Theme Toggle Button */}
         <motion.button
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.1, y: -2, rotate: 180 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          className="flex flex-col items-center text-xs text-foreground px-2 py-1 rounded-xl hover:bg-primary/10 font-persian"
+          className="flex flex-col items-center text-xs text-foreground px-3 py-2 rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 font-persian transition-all duration-300"
         >
-          <span className="mb-1">{theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}</span>
-          {theme === "light" ? "تاریک" : "روشن"}
+          <motion.div
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.5 }}
+            className="mb-1.5"
+          >
+            {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          </motion.div>
+          <span className="font-medium text-xs leading-tight">{theme === "light" ? "تاریک" : "روشن"}</span>
         </motion.button>
       </nav>
     </>
