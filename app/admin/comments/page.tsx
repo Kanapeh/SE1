@@ -186,6 +186,35 @@ export default function CommentsPage() {
         </div>
       </div>
 
+      {/* Debug Section */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-yellow-800 font-semibold mb-2">🔍 بخش عیب‌یابی نظرات</h4>
+            <p className="text-yellow-700 text-sm">
+              برای بررسی جدول نظرات و رفع مشکل نمایش، روی دکمه زیر کلیک کنید
+            </p>
+          </div>
+          <Button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/admin/test-comments');
+                const data = await response.json();
+                console.log('Comments test results:', data);
+                alert('نتایج تست نظرات در کنسول مرورگر نمایش داده شد. F12 را فشار دهید و Console را بررسی کنید.');
+              } catch (error) {
+                console.error('Error testing comments:', error);
+                alert('خطا در تست نظرات');
+              }
+            }}
+            variant="outline"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500"
+          >
+            تست جدول نظرات
+          </Button>
+        </div>
+      </div>
+
       {filteredComments.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">

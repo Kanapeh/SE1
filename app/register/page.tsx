@@ -216,20 +216,7 @@ function RegisterContent() {
             }
           </p>
           
-          {userType === 'teacher' && (
-            <div className="mt-4">
-              <a 
-                href="/register/teacher" 
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-medium rounded-lg transition-colors"
-              >
-                <GraduationCap className="w-4 h-4 ml-2" />
-                ثبت‌نام کامل معلم (فرم چند مرحله‌ای)
-              </a>
-              <p className="text-xs text-gray-500 mt-2">
-                برای ثبت‌نام کامل با تمام جزئیات، روی دکمه بالا کلیک کنید
-              </p>
-            </div>
-          )}
+
         </div>
 
         {/* Google OAuth Button */}

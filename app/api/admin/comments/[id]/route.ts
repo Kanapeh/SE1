@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase-admin';
 import { checkAdminAccessAPI } from '@/lib/api-utils';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Check admin access first
@@ -13,35 +13,34 @@ export async function PATCH(
       return adminError;
     }
 
-    const resolvedParams = await params;
+    const supabase = createAdminClient();
+    const { id } = params;
     const body = await request.json();
-    const { status } = body;
 
-    if (!status || !['approved', 'rejected'].includes(status)) {
-      return NextResponse.json(
-        { error: 'وضعیت نامعتبر است' },
-        { status: 400 }
-      );
-    }
-
+    // Update comment status
     const { data, error } = await supabase
       .from('comments')
-      .update({ status })
-      .eq('id', resolvedParams.id)
+      .update({ status: body.status })
+      .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating comment:', error);
+      return NextResponse.json(
+        { error: 'خطا در بروزرسانی نظر', details: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      message: 'وضعیت نظر بروزرسانی شد',
-      comment: data
+      message: 'وضعیت نظر با موفقیت بروزرسانی شد',
+      data
     });
-
   } catch (error: any) {
-    console.error('Error updating comment:', error);
+    console.error('Error in PATCH comment:', error);
     return NextResponse.json(
-      { error: 'خطا در بروزرسانی نظر' },
+      { error: 'خطا در بروزرسانی نظر', details: error.message },
       { status: 500 }
     );
   }
@@ -49,7 +48,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Check admin access first
@@ -58,23 +57,31 @@ export async function DELETE(
       return adminError;
     }
 
-    const resolvedParams = await params;
+    const supabase = createAdminClient();
+    const { id } = params;
+
+    // Delete comment
     const { error } = await supabase
       .from('comments')
       .delete()
-      .eq('id', resolvedParams.id);
+      .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting comment:', error);
+      return NextResponse.json(
+        { error: 'خطا در حذف نظر', details: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      message: 'نظر حذف شد'
+      message: 'نظر با موفقیت حذف شد'
     });
-
   } catch (error: any) {
-    console.error('Error deleting comment:', error);
+    console.error('Error in DELETE comment:', error);
     return NextResponse.json(
-      { error: 'خطا در حذف نظر' },
+      { error: 'خطا در حذف نظر', details: error.message },
       { status: 500 }
-    );
+      );
   }
 } 

@@ -289,20 +289,11 @@ export default function TeachersPage() {
                       <Button
                         onClick={() => handleSelectTeacher(teacher.id)}
                         disabled={!teacher.available}
-                        className="flex-1 flex items-center gap-2"
+                        className="w-full flex items-center gap-2"
                         variant="outline"
                       >
                         <MessageCircle className="w-4 h-4" />
                         {teacher.available ? "انتخاب" : "غیرفعال"}
-                      </Button>
-                      
-                      <Button
-                        onClick={() => router.push(`/teachers/${teacher.id}/video-call`)}
-                        disabled={!teacher.available}
-                        className="flex-1 flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                      >
-                        <Video className="w-4 h-4" />
-                        کلاس آنلاین
                       </Button>
                     </div>
                   </div>

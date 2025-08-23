@@ -249,16 +249,16 @@ export default function AboutPage() {
                 className="space-y-6 text-gray-700 leading-relaxed text-lg"
               >
                 <p className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl border-r-4 border-blue-500">
-                  آکادمی زبان <span className="text-blue-600 font-bold">سِ وان</span> در سال ۲۰۲۴ 
-                  با هدف ایجاد اعتماد و آموزش با کیفیت بین زبان‌آموزان و اساتید تأسیس شده است.
+                  آکادمی زبان <span className="text-blue-600 font-bold">سِ وان</span> در تاریخ ۲۱ آوریل ۲۰۲۵ 
+                  توسط <span className="text-blue-600 font-bold">علی علیزاده</span> ملقب به <span className="text-blue-600 font-bold">سپنتا</span> تأسیس شده است.
                 </p>
                 <p>
-                  هدف ما این است که برای هر دو سمت از لحاظ مالی به صرفه‌تر باشد و امکانات زیادی 
-                  در سایت فراهم کنیم تا همواره دنبال جذب اساتید حرفه‌ای و زبان‌آموزان علاقه‌مند باشیم.
+                  هدف اصلی تأسیس این موسسه کمک به معلمان و دانش‌آموزانی است که مشکل دسترسی به آموزش دارند، 
+                  مانند دختران و پسران افغانستان و دیگر دانش‌آموزانی که از تدریس محروم هستند.
                 </p>
                 <p>
                   ما به‌صورت تخصصی بر برگزاری کلاس‌های خصوصی و آنلاین تمرکز داریم تا یادگیری را برای هر فرد 
-                  متناسب با نیازهایش شخصی‌سازی کنیم.
+                  متناسب با نیازهایش شخصی‌سازی کنیم و فرصت آموزش را برای همه فراهم آوریم.
                 </p>
               </motion.div>
               
@@ -554,7 +554,7 @@ export default function AboutPage() {
                     ))}
                   </div>
                   <p className="text-gray-700 text-lg leading-relaxed italic">
-                    "{testimonial.content}"
+                    &ldquo;{testimonial.content}&rdquo;
                   </p>
                 </Card>
               </motion.div>

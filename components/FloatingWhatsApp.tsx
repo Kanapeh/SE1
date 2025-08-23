@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Smartphone } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function FloatingWhatsApp() {
   const [isHovered, setIsHovered] = useState(false);
+  const pathname = usePathname();
   const phoneNumber = "989387279975";
   const whatsappUrl = `https://wa.me/${phoneNumber}`;
+
+  // Hide floating WhatsApp on student dashboard pages
+  if (pathname?.startsWith('/dashboard/student') || pathname?.startsWith('/students/')) {
+    return null;
+  }
 
   const handleClick = () => {
     window.open(whatsappUrl, '_blank');

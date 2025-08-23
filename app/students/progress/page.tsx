@@ -123,123 +123,160 @@ export default function StudentProgressPage() {
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // Mock progress data
-    const mockProgress: ProgressData = {
-      currentLevel: 'متوسط',
-      nextLevel: 'پیشرفته',
-      progressPercentage: 75,
-      completedLessons: 15,
-      totalLessons: 20,
-      streak: 7,
-      weeklyGoal: 5,
-      weeklyProgress: 3,
-      monthlyGoal: 20,
-      monthlyProgress: 15,
-      totalStudyTime: 45,
-      averageStudyTime: 3,
-      improvementRate: 85,
-      accuracyRate: 92,
-      completionRate: 78
-    };
+    // Check if user is new (no classes taken yet)
+    const isNewUser = true; // This should be fetched from actual user data
+    
+    if (isNewUser) {
+      // Empty progress data for new user
+      const emptyProgress: ProgressData = {
+        currentLevel: 'مبتدی',
+        nextLevel: 'ابتدایی',
+        progressPercentage: 0,
+        completedLessons: 0,
+        totalLessons: 0,
+        streak: 0,
+        weeklyGoal: 2,
+        weeklyProgress: 0,
+        monthlyGoal: 8,
+        monthlyProgress: 0,
+        totalStudyTime: 0,
+        averageStudyTime: 0,
+        improvementRate: 0,
+        accuracyRate: 0,
+        completionRate: 0
+      };
+      setProgress(emptyProgress);
+    } else {
+      // Mock progress data for existing user
+      const existingProgress: ProgressData = {
+        currentLevel: 'متوسط',
+        nextLevel: 'پیشرفته',
+        progressPercentage: 75,
+        completedLessons: 15,
+        totalLessons: 20,
+        streak: 7,
+        weeklyGoal: 5,
+        weeklyProgress: 3,
+        monthlyGoal: 20,
+        monthlyProgress: 15,
+        totalStudyTime: 45,
+        averageStudyTime: 3,
+        improvementRate: 85,
+        accuracyRate: 92,
+        completionRate: 78
+      };
+      setProgress(existingProgress);
+    }
 
-    // Mock lessons data
-    const mockLessons: LessonProgress[] = [
-      {
-        id: '1',
-        title: 'مکالمه روزمره',
-        category: 'مکالمه',
-        status: 'completed',
-        score: 95,
-        timeSpent: 45,
-        completedAt: '2024-01-15'
-      },
-      {
-        id: '2',
-        title: 'گرامر زمان حال',
-        category: 'گرامر',
-        status: 'completed',
-        score: 88,
-        timeSpent: 60,
-        completedAt: '2024-01-14'
-      },
-      {
-        id: '3',
-        title: 'واژگان تجاری',
-        category: 'واژگان',
-        status: 'in_progress',
-        score: 65,
-        timeSpent: 30
-      },
-      {
-        id: '4',
-        title: 'شنیداری پیشرفته',
-        category: 'شنیداری',
-        status: 'not_started',
-        score: 0,
-        timeSpent: 0
-      },
-      {
-        id: '5',
-        title: 'نوشتاری رسمی',
-        category: 'نوشتاری',
-        status: 'completed',
-        score: 92,
-        timeSpent: 75,
-        completedAt: '2024-01-13'
-      }
-    ];
+    // Lessons data based on user status
+    if (isNewUser) {
+      // Empty lessons for new user
+      setLessons([]);
+    } else {
+      // Mock lessons data for existing user
+      const mockLessons: LessonProgress[] = [
+        {
+          id: '1',
+          title: 'مکالمه روزمره',
+          category: 'مکالمه',
+          status: 'completed',
+          score: 95,
+          timeSpent: 45,
+          completedAt: '2024-01-15'
+        },
+        {
+          id: '2',
+          title: 'گرامر زمان حال',
+          category: 'گرامر',
+          status: 'completed',
+          score: 88,
+          timeSpent: 60,
+          completedAt: '2024-01-14'
+        },
+        {
+          id: '3',
+          title: 'واژگان تجاری',
+          category: 'واژگان',
+          status: 'in_progress',
+          score: 65,
+          timeSpent: 30
+        },
+        {
+          id: '4',
+          title: 'شنیداری پیشرفته',
+          category: 'شنیداری',
+          status: 'not_started',
+          score: 0,
+          timeSpent: 0
+        },
+        {
+          id: '5',
+          title: 'نوشتاری رسمی',
+          category: 'نوشتاری',
+          status: 'completed',
+          score: 92,
+          timeSpent: 75,
+          completedAt: '2024-01-13'
+        }
+      ];
+      setLessons(mockLessons);
+    }
 
-    // Mock weekly data
-    const mockWeeklyData: WeeklyProgress[] = [
-      { week: 'هفته 1', lessonsCompleted: 3, studyTime: 12, accuracy: 85, streak: 3 },
-      { week: 'هفته 2', lessonsCompleted: 4, studyTime: 15, accuracy: 88, streak: 5 },
-      { week: 'هفته 3', lessonsCompleted: 5, studyTime: 18, accuracy: 92, streak: 7 },
-      { week: 'هفته 4', lessonsCompleted: 3, studyTime: 10, accuracy: 90, streak: 7 }
-    ];
+    // Weekly and skills data based on user status
+    if (isNewUser) {
+      // Empty data for new user
+      setWeeklyData([]);
+      setSkills([]);
+    } else {
+      // Mock data for existing user
+      const mockWeeklyData: WeeklyProgress[] = [
+        { week: 'هفته 1', lessonsCompleted: 3, studyTime: 12, accuracy: 85, streak: 3 },
+        { week: 'هفته 2', lessonsCompleted: 4, studyTime: 15, accuracy: 88, streak: 5 },
+        { week: 'هفته 3', lessonsCompleted: 5, studyTime: 18, accuracy: 92, streak: 7 },
+        { week: 'هفته 4', lessonsCompleted: 3, studyTime: 10, accuracy: 90, streak: 7 }
+      ];
 
-    // Mock skills data
-    const mockSkills: SkillProgress[] = [
-      {
-        skill: 'مکالمه',
-        currentLevel: 4,
-        maxLevel: 5,
-        progress: 80,
-        description: 'توانایی مکالمه در موقعیت‌های روزمره'
-      },
-      {
-        skill: 'گرامر',
-        currentLevel: 3,
-        maxLevel: 5,
-        progress: 60,
-        description: 'درک و استفاده از ساختارهای گرامری'
-      },
-      {
-        skill: 'واژگان',
-        currentLevel: 4,
-        maxLevel: 5,
-        progress: 80,
-        description: 'دایره واژگان گسترده و متنوع'
-      },
-      {
-        skill: 'شنیداری',
-        currentLevel: 3,
-        maxLevel: 5,
-        progress: 60,
-        description: 'درک گفتار در سرعت‌های مختلف'
-      },
-      {
-        skill: 'نوشتاری',
-        currentLevel: 4,
-        maxLevel: 5,
-        progress: 80,
-        description: 'نوشتن متون رسمی و غیررسمی'
-      }
-    ];
+      const mockSkills: SkillProgress[] = [
+        {
+          skill: 'مکالمه',
+          currentLevel: 4,
+          maxLevel: 5,
+          progress: 80,
+          description: 'توانایی مکالمه در موقعیت‌های روزمره'
+        },
+        {
+          skill: 'گرامر',
+          currentLevel: 3,
+          maxLevel: 5,
+          progress: 60,
+          description: 'درک و استفاده از ساختارهای گرامری'
+        },
+        {
+          skill: 'واژگان',
+          currentLevel: 4,
+          maxLevel: 5,
+          progress: 80,
+          description: 'دایره واژگان گسترده و متنوع'
+        },
+        {
+          skill: 'شنیداری',
+          currentLevel: 3,
+          maxLevel: 5,
+          progress: 60,
+          description: 'درک گفتار در سرعت‌های مختلف'
+        },
+        {
+          skill: 'نوشتاری',
+          currentLevel: 4,
+          maxLevel: 5,
+          progress: 80,
+          description: 'نوشتن متون رسمی و غیررسمی'
+        }
+      ];
+      setWeeklyData(mockWeeklyData);
+      setSkills(mockSkills);
+    }
 
-    setProgress(mockProgress);
-    setLessons(mockLessons);
-    setWeeklyData(mockWeeklyData);
-    setSkills(mockSkills);
     setLoading(false);
   }, []);
 
@@ -512,96 +549,132 @@ export default function StudentProgressPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {lessons.map((lesson) => (
-                    <motion.div
-                      key={lesson.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
+                {lessons.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">هنوز درسی ندارید</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">برای شروع یادگیری، اولین کلاس خود را رزرو کنید</p>
+                    <Button 
+                      onClick={() => router.push('/teachers')}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            {getCategoryIcon(lesson.category)}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white">
-                              {lesson.title}
-                            </h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              <span>{lesson.category}</span>
-                              <span>{lesson.timeSpent} دقیقه</span>
-                              {lesson.score > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                  {lesson.score}%
-                                </span>
-                              )}
+                      مشاهده معلمان
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {lessons.map((lesson) => (
+                      <motion.div
+                        key={lesson.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                              {getCategoryIcon(lesson.category)}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                {lesson.title}
+                              </h4>
+                              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                <span>{lesson.category}</span>
+                                <span>{lesson.timeSpent} دقیقه</span>
+                                {lesson.score > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                    {lesson.score}%
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          {getStatusBadge(lesson.status)}
-                        </div>
-                      </div>
-                      
-                      {lesson.status === 'in_progress' && (
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">پیشرفت</span>
-                            <span className="text-sm font-medium">{lesson.score}%</span>
+                          <div className="text-right">
+                            {getStatusBadge(lesson.status)}
                           </div>
-                          <Progress value={lesson.score} className="h-2" />
                         </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
+                        
+                        {lesson.status === 'in_progress' && (
+                          <div className="mt-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">پیشرفت</span>
+                              <span className="text-sm font-medium">{lesson.score}%</span>
+                            </div>
+                            <Progress value={lesson.score} className="h-2" />
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Skills Tab */}
           <TabsContent value="skills" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {skills.map((skill) => (
-                <Card key={skill.skill} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-5 h-5" />
-                      {skill.skill}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">سطح {skill.currentLevel} از {skill.maxLevel}</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{skill.progress}%</span>
+            {skills.length === 0 ? (
+              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Target className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">هنوز مهارتی ندارید</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">با شرکت در کلاس‌ها، مهارت‌های خود را توسعه دهید</p>
+                    <Button 
+                      onClick={() => router.push('/teachers')}
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                    >
+                      مشاهده معلمان
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {skills.map((skill) => (
+                  <Card key={skill.skill} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="w-5 h-5" />
+                        {skill.skill}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">سطح {skill.currentLevel} از {skill.maxLevel}</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">{skill.progress}%</span>
+                        </div>
+                        <Progress value={skill.progress} className="h-3" />
                       </div>
-                      <Progress value={skill.progress} className="h-3" />
-                    </div>
-                    
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {skill.description}
-                    </p>
-                    
-                    <div className="flex items-center gap-2">
-                      {[...Array(skill.maxLevel)].map((_, index) => (
-                        <div
-                          key={index}
-                          className={`w-4 h-4 rounded-full ${
-                            index < skill.currentLevel
-                              ? 'bg-gradient-to-r from-blue-500 to-purple-600'
-                              : 'bg-gray-200 dark:bg-gray-700'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {skill.description}
+                      </p>
+                      
+                      <div className="flex items-center gap-2">
+                        {[...Array(skill.maxLevel)].map((_, index) => (
+                          <div
+                            key={index}
+                            className={`w-4 h-4 rounded-full ${
+                              index < skill.currentLevel
+                                ? 'bg-gradient-to-r from-blue-500 to-purple-600'
+                                : 'bg-gray-200 dark:bg-gray-700'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Analytics Tab */}

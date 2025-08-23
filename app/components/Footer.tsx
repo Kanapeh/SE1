@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { 
   Facebook, 
   Instagram, 
@@ -24,6 +25,12 @@ import imageLogo from "@/components/images/logo.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+
+  // Hide footer on student dashboard pages
+  if (pathname?.startsWith('/dashboard/student') || pathname?.startsWith('/students/')) {
+    return null;
+  }
 
   const quickLinks = [
     { name: "خانه", href: "/", icon: GraduationCap },

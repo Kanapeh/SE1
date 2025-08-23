@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import StudentHeader from '@/components/StudentHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -207,157 +209,94 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
-        // Mock user data
-        const mockUser = {
-          id: 'temp-user-id',
-          email: 'student@example.com',
+        // Get current authenticated user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error('User not authenticated:', userError);
+          router.push('/login');
+          return;
+        }
+
+        setCurrentUser({
+          id: user.id,
+          email: user.email,
           role: 'student'
-        };
-        setCurrentUser(mockUser);
+        });
 
-        // Mock student profile
-        const mockProfile = {
-          id: 'temp-profile-id',
-          first_name: 'سارا',
-          last_name: 'محمدی',
-          email: 'student@example.com',
-          phone: '09123456789',
-          avatar: null,
-          level: 'متوسط',
-          language: 'انگلیسی',
-          status: 'active',
-          goals: 'یادگیری زبان انگلیسی برای کار و سفر',
-          experience_years: 2
-        };
-        setUserProfile(mockProfile);
+        // Get student profile from database
+        const { data: studentData, error: profileError } = await supabase
+          .from('students')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-        // Mock classes data
-        const mockClasses = [
+        if (profileError) {
+          console.error('Error fetching student profile:', profileError);
+          // Redirect to complete profile if profile doesn't exist
+          router.push('/complete-profile?type=student');
+          return;
+        }
+
+        if (studentData) {
+          setUserProfile({
+            id: studentData.id,
+            first_name: studentData.first_name,
+            last_name: studentData.last_name,
+            email: studentData.email,
+            phone: studentData.phone,
+            avatar: studentData.avatar,
+            level: studentData.current_language_level,
+            language: studentData.preferred_languages?.[0] || 'انگلیسی',
+            status: studentData.status,
+            goals: studentData.learning_goals,
+            experience_years: 0
+          });
+        }
+
+        // Initialize empty data for new student
+        setClasses([]);
+        
+        // Initialize basic progress data for new student
+        const basicProgress: ProgressData = {
+          currentLevel: studentData?.current_language_level || 'مبتدی',
+          nextLevel: 'ابتدایی',
+          progressPercentage: 0,
+          completedLessons: 0,
+          totalLessons: 0,
+          streak: 0,
+          weeklyGoal: 2,
+          weeklyProgress: 0
+        };
+        setProgress(basicProgress);
+
+        // Initialize basic analytics for new student
+        const basicAnalytics: Analytics = {
+          totalClasses: 0,
+          completedClasses: 0,
+          totalSpent: 0,
+          averageRating: 0,
+          thisMonthClasses: 0,
+          thisMonthSpent: 0,
+          favoriteTeacher: 'هنوز معلمی انتخاب نکرده‌اید',
+          mostStudiedLanguage: studentData?.preferred_languages?.[0] || 'انگلیسی',
+          studyTime: 0,
+          improvementRate: 0
+        };
+        setAnalytics(basicAnalytics);
+
+        // Initialize welcome notification for new student
+        const welcomeNotifications: Notification[] = [
           {
             id: '1',
-            teacher_id: 'teacher-1',
-            student_id: 'temp-profile-id',
-            class_date: '2024-01-15',
-            class_time: '14:00',
-            duration: 60,
-            status: 'scheduled',
-            amount: 200000,
-            notes: 'کلاس انگلیسی سطح متوسط - تمرین مکالمه',
-            created_at: '2024-01-10T10:00:00Z',
-            teacher: {
-              first_name: 'علی',
-              last_name: 'احمدی',
-              avatar: null
-            },
-            student: {
-              first_name: 'سارا',
-              last_name: 'محمدی',
-              avatar: null
-            }
-          },
-          {
-            id: '2',
-            teacher_id: 'teacher-2',
-            student_id: 'temp-profile-id',
-            class_date: '2024-01-10',
-            class_time: '10:00',
-            duration: 60,
-            status: 'completed',
-            amount: 180000,
-            notes: 'کلاس انگلیسی سطح مبتدی - گرامر و واژگان',
-            created_at: '2024-01-05T10:00:00Z',
-            teacher: {
-              first_name: 'فاطمه',
-              last_name: 'کریمی',
-              avatar: null
-            },
-            student: {
-              first_name: 'سارا',
-              last_name: 'محمدی',
-              avatar: null
-            }
-          },
-          {
-            id: '3',
-            teacher_id: 'teacher-3',
-            student_id: 'temp-profile-id',
-            class_date: '2024-01-20',
-            class_time: '16:00',
-            duration: 60,
-            status: 'pending',
-            amount: 220000,
-            notes: 'کلاس انگلیسی سطح پیشرفته - آمادگی آیلتس',
-            created_at: '2024-01-12T10:00:00Z',
-            teacher: {
-              first_name: 'احمد',
-              last_name: 'رضایی',
-              avatar: null
-            },
-            student: {
-              first_name: 'سارا',
-              last_name: 'محمدی',
-              avatar: null
-            }
-          }
-        ];
-        setClasses(mockClasses);
-
-        // Mock progress data
-        const mockProgress: ProgressData = {
-          currentLevel: 'متوسط',
-          nextLevel: 'پیشرفته',
-          progressPercentage: 75,
-          completedLessons: 15,
-          totalLessons: 20,
-          streak: 7,
-          weeklyGoal: 5,
-          weeklyProgress: 3
-        };
-        setProgress(mockProgress);
-
-        // Mock analytics data
-        const mockAnalytics: Analytics = {
-          totalClasses: 12,
-          completedClasses: 9,
-          totalSpent: 2400000,
-          averageRating: 4.8,
-          thisMonthClasses: 3,
-          thisMonthSpent: 600000,
-          favoriteTeacher: 'علی احمدی',
-          mostStudiedLanguage: 'انگلیسی',
-          studyTime: 45,
-          improvementRate: 85
-        };
-        setAnalytics(mockAnalytics);
-
-        // Mock notifications
-        const mockNotifications: Notification[] = [
-          {
-            id: '1',
-            type: 'success',
-            title: 'کلاس جدید رزرو شد',
-            message: 'کلاس شما با استاد علی احمدی برای فردا رزرو شد',
-            time: '2 ساعت پیش',
-            read: false
-          },
-          {
-            id: '2',
             type: 'info',
-            title: 'یادآوری کلاس',
-            message: 'کلاس شما با استاد فاطمه کریمی در 30 دقیقه دیگر شروع می‌شود',
-            time: '1 ساعت پیش',
-            read: true
-          },
-          {
-            id: '3',
-            type: 'warning',
-            title: 'پیشرفت شما',
-            message: 'شما 75% از سطح متوسط را تکمیل کرده‌اید',
-            time: '3 ساعت پیش',
+            title: 'خوش آمدید! 🎉',
+            message: 'به آکادمی زبان خوش آمدید. برای شروع یادگیری، یک معلم انتخاب کنید.',
+            time: 'همین الان',
             read: false
           }
         ];
-        setNotifications(mockNotifications);
+        setNotifications(welcomeNotifications);
 
       } catch (error) {
         console.error('Error initializing dashboard:', error);
@@ -438,46 +377,28 @@ export default function StudentDashboardPage() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+      {/* Student Header */}
+      <StudentHeader 
+        studentName={`${student.first_name} ${student.last_name}`}
+        studentEmail={student.email}
+      />
+      
+      <div className="container mx-auto px-4 py-8 pt-24">
+        {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 text-center"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                بازگشت به انتخاب
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  داشبورد دانش‌آموز
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  خوش آمدید {student.first_name} {student.last_name} 👋
-                </p>
-                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                  ✨ 6 امکانات جدید برای شما فعال شده است!
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" onClick={() => router.push('/teachers')}>
-                <BookOpen className="w-4 h-4 mr-2" />
-                رزرو کلاس
-              </Button>
-              <Button onClick={() => router.push('/students/profile')}>
-                <Settings className="w-4 h-4 mr-2" />
-                تنظیمات
-              </Button>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
+            داشبورد دانش‌آموز
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            خوش آمدید {student.first_name} {student.last_name} 👋
+          </p>
+          <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+            ✨ امکانات جدید برای شما فعال شده است!
+          </p>
         </motion.div>
 
         {/* Stats Cards */}
@@ -493,7 +414,9 @@ export default function StudentDashboardPage() {
                 <div>
                   <p className="text-green-100 text-sm">کلاس‌های تکمیل شده</p>
                   <p className="text-2xl font-bold">{analytics?.completedClasses}</p>
-                  <p className="text-green-100 text-sm">از {analytics?.totalClasses} کلاس</p>
+                  <p className="text-green-100 text-sm">
+                    {analytics?.totalClasses === 0 ? 'هنوز کلاسی ندارید' : `از ${analytics?.totalClasses} کلاس`}
+                  </p>
                 </div>
                 <div className="p-3 bg-white/20 rounded-lg">
                   <CheckCircle className="w-8 h-8" />
@@ -508,7 +431,9 @@ export default function StudentDashboardPage() {
                 <div>
                   <p className="text-blue-100 text-sm">سطح فعلی</p>
                   <p className="text-2xl font-bold">{student.level}</p>
-                  <p className="text-blue-100 text-sm">{progress?.progressPercentage}% تکمیل شده</p>
+                  <p className="text-blue-100 text-sm">
+                    {progress?.progressPercentage === 0 ? 'شروع کنید' : `${progress?.progressPercentage}% تکمیل شده`}
+                  </p>
                 </div>
                 <div className="p-3 bg-white/20 rounded-lg">
                   <GraduationCap className="w-8 h-8" />
@@ -522,10 +447,14 @@ export default function StudentDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm">امتیاز متوسط</p>
-                  <p className="text-2xl font-bold">{analytics?.averageRating}</p>
+                  <p className="text-2xl font-bold">
+                    {analytics?.averageRating === 0 ? '-' : analytics?.averageRating}
+                  </p>
                   <div className="flex items-center gap-1 mt-2">
                     <Star className="w-4 h-4" />
-                    <span className="text-sm text-purple-100">از 5</span>
+                    <span className="text-sm text-purple-100">
+                      {analytics?.averageRating === 0 ? 'هنوز امتیازی ندارید' : 'از 5'}
+                    </span>
                   </div>
                 </div>
                 <div className="p-3 bg-white/20 rounded-lg">
@@ -556,7 +485,9 @@ export default function StudentDashboardPage() {
                 <div>
                   <p className="text-teal-100 text-sm">روزهای متوالی</p>
                   <p className="text-2xl font-bold">{progress?.streak}</p>
-                  <p className="text-teal-100 text-sm">روز مطالعه</p>
+                  <p className="text-teal-100 text-sm">
+                    {progress?.streak === 0 ? 'شروع کنید' : 'روز مطالعه'}
+                  </p>
                 </div>
                 <div className="p-3 bg-white/20 rounded-lg">
                   <Activity className="w-8 h-8" />
@@ -568,7 +499,7 @@ export default function StudentDashboardPage() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               نمای کلی
@@ -580,6 +511,10 @@ export default function StudentDashboardPage() {
             <TabsTrigger value="progress" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               پیشرفت
+            </TabsTrigger>
+            <TabsTrigger value="gamification" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              گیمیفیکیشن
             </TabsTrigger>
             <TabsTrigger value="features" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
@@ -672,6 +607,11 @@ export default function StudentDashboardPage() {
                       </span>
                     </div>
                     <Progress value={(progress?.weeklyProgress || 0) / (progress?.weeklyGoal || 1) * 100} className="h-2" />
+                    {progress?.weeklyProgress === 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                        برای شروع، اولین کلاس خود را رزرو کنید
+                      </p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -700,35 +640,51 @@ export default function StudentDashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  {analytics?.totalClasses === 0 ? (
+                    <div className="text-center py-4">
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        هنوز فعالیتی ندارید
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        اولین کلاس خود را رزرو کنید
+                      </p>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">کلاس تکمیل شد</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">2 ساعت پیش</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">کلاس جدید رزرو شد</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">1 روز پیش</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                      <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">سطح ارتقا یافت</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">3 روز پیش</p>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">کلاس تکمیل شد</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">2 ساعت پیش</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                          <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">کلاس جدید رزرو شد</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">1 روز پیش</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                          <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">سطح ارتقا یافت</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">3 روز پیش</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -821,6 +777,32 @@ export default function StudentDashboardPage() {
 
           {/* Progress Tab */}
           <TabsContent value="progress" className="space-y-6">
+            {/* Welcome Message for New Users */}
+            {analytics?.totalClasses === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800"
+              >
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    به بخش پیشرفت خوش آمدید! 📈
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    برای شروع ردیابی پیشرفت، اولین کلاس خود را رزرو کنید
+                  </p>
+                  <Button 
+                    onClick={() => router.push('/teachers')}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                  >
+                    مشاهده معلمان
+                  </Button>
+                </div>
+              </motion.div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Level Progress */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
@@ -833,27 +815,41 @@ export default function StudentDashboardPage() {
                 <CardContent className="space-y-6">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">سطح {progress?.currentLevel}</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{progress?.progressPercentage}%</span>
+                      <span className="text-sm font-medium">
+                        سطح {progress?.currentLevel || 'مبتدی'}
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {analytics?.totalClasses === 0 ? '0%' : `${progress?.progressPercentage}%`}
+                      </span>
                     </div>
-                    <Progress value={progress?.progressPercentage || 0} className="h-3" />
+                    <Progress 
+                      value={analytics?.totalClasses === 0 ? 0 : (progress?.progressPercentage || 0)} 
+                      className="h-3" 
+                    />
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                      {progress?.completedLessons} از {progress?.totalLessons} درس تکمیل شده
+                      {analytics?.totalClasses === 0 
+                        ? 'هنوز درسی تکمیل نکرده‌اید' 
+                        : `${progress?.completedLessons} از ${progress?.totalLessons} درس تکمیل شده`
+                      }
                     </p>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {progress?.streak}
+                        {analytics?.totalClasses === 0 ? '0' : progress?.streak}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">روز متوالی</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {analytics?.totalClasses === 0 ? 'روز متوالی' : 'روز متوالی'}
+                      </div>
                     </div>
                     <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {analytics?.improvementRate}%
+                        {analytics?.totalClasses === 0 ? '0' : analytics?.improvementRate}%
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">بهبود</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {analytics?.totalClasses === 0 ? 'بهبود' : 'بهبود'}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -871,13 +867,13 @@ export default function StudentDashboardPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {analytics?.totalClasses}
+                        {analytics?.totalClasses || 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">کل کلاس‌ها</div>
                     </div>
                     <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {analytics?.studyTime}
+                        {analytics?.studyTime || 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">ساعت مطالعه</div>
                     </div>
@@ -886,20 +882,319 @@ export default function StudentDashboardPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">زبان محبوب</span>
-                      <span className="text-sm font-medium">{analytics?.mostStudiedLanguage}</span>
+                      <span className="text-sm font-medium">
+                        {analytics?.totalClasses === 0 ? 'هنوز انتخاب نشده' : analytics?.mostStudiedLanguage}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">معلم محبوب</span>
-                      <span className="text-sm font-medium">{analytics?.favoriteTeacher}</span>
+                      <span className="text-sm font-medium">
+                        {analytics?.totalClasses === 0 ? 'هنوز معلمی انتخاب نکرده‌اید' : analytics?.favoriteTeacher}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">امتیاز متوسط</span>
-                      <span className="text-sm font-medium">{analytics?.averageRating}/5</span>
+                      <span className="text-sm font-medium">
+                        {analytics?.totalClasses === 0 ? '0' : analytics?.averageRating}/5
+                      </span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Gamification Tab */}
+          <TabsContent value="gamification" className="space-y-6">
+            {/* Welcome Message for New Users */}
+            {analytics?.totalClasses === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
+              >
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trophy className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    به دنیای گیمیفیکیشن خوش آمدید! 🎮
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    برای شروع کسب امتیاز و دستاورد، اولین کلاس خود را رزرو کنید
+                  </p>
+                  <Button 
+                    onClick={() => router.push('/teachers')}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                  >
+                    مشاهده معلمان
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Level & Points */}
+              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                    سطح و امتیازات
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Current Level */}
+                  <div className="text-center p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl">
+                    <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Trophy className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      سطح {student.level || 'مبتدی'}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      امتیاز کل: <span className="font-bold text-yellow-600 dark:text-yellow-400">
+                        {analytics?.totalClasses === 0 ? '0' : '1,250'}
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Progress to Next Level */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">پیشرفت به سطح بعدی</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {analytics?.totalClasses === 0 ? '0%' : '75%'}
+                      </span>
+                    </div>
+                    <Progress value={analytics?.totalClasses === 0 ? 0 : 75} className="h-3" />
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                      {analytics?.totalClasses === 0 ? 'شروع کنید تا امتیاز کسب کنید' : '250 امتیاز دیگر برای سطح بعدی'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Achievements */}
+              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-purple-500" />
+                    دستاوردها
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* First Class */}
+                    <div className={`text-center p-3 rounded-lg border ${
+                      analytics?.totalClasses === 0 
+                        ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+                        : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                    }`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${
+                        analytics?.totalClasses === 0 ? 'bg-gray-400' : 'bg-green-500'
+                      }`}>
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        analytics?.totalClasses === 0 
+                          ? 'text-gray-500 dark:text-gray-400' 
+                          : 'text-green-700 dark:text-green-300'
+                      }`}>
+                        {analytics?.totalClasses === 0 ? 'اولین کلاس' : 'اولین کلاس ✓'}
+                      </p>
+                    </div>
+
+                    {/* Study Streak */}
+                    <div className={`text-center p-3 rounded-lg border ${
+                      progress?.streak === 0 
+                        ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+                        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                    }`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${
+                        progress?.streak === 0 ? 'bg-gray-400' : 'bg-blue-500'
+                      }`}>
+                        <Activity className="w-5 h-5 text-white" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        progress?.streak === 0 
+                          ? 'text-gray-500 dark:text-gray-400' 
+                          : 'text-blue-700 dark:text-blue-300'
+                      }`}>
+                        {progress?.streak === 0 ? '7 روز متوالی' : `${progress?.streak} روز متوالی ✓`}
+                      </p>
+                    </div>
+
+                    {/* Perfect Score */}
+                    <div className={`text-center p-3 rounded-lg border ${
+                      analytics?.averageRating === 0 
+                        ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+                        : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                    }`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${
+                        analytics?.averageRating === 0 ? 'bg-gray-400' : 'bg-purple-500'
+                      }`}>
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        analytics?.averageRating === 0 
+                          ? 'text-gray-500 dark:text-gray-400' 
+                          : 'text-purple-700 dark:text-purple-300'
+                      }`}>
+                        {analytics?.averageRating === 0 ? 'امتیاز کامل' : 'امتیاز کامل ✓'}
+                      </p>
+                    </div>
+
+                    {/* Language Master */}
+                    <div className={`text-center p-3 rounded-lg border ${
+                      analytics?.totalClasses === 0 
+                        ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+                        : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                    }`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${
+                        analytics?.totalClasses === 0 ? 'bg-gray-400' : 'bg-orange-500'
+                      }`}>
+                        <Languages className="w-5 h-5 text-white" />
+                      </div>
+                      <p className={`text-xs font-medium ${
+                        analytics?.totalClasses === 0 
+                          ? 'text-gray-500 dark:text-gray-400' 
+                          : 'text-orange-700 dark:text-orange-300'
+                      }`}>
+                        {analytics?.totalClasses === 0 ? 'استاد زبان' : 'استاد زبان ✓'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Daily Challenges */}
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-red-500" />
+                  چالش‌های روزانه
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Challenge 1 */}
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <BookOpen className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">مطالعه 30 دقیقه</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">امتیاز: 50</p>
+                      </div>
+                    </div>
+                    <Progress value={analytics?.totalClasses === 0 ? 0 : 60} className="h-2 mb-2" />
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {analytics?.totalClasses === 0 ? 'شروع کنید تا پیشرفت کنید' : '18 دقیقه باقی مانده'}
+                    </p>
+                  </div>
+
+                  {/* Challenge 2 */}
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <Video className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">شرکت در کلاس</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">امتیاز: 100</p>
+                      </div>
+                    </div>
+                    <Progress value={analytics?.totalClasses === 0 ? 0 : 100} className="h-2 mb-2" />
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {analytics?.totalClasses === 0 ? 'هنوز کلاسی ندارید' : 'تکمیل شده! 🎉'}
+                    </p>
+                  </div>
+
+                  {/* Challenge 3 */}
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                        <Brain className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">تمرین AI</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">امتیاز: 75</p>
+                      </div>
+                    </div>
+                    <Progress value={0} className="h-2 mb-2" />
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {analytics?.totalClasses === 0 ? 'شروع کنید تا دسترسی پیدا کنید' : 'شروع نشده'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Leaderboard */}
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-500" />
+                  جدول امتیازات
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {/* Top 3 */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {/* 2nd Place */}
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                      <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-white font-bold">2</span>
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">علی احمدی</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">2,450 امتیاز</p>
+                    </div>
+
+                    {/* 1st Place */}
+                    <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-400">
+                      <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <Trophy className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">سارا محمدی</h4>
+                      <p className="text-sm text-yellow-600 dark:text-yellow-400">3,200 امتیاز</p>
+                    </div>
+
+                    {/* 3rd Place */}
+                    <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+                      <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-white font-bold">3</span>
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">محمد رضایی</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">2,100 امتیاز</p>
+                    </div>
+                  </div>
+
+                  {/* Your Position */}
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold">
+                            {analytics?.totalClasses === 0 ? '-' : '5'}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">شما</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {analytics?.totalClasses === 0 ? '0 امتیاز' : '1,250 امتیاز'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline">
+                        {analytics?.totalClasses === 0 ? 'شروع کنید' : 'مشاهده کامل'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Features Tab */}

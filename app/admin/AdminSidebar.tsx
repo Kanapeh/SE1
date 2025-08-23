@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpen, Users, Settings, FileText, DollarSign, MessageSquare, MessageCircle } from "lucide-react";
+import { Home, BookOpen, Users, Settings, FileText, DollarSign, MessageSquare, MessageCircle, GraduationCap } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
     { href: "/admin", label: "داشبورد", icon: Home },
+    { href: "/admin/teachers", label: "مدیریت معلمان", icon: GraduationCap },
     { href: "/admin/courses", label: "مدیریت دوره‌ها", icon: BookOpen },
+    { href: "/admin/blog", label: "مدیریت وبلاگ", icon: FileText },
     { href: "/admin/students", label: "مدیریت دانش‌آموزان", icon: Users },
     { href: "/admin/requests", label: "درخواست‌ها", icon: FileText },
     { href: "/admin/pricing", label: "مدیریت قیمت‌ها", icon: DollarSign },

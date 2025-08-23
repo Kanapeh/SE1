@@ -271,62 +271,53 @@ function AuthCompleteContent() {
           return;
         }
 
-        // Check if user has admin role in auth-users table
-        console.log('🔍 Checking auth-users table...');
-        console.log('🔍 User ID being checked:', session.user.id);
+        // Check if user has admin role in auth-users table (if it exists)
+        console.log('🔍 Checking if auth-users table exists...');
         
         try {
-          // First check if the auth-users table exists and is accessible
-          console.log('🔍 Testing auth-users table accessibility...');
+          // First check if the table exists by trying to access it
           const { data: tableTest, error: tableError } = await supabase
             .from("auth-users")
             .select("count")
             .limit(1);
           
           if (tableError) {
-            console.error('❌ Auth-users table access error:', {
-              message: tableError.message,
-              code: tableError.code,
-              details: tableError.details,
-              hint: tableError.hint
-            });
-            console.log('⚠️ Auth-users table may not exist or be accessible');
-          } else {
-            console.log('✅ Auth-users table is accessible');
-          }
-          
-          const { data: authUserData, error: authUserError } = await supabase
-            .from("auth-users")
-            .select("id, role, is_admin")
-            .eq("id", session.user.id)
-            .single();
-
-          if (authUserError) {
-            if (authUserError.code === 'PGRST116') {
-              console.log('ℹ️ User not found in auth-users table (this is normal for new users)');
+            if (tableError.code === '42P01') { // Table doesn't exist
+              console.log('ℹ️ Auth-users table does not exist, skipping admin check');
             } else {
-              console.error('❌ Auth user check error:', {
-                message: authUserError.message,
-                code: authUserError.code,
-                details: authUserError.details,
-                hint: authUserError.hint
-              });
+              console.log('⚠️ Auth-users table access error (may not exist):', tableError.message);
             }
           } else {
-            console.log('✅ Auth user data found:', authUserData);
-          }
+            console.log('✅ Auth-users table is accessible, checking admin status...');
+            
+            const { data: authUserData, error: authUserError } = await supabase
+              .from("auth-users")
+              .select("id, role, is_admin")
+              .eq("id", session.user.id)
+              .single();
 
-          if (authUserData && (authUserData.role === 'admin' || authUserData.is_admin === true)) {
-            console.log("✅ OAuth user is admin by role:", authUserData);
-            toast({
-              title: "ورود موفقیت‌آمیز",
-              description: "در حال انتقال به پنل ادمین...",
-            });
-            router.push('/admin');
-            return;
+            if (authUserError) {
+              if (authUserError.code === 'PGRST116') {
+                console.log('ℹ️ User not found in auth-users table (this is normal for new users)');
+              } else {
+                console.log('⚠️ Auth user check error:', authUserError.message);
+              }
+            } else {
+              console.log('✅ Auth user data found:', authUserData);
+              
+              if (authUserData && (authUserData.role === 'admin' || authUserData.is_admin === true)) {
+                console.log("✅ OAuth user is admin by role:", authUserData);
+                toast({
+                  title: "ورود موفقیت‌آمیز",
+                  description: "در حال انتقال به پنل ادمین...",
+                });
+                router.push('/admin');
+                return;
+              }
+            }
           }
         } catch (error) {
-          console.error('💥 Exception during auth-users check:', error);
+          console.log('ℹ️ Auth-users table check failed, continuing with other checks...');
           // Continue with other checks even if this fails
         }
 
@@ -348,8 +339,8 @@ function AuthCompleteContent() {
         }
 
         if (teacherData) {
-          if (teacherData.status === 'active') {
-            console.log("✅ OAuth user is active teacher");
+          if (teacherData.status === 'active' || teacherData.status === 'Approved') {
+            console.log("✅ OAuth user is active/approved teacher");
             toast({
               title: "ورود موفقیت‌آمیز",
               description: "در حال انتقال به پنل معلم...",
@@ -358,7 +349,7 @@ function AuthCompleteContent() {
             return;
           } else {
             console.log("⚠️ OAuth user is inactive teacher");
-            setError('حساب کاربری معلم شما غیرفعال است');
+            setError('حساب کاربری معلم شما هنوز تایید نشده است. لطفاً منتظر تایید ادمین باشید.');
             return;
           }
         }

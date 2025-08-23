@@ -6,8 +6,8 @@ import Footer from "@/app/components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import PKCEDebugger from "@/components/PKCEDebugger";
-
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import ClientOnly from "@/components/ClientOnly";
 
 // فونت اصلی - Vazirmatn (بهترین فونت فارسی)
 const vazirmatn = Vazirmatn({
@@ -96,20 +96,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
-      <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <FloatingWhatsApp />
-          <Toaster position="top-center" />
-          {process.env.NODE_ENV === 'development' && <PKCEDebugger />}
-        </ThemeProvider>
+      <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`} suppressHydrationWarning>
+        <ClientOnly>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Header />
+            <main className="min-h-screen">
+              {children}
+            </main>
+            <Footer />
+            <FloatingWhatsApp />
+            <Toaster position="top-center" richColors />
+            <PKCEDebugger />
+          </ThemeProvider>
+        </ClientOnly>
       </body>
     </html>
   );

@@ -19,6 +19,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface Teacher {
   id: string;
@@ -63,7 +64,7 @@ interface ClassSession {
 export default function TeacherVideoCallPage() {
   const router = useRouter();
   const params = useParams();
-  const teacherId = params.id as string;
+  const teacherId = params?.id as string;
 
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [currentClass, setCurrentClass] = useState<ClassSession | null>(null);
@@ -71,49 +72,176 @@ export default function TeacherVideoCallPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock teacher data
-    const mockTeacher: Teacher = {
-      id: teacherId,
-      first_name: 'احمد',
-      last_name: 'رضایی',
-      email: 'ahmad.rezaei@example.com',
-      phone: '09121234567',
-      avatar: null,
-      bio: 'استاد زبان انگلیسی با ۱۰ سال تجربه تدریس',
-      hourly_rate: 150000,
-      experience_years: 10,
-      languages: ['انگلیسی', 'فرانسوی'],
-      specialties: ['مکالمه', 'گرامر', 'آیلتس'],
-      rating: 4.8,
-      total_students: 45,
-      total_classes: 320,
-      availability: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه']
-    };
+    const fetchTeacherAndClassData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get current logged-in user
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+          console.error('Error getting current user:', authError);
+          return;
+        }
 
-    // Mock current class
-    const mockClass: ClassSession = {
-      id: 'class-1',
-      student_id: 'student-1',
-      teacher_id: teacherId,
-      scheduled_time: new Date().toISOString(),
-      duration: 60,
-      status: 'scheduled',
-      subject: 'مکالمه انگلیسی سطح متوسط',
-      notes: 'تمرکز روی مکالمه روزمره و اصلاح تلفظ',
-      student: {
-        id: 'student-1',
-        first_name: 'سارا',
-        last_name: 'محمدی',
-        email: 'sara.mohammadi@example.com',
-        avatar: null,
-        level: 'متوسط',
-        language: 'انگلیسی'
+        console.log('Current user:', user.email);
+        console.log('Teacher ID from URL:', teacherId);
+        
+        // Fetch teacher data from database
+        const { data: teacherData, error: teacherError } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('id', teacherId)
+          .single();
+
+        console.log('Teacher query result:', { teacherData, teacherError });
+
+        if (teacherError) {
+          console.error('Error fetching teacher:', teacherError);
+          return;
+        }
+
+        if (teacherData) {
+          console.log('Setting teacher data:', teacherData);
+          setTeacher({
+            id: teacherData.id,
+            first_name: teacherData.first_name,
+            last_name: teacherData.last_name,
+            email: teacherData.email,
+            phone: teacherData.phone,
+            avatar: teacherData.avatar,
+            bio: teacherData.bio,
+            hourly_rate: teacherData.hourly_rate || 0,
+            experience_years: teacherData.experience_years || 0,
+            languages: teacherData.languages || [],
+            specialties: teacherData.teaching_methods || [],
+            rating: 0, // Will be calculated later
+            total_students: 0, // Will be calculated later
+            total_classes: 0, // Will be calculated later
+            availability: teacherData.available_days || []
+          });
+        }
+
+        // Fetch current logged-in student data
+        let { data: studentData, error: studentError } = await supabase
+          .from('students')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (studentError) {
+          console.error('Error fetching student:', studentError);
+          // Try to find student by email if id doesn't match
+          const { data: studentByEmail, error: emailError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('email', user.email)
+            .single();
+          
+          if (emailError) {
+            console.error('Error fetching student by email:', emailError);
+            // Create a default student if none found
+            const defaultStudent = {
+              id: user.id,
+              first_name: 'دانش‌آموز',
+              last_name: 'فعلی',
+              email: user.email || 'unknown@example.com',
+              avatar: null,
+              level: 'متوسط',
+              language: 'انگلیسی'
+            };
+            
+            // Create default class with current student
+            const defaultClass: ClassSession = {
+              id: `class-${teacherId}-${Date.now()}`,
+              student_id: user.id,
+              teacher_id: teacherId,
+              scheduled_time: new Date().toISOString(),
+              duration: 60,
+              status: 'scheduled',
+              subject: 'کلاس آنلاین',
+              notes: 'کلاس آنلاین با معلم',
+              student: defaultStudent
+            };
+            setCurrentClass(defaultClass);
+            return;
+          }
+          
+          if (studentByEmail) {
+            studentData = studentByEmail;
+          }
+        }
+
+        if (studentData) {
+          // Fetch or create class session for current student and teacher
+          const { data: classData, error: classError } = await supabase
+            .from('classes')
+            .select('*')
+            .eq('teacher_id', teacherId)
+            .eq('student_id', studentData.id)
+            .eq('status', 'scheduled')
+            .gte('scheduled_time', new Date().toISOString())
+            .order('scheduled_time', { ascending: true })
+            .limit(1)
+            .single();
+
+          if (classError) {
+            console.log('No existing class found, creating default class');
+            // Create a new class session for current student
+            const newClass: ClassSession = {
+              id: `class-${teacherId}-${studentData.id}-${Date.now()}`,
+              student_id: studentData.id,
+              teacher_id: teacherId,
+              scheduled_time: new Date().toISOString(),
+              duration: 60,
+              status: 'scheduled',
+              subject: 'کلاس آنلاین',
+              notes: 'کلاس آنلاین با معلم',
+              student: {
+                id: studentData.id,
+                first_name: studentData.first_name,
+                last_name: studentData.last_name,
+                email: studentData.email,
+                avatar: studentData.avatar,
+                level: studentData.education_level || 'متوسط',
+                language: studentData.preferred_languages?.[0] || 'انگلیسی'
+              }
+            };
+            setCurrentClass(newClass);
+          } else if (classData) {
+            // Use existing class data
+            const currentClassData: ClassSession = {
+              id: classData.id,
+              student_id: classData.student_id,
+              teacher_id: classData.teacher_id,
+              scheduled_time: classData.scheduled_time,
+              duration: classData.duration,
+              status: classData.status as any,
+              subject: classData.subject || 'کلاس آنلاین',
+              notes: classData.notes || 'کلاس آنلاین',
+              student: {
+                id: studentData.id,
+                first_name: studentData.first_name,
+                last_name: studentData.last_name,
+                email: studentData.email,
+                avatar: studentData.avatar,
+                level: studentData.education_level || 'متوسط',
+                language: studentData.preferred_languages?.[0] || 'انگلیسی'
+              }
+            };
+            setCurrentClass(currentClassData);
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetchTeacherAndClassData:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    setTeacher(mockTeacher);
-    setCurrentClass(mockClass);
-    setLoading(false);
+    if (teacherId) {
+      fetchTeacherAndClassData();
+    }
   }, [teacherId]);
 
   const handleCallStart = () => {

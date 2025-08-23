@@ -17,18 +17,21 @@ import {
   Menu,
   X,
   User,
+  Shield,
   GraduationCap as TeacherIcon
 } from "lucide-react";
 import Image from "next/image";
 import imageLogo from "./images/logo.png";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -39,6 +42,13 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Hide header on student dashboard pages
+  if (pathname?.startsWith('/dashboard/student') || pathname?.startsWith('/students/')) {
+    return null;
+  }
+
+  if (!mounted) return null;
+
   const navItems = [
     { name: "خانه", href: "/", icon: Home },
     { name: "دوره‌ها", href: "/courses", icon: BookOpen },
@@ -47,8 +57,6 @@ export default function Header() {
     { name: "درباره ما", href: "/about", icon: Users },
     { name: "تماس با ما", href: "/contact", icon: Phone },
   ];
-
-  if (!mounted) return null;
 
   return (
     <>
@@ -118,6 +126,8 @@ export default function Header() {
               </motion.div>
             ))}
             
+
+
             {/* Login Button */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -276,11 +286,12 @@ export default function Header() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
+                  className="mb-4"
                 >
                   <Link href="/contact" onClick={() => setIsSidebarOpen(false)}>
                     <div className="flex items-center p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border border-indigo-200 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 group">
                       <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                        <Phone className="w-6 h-6 text-white" />
+                        <Phone className="w-6 h-5 text-white" />
                       </div>
                       <div>
                         <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1">تماس با ما</h4>
@@ -289,6 +300,8 @@ export default function Header() {
                     </div>
                   </Link>
                 </motion.div>
+
+
               </div>
             </motion.div>
           </>
@@ -313,6 +326,8 @@ export default function Header() {
           </motion.div>
         ))}
         
+
+
         {/* Login Button */}
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
           <Link href="/login">

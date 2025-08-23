@@ -398,8 +398,8 @@ function LoginPageContent() {
 
         if (teacherData) {
           console.log("✅ User found in teachers table:", teacherData);
-          if (teacherData.status === 'active') {
-            console.log("🎯 User is active teacher, redirecting to admin panel");
+          if (teacherData.status === 'active' || teacherData.status === 'Approved') {
+            console.log("🎯 User is active/approved teacher, redirecting to admin panel");
             handleRedirect("/admin", "خوش آمدید معلم!");
           } else {
             console.log("⚠️ User is inactive teacher");

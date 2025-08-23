@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/lib/supabase';
 import Link from "next/link";
 import { Editor } from '@tinymce/tinymce-react';
 import { useRouter } from 'next/navigation';
@@ -33,7 +33,7 @@ export default function BlogPage() {
   const [search, setSearch] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const editorRef = useRef<any>(null);
-  const supabase = createClientComponentClient();
+
 
   useEffect(() => {
     checkAuth();
@@ -43,7 +43,7 @@ export default function BlogPage() {
   const checkAuth = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
-      router.push('/login');
+      router.push('/admin/login');
     }
   };
 
@@ -51,7 +51,7 @@ export default function BlogPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push('/login');
+        router.push('/admin/login');
         return;
       }
 
@@ -102,7 +102,7 @@ export default function BlogPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push('/login');
+        router.push('/admin/login');
         return;
       }
 
@@ -269,16 +269,12 @@ export default function BlogPage() {
     menubar: true,
     directionality: 'rtl',
     plugins: [
-      'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 
-      'searchreplace', 'table', 'visualblocks', 'wordcount', 'checklist', 'mediaembed', 'casechange', 
-      'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 
-      'advtable', 'advcode', 'editimage', 'advtemplate', 'mentions', 
-      'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown',
-      'importword', 'exportword', 'exportpdf'
+      'anchor', 'autolink', 'charmap', 'code', 'emoticons', 'image', 'link', 'lists', 'media', 
+      'searchreplace', 'table', 'visualblocks', 'wordcount', 'fullscreen', 'help', 'insertdatetime',
+      'preview', 'save', 'directionality'
     ],
     toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | ' +
-      'link image media table mergetags | spellcheckdialog a11ycheck typography | ' +
-      'align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+      'link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | code fullscreen help | removeformat',
     content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
     images_upload_handler: async (blobInfo: any) => {
       const file = blobInfo.blob();
@@ -321,8 +317,11 @@ export default function BlogPage() {
           />
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
             افزودن مقاله جدید
           </button>
         </div>
@@ -406,152 +405,195 @@ export default function BlogPage() {
 
       {/* Add Post Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">افزودن مقاله جدید</h2>
-            <form onSubmit={handleAddPost} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">عنوان</label>
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">محتوا</label>
-                <Editor
-                  apiKey="v8l89007akyh5ic8nt27hm1zsj5iheg8dzn0n41sinazolj3"
-                  onInit={(evt: any, editor: any) => editorRef.current = editor}
-                  initialValue=""
-                  init={editorConfig}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">آدرس تصویر شاخص</label>
-                <input
-                  type="url"
-                  name="image_url"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">نویسنده</label>
-                <input
-                  type="text"
-                  name="author"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">وضعیت</label>
-                <select
-                  name="status"
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700">
+            {/* Header */}
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white">افزودن مقاله جدید</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mt-2">مقاله جدید خود را با فرم زیبای زیر ایجاد کنید</p>
+                </div>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                 >
-                  <option value="draft">پیش‌نویس</option>
-                  <option value="published">منتشر شده</option>
-                  <option value="archived">بایگانی</option>
-                </select>
+                  <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">برچسب‌ها (با کاما جدا کنید)</label>
-                <input
-                  type="text"
-                  name="tags"
-                  placeholder="مثال: آموزش, زبان انگلیسی, گرامر"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleAddPost} className="p-6 space-y-6">
+              {/* Basic Info Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  اطلاعات پایه مقاله
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      عنوان مقاله <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      required
+                      placeholder="عنوان جذاب و کوتاه مقاله خود را وارد کنید..."
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      نویسنده <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="author"
+                      required
+                      placeholder="نام نویسنده یا مدیر سیستم"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    برچسب‌ها
+                  </label>
+                  <input
+                    type="text"
+                    name="tags"
+                    placeholder="آموزش, زبان انگلیسی, گرامر, مکالمه (با کاما جدا کنید)"
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">برچسب‌ها به خوانندگان کمک می‌کنند تا مقاله شما را راحت‌تر پیدا کنند</p>
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    وضعیت انتشار <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="status"
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  >
+                    <option value="draft">پیش‌نویس (ذخیره شده اما منتشر نشده)</option>
+                    <option value="published">منتشر شده (قابل مشاهده برای عموم)</option>
+                    <option value="archived">بایگانی شده</option>
+                  </select>
+                </div>
               </div>
-              
+
+              {/* Image Section */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 rounded-xl border border-green-200 dark:border-green-800">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  تصویر شاخص مقاله
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    آدرس تصویر شاخص <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    name="image_url"
+                    required
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">تصویر شاخص باید کیفیت بالا و اندازه مناسب (حداقل 800x600 پیکسل) داشته باشد</p>
+                </div>
+              </div>
+
               {/* Video Section */}
-              <div className="border-t pt-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-xl border border-purple-200 dark:border-purple-800">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  ویدیو (اختیاری)
+                </h3>
+                
                 <div className="flex items-center mb-4">
                   <input
                     type="checkbox"
                     name="has_video"
                     id="has_video"
-                    className="mr-2"
+                    className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                   />
-                  <label htmlFor="has_video" className="text-sm font-medium text-gray-700">
-                    شامل ویدیو
+                  <label htmlFor="has_video" className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    این مقاله شامل ویدیو است
                   </label>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">آدرس ویدیو (YouTube, Vimeo)</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    آدرس ویدیو
+                  </label>
                   <input
                     type="url"
                     name="video_url"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="https://www.youtube.com/watch?v=... یا https://vimeo.com/..."
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">از YouTube، Vimeo یا سایر سرویس‌های ویدیویی پشتیبانی می‌شود</p>
                 </div>
               </div>
 
-              {/* Chart Section */}
-              <div className="border-t pt-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    name="has_chart"
-                    id="has_chart"
-                    className="mr-2"
-                  />
-                  <label htmlFor="has_chart" className="text-sm font-medium text-gray-700">
-                    شامل نمودار
-                  </label>
-                </div>
+              {/* Content Section */}
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-6 rounded-xl border border-orange-200 dark:border-orange-800">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  محتوای مقاله
+                </h3>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">داده‌های نمودار (JSON)</label>
-                  <textarea
-                    name="chart_data"
-                    rows={6}
-                    placeholder='{"type": "bar", "data": {"labels": ["A", "B", "C"], "datasets": [{"label": "مثال", "data": [1, 2, 3]}]}}'
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    محتوای مقاله <span className="text-red-500">*</span>
+                  </label>
+                  <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <Editor
+                      apiKey="v8l89007akyh5ic8nt27hm1zsj5iheg8dzn0n41sinazolj3"
+                      onInit={(evt: any, editor: any) => editorRef.current = editor}
+                      initialValue=""
+                      init={editorConfig}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">از ابزارهای ویرایشگر برای ایجاد محتوای جذاب و ساختاریافته استفاده کنید</p>
                 </div>
               </div>
 
-              {/* Table Section */}
-              <div className="border-t pt-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    name="has_table"
-                    id="has_table"
-                    className="mr-2"
-                  />
-                  <label htmlFor="has_table" className="text-sm font-medium text-gray-700">
-                    شامل جدول
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">داده‌های جدول (JSON)</label>
-                  <textarea
-                    name="table_data"
-                    rows={6}
-                    placeholder='{"headers": ["ستون 1", "ستون 2"], "rows": [["داده 1", "داده 2"], ["داده 3", "داده 4"]]}'
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-4">
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  className="px-8 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl font-medium transition-all duration-300 border-2 border-gray-200 dark:border-gray-700"
                 >
                   انصراف
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  افزودن
+                  <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  انتشار مقاله
                 </button>
               </div>
             </form>
