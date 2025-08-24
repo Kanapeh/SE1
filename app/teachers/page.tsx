@@ -68,38 +68,6 @@ export default function TeachersPage() {
       setLoading(true);
       console.log('🔍 Fetching teachers from Supabase...');
       
-      // Now that RLS policy is created, we can use the regular anon key
-      console.log('🔄 Using anon key with RLS policy...');
-      
-      // Test simple query first
-      console.log('🧪 Testing simple query...');
-      console.log('🔧 Supabase client:', supabase);
-      console.log('🔧 Supabase client type:', typeof supabase);
-      
-      const testResult = await supabase
-        .from('teachers')
-        .select('id')
-        .limit(1);
-      
-      console.log('🧪 Test query result:', testResult);
-      console.log('🧪 Test query success:', !testResult.error);
-      console.log('🧪 Test query data:', testResult.data);
-      
-      if (testResult.error) {
-        console.error('❌ Test query failed:', testResult.error);
-        console.error('Test error details:', {
-          message: testResult.error.message || 'No message',
-          details: testResult.error.details || 'No details',
-          hint: testResult.error.hint || 'No hint',
-          code: testResult.error.code || 'No code'
-        });
-        console.error('Full test error object:', JSON.stringify(testResult.error, null, 2));
-        console.error('Test error type:', typeof testResult.error);
-        setLoading(false);
-        return;
-      }
-      
-      // Use the regular supabase client (with anon key)
       const result = await supabase
         .from('teachers')
         .select('*')
@@ -107,37 +75,14 @@ export default function TeachersPage() {
       
       if (result.error) {
         console.error('❌ Query failed:', result.error);
-        console.error('Error details:', {
-          message: result.error.message || 'No message',
-          details: result.error.details || 'No details',
-          hint: result.error.hint || 'No hint',
-          code: result.error.code || 'No code'
-        });
-        console.error('Full error object:', JSON.stringify(result.error, null, 2));
-        console.error('Error type:', typeof result.error);
         setLoading(false);
         return;
       }
-      
-      console.log('✅ Teachers fetched successfully:', result.data?.length || 0);
-      console.log('📊 Sample teacher data:', result.data?.[0]);
       
       // Filter for approved teachers
       const approvedTeachers = result.data?.filter(teacher => 
         teacher.status === 'Approved' || teacher.status === 'approved' || teacher.status === 'active'
       ) || [];
-      
-      console.log('✅ Filtered approved teachers:', approvedTeachers?.length || 0);
-      console.log('📊 Approved teachers data:', approvedTeachers);
-      
-      // Show status breakdown
-      if (result.data && result.data.length > 0) {
-        const statusCount = result.data.reduce((acc, teacher) => {
-          acc[teacher.status || 'unknown'] = (acc[teacher.status || 'unknown'] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        console.log('📊 Status breakdown:', statusCount);
-      }
       
       setTeachers(approvedTeachers);
       setFilteredTeachers(approvedTeachers);
@@ -145,8 +90,6 @@ export default function TeachersPage() {
       
     } catch (error) {
       console.error('💥 Unexpected error:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error stringified:', JSON.stringify(error, null, 2));
       setLoading(false);
     }
   };

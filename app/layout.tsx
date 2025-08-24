@@ -34,8 +34,25 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
-  description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+  title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی | SE1A Academy",
+  description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان. دوره‌های حضوری و آنلاین با بهترین اساتید.",
+  keywords: "آموزش زبان انگلیسی, کلاس زبان, دوره زبان, معلم خصوصی زبان, آکادمی زبان, SE1A, سِ وان",
+  authors: [{ name: "SE1A Academy" }],
+  creator: "SE1A Academy",
+  publisher: "SE1A Academy",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://www.se1a.org'),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'fa-IR': '/',
+      'en-US': '/en',
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -50,12 +67,14 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   other: {
     'msapplication-config': '/browserconfig.xml',
+    'msapplication-TileColor': '#ffffff',
+    'theme-color': '#ffffff',
   },
   openGraph: {
     title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
-    description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+    description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان. دوره‌های حضوری و آنلاین با بهترین اساتید.",
     url: "https://www.se1a.org",
-    siteName: "سِ وان",
+    siteName: "سِ وان - SE1A Academy",
     images: [
       {
         url: "https://www.se1a.org/images/logo.png",
@@ -72,6 +91,8 @@ export const metadata: Metadata = {
     title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
     description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
     images: ["https://www.se1a.org/images/logo.png"],
+    creator: "@se1a_academy",
+    site: "@se1a_academy",
   },
   robots: {
     index: true,
@@ -85,7 +106,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "your-google-verification-code", // کد تایید گوگل را اینجا قرار دهید
+    google: "gHW_n1GYHPWhQoj46nxuPhE5TKG9G0hMgk5X7Kn1xsM", // کد تایید گوگل
   },
 };
 
@@ -96,6 +117,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
+      <head>
+        {/* Schema.org Organization and Logo Markup */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+              "alternateName": "SE1A Academy",
+              "url": "https://www.se1a.org",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://www.se1a.org/images/logo.png",
+                "width": 1200,
+                "height": 630,
+                "alt": "سِ وان - مرکز تخصصی آموزش زبان انگلیسی"
+              },
+              "image": "https://www.se1a.org/images/logo.png",
+              "description": "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
+              "sameAs": [
+                "https://www.instagram.com/se1a_academy",
+                "https://www.youtube.com/@Se1-academy"
+              ]
+            })
+          }}
+        />
+      </head>
       <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`} suppressHydrationWarning>
         <ClientOnly>
           <ThemeProvider
