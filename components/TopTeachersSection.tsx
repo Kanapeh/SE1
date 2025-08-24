@@ -16,40 +16,12 @@ const topTeachers = [
     specialty: "مکالمه انگلیسی",
     rating: 4.9,
     students: 156,
-    avatar: "/images/teacher1.jpg",
+    avatar: "/images/sepanta.png", // Using the existing sepanta.png image
     experience: 8,
     hourlyRate: 250000,
     gradient: "from-blue-500 to-cyan-500",
     emoji: "🗣️",
     achievements: ["برنده جایزه بهترین معلم سال", "نمره 8.5 در آیلتس"],
-    languages: ["انگلیسی", "فارسی"]
-  },
-  {
-    id: "2", 
-    name: "پارمیدا معصومی",
-    specialty: "گرامر پیشرفته",
-    rating: 4.8,
-    students: 203,
-    avatar: "/images/teacher2.jpg",
-    experience: 12,
-    hourlyRate: 300000,
-    gradient: "from-purple-500 to-pink-500",
-    emoji: "📚",
-    achievements: ["دکترای زبان‌شناسی", "نویسنده کتاب‌های آموزشی"],
-    languages: ["انگلیسی", "فارسی", "آلمانی"]
-  },
-  {
-    id: "3",
-    name: "نجمه کریمی",
-    specialty: "آیلتس",
-    rating: 4.7,
-    students: 89,
-    avatar: "/images/teacher3.jpg",
-    experience: 6,
-    hourlyRate: 280000,
-    gradient: "from-green-500 to-emerald-500",
-    emoji: "🎯",
-    achievements: ["مدرس رسمی آیلتس", "نمره 9 در آیلتس"],
     languages: ["انگلیسی", "فارسی"]
   }
 ];
@@ -89,7 +61,7 @@ export default function TopTeachersSection() {
         </motion.div>
 
         {/* Teachers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-8 mb-16 max-w-2xl mx-auto">
           {topTeachers.map((teacher, index) => (
             <motion.div
               key={teacher.id}

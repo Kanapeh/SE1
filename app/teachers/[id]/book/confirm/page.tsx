@@ -250,19 +250,48 @@ function ConfirmBookingContent() {
         return;
       }
 
-      // Create payment
-      const payment = await createPayment(student.id);
-      if (!payment) {
-        alert('خطا در ثبت پرداخت');
-        return;
+      // Create booking using the new API
+      const bookingPayload = {
+        teacher_id: bookingData.teacher_id,
+        student_id: currentUser.id,
+        student_name: bookingData.studentName,
+        student_email: bookingData.studentEmail,
+        student_phone: bookingData.studentPhone,
+        selected_days: bookingData.selectedDays,
+        selected_hours: bookingData.selectedHours,
+        session_type: bookingData.sessionType,
+        duration: parseInt(bookingData.duration),
+        total_price: bookingData.totalPrice,
+        notes: bookingData.notes,
+        transaction_id: paymentForm.transactionId
+      };
+
+      console.log('Creating booking with payload:', bookingPayload);
+
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingPayload),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'خطا در ایجاد رزرو');
       }
+
+      console.log('✅ Booking created successfully:', result.booking);
 
       // Success
       alert('رزرو و پرداخت با موفقیت ثبت شد!');
+      
+      // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {
       console.error('Error submitting:', error);
-      alert('خطا در ثبت رزرو');
+      alert(`خطا در ثبت رزرو: ${error instanceof Error ? error.message : 'خطای نامشخص'}`);
     } finally {
       setSubmitting(false);
     }

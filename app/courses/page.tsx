@@ -41,6 +41,26 @@ export default function CoursesPage() {
       setLoading(true);
       setError(null);
 
+      // Test simple query first
+      console.log("🧪 Testing simple query...");
+      const testResult = await supabase
+        .from("coursesstudents")
+        .select("id")
+        .limit(1);
+      
+      console.log("🧪 Test query result:", testResult);
+      
+      if (testResult.error) {
+        console.error("❌ Test query failed:", testResult.error);
+        console.error("Test error details:", {
+          message: testResult.error.message || 'No message',
+          details: testResult.error.details || 'No details',
+          hint: testResult.error.hint || 'No hint',
+          code: testResult.error.code || 'No code'
+        });
+        throw testResult.error;
+      }
+      
       const { data, error: fetchError } = await supabase
         .from("coursesstudents")
         .select("*")
@@ -49,6 +69,13 @@ export default function CoursesPage() {
 
       if (fetchError) {
         console.error("Error fetching courses:", fetchError);
+        console.error("Error details:", {
+          message: fetchError.message || 'No message',
+          details: fetchError.details || 'No details',
+          hint: fetchError.hint || 'No hint',
+          code: fetchError.code || 'No code'
+        });
+        console.error("Full error object:", JSON.stringify(fetchError, null, 2));
         throw fetchError;
       }
 
@@ -60,6 +87,8 @@ export default function CoursesPage() {
       setCourses(data as Course[]);
     } catch (err: any) {
       console.error("Error in fetchCourses:", err);
+      console.error("Error type:", typeof err);
+      console.error("Error stringified:", JSON.stringify(err, null, 2));
       setError(err.message || "خطا در دریافت دوره‌ها");
     } finally {
       setLoading(false);

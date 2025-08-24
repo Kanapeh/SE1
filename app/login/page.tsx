@@ -399,8 +399,8 @@ function LoginPageContent() {
         if (teacherData) {
           console.log("✅ User found in teachers table:", teacherData);
           if (teacherData.status === 'active' || teacherData.status === 'Approved') {
-            console.log("🎯 User is active/approved teacher, redirecting to admin panel");
-            handleRedirect("/admin", "خوش آمدید معلم!");
+            console.log("🎯 User is active/approved teacher, redirecting to teacher dashboard");
+            handleRedirect("/dashboard/teacher", "خوش آمدید معلم!");
           } else {
             console.log("⚠️ User is inactive teacher");
             setError("حساب کاربری شما هنوز تایید نشده است. لطفاً منتظر تایید ادمین باشید.");

@@ -175,7 +175,7 @@ export default function AdminDashboard() {
           {
             title: 'مدیریت دوره‌ها',
             description: 'ایجاد و مدیریت دوره‌های آموزشی',
-            href: '/admin/courses',
+      href: '/admin/courses',
             icon: 'BookOpen',
             color: 'from-purple-500 to-pink-500',
             bgColor: 'bg-gradient-to-br from-purple-50 to-pink-50',
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
           {
             title: 'مدیریت قیمت‌ها',
             description: 'تنظیم قیمت دوره‌ها و پلن‌ها',
-            href: '/admin/pricing',
+      href: '/admin/pricing',
             icon: 'DollarSign',
             color: 'from-yellow-500 to-orange-500',
             bgColor: 'bg-gradient-to-br from-yellow-50 to-orange-50',
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
           {
             title: 'تنظیمات سیستم',
             description: 'تنظیمات کلی و پیکربندی',
-            href: '/admin/settings',
+      href: '/admin/settings',
             icon: 'Settings',
             color: 'from-gray-500 to-slate-500',
             bgColor: 'bg-gradient-to-br from-gray-50 to-slate-50',
@@ -374,9 +374,9 @@ export default function AdminDashboard() {
           {stats.sections.map((section, index) => {
             const IconComponent = iconMap[section.icon as keyof typeof iconMap];
             return (
-              <Link
-                key={section.href}
-                href={section.href}
+          <Link
+            key={section.href}
+            href={section.href}
                 className="group"
               >
                 <div className={`${section.bgColor} border-2 ${section.borderColor} rounded-2xl p-6 h-full transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group-hover:border-opacity-60`}>
@@ -414,7 +414,7 @@ export default function AdminDashboard() {
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
               <div className="animate-pulse">
-                <div className="flex items-center mb-4">
+            <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-xl mr-3"></div>
                   <div className="h-5 bg-gray-200 rounded w-24"></div>
                 </div>

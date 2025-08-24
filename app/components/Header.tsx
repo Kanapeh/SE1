@@ -76,11 +76,11 @@ export default function Header() {
     {
       title: "معلم هستم",
       icon: GraduationCap,
-      description: "شروع تدریس و کسب درآمد",
-      features: ["درآمد عالی", "ساعات منعطف", "پشتیبانی کامل"],
+      description: "ورود به پنل معلم و مدیریت کلاس‌ها",
+      features: ["مدیریت کلاس‌ها", "برنامه‌ریزی زمانی", "پشتیبانی کامل"],
       color: "from-blue-500 to-purple-600",
-      href: "/register?type=teacher",
-      badge: "پیشنهاد ویژه"
+      href: "/login",
+      badge: "ورود سریع"
     },
     {
       title: "دانش‌آموز هستم",

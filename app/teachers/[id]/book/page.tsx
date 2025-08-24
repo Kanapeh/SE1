@@ -77,19 +77,20 @@ interface BookingForm {
 }
 
 const weekDays = [
-  { value: "شنبه", label: "شنبه" },
-  { value: "یکشنبه", label: "یکشنبه" },
-  { value: "دوشنبه", label: "دوشنبه" },
-  { value: "سه‌شنبه", label: "سه‌شنبه" },
-  { value: "چهارشنبه", label: "چهارشنبه" },
-  { value: "پنج‌شنبه", label: "پنج‌شنبه" },
-  { value: "جمعه", label: "جمعه" }
+  { value: "saturday", label: "شنبه" },
+  { value: "sunday", label: "یکشنبه" },
+  { value: "monday", label: "دوشنبه" },
+  { value: "tuesday", label: "سه‌شنبه" },
+  { value: "wednesday", label: "چهارشنبه" },
+  { value: "thursday", label: "پنج‌شنبه" },
+  { value: "friday", label: "جمعه" }
 ];
 
 const timeSlots = [
-  "08:00-09:00", "09:00-10:00", "10:00-11:00", "11:00-12:00",
-  "14:00-15:00", "15:00-16:00", "16:00-17:00", "17:00-18:00",
-  "18:00-19:00", "19:00-20:00", "20:00-21:00", "21:00-22:00"
+  { value: "morning", label: "صبح (08:00-12:00)" },
+  { value: "afternoon", label: "ظهر (12:00-16:00)" },
+  { value: "evening", label: "عصر (16:00-20:00)" },
+  { value: "night", label: "شب (20:00-24:00)" }
 ];
 
 export default function BookSessionPage() {
@@ -110,25 +111,72 @@ export default function BookSessionPage() {
     studentEmail: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userSession, setUserSession] = useState<any>(null);
 
-  // Fetch teacher from Supabase
+  // Fetch user session on component mount
+  useEffect(() => {
+    const fetchUserSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (session && !error) {
+          console.log('👤 User session found:', session);
+          setUserSession(session);
+          
+          // Auto-fill student information if user is logged in
+          if (session.user) {
+            const userEmail = session.user.email;
+            const userName = session.user.user_metadata?.full_name || 
+                           session.user.user_metadata?.name || 
+                           session.user.user_metadata?.first_name + ' ' + session.user.user_metadata?.last_name ||
+                           '';
+            
+            setBookingForm(prev => ({
+              ...prev,
+              studentName: userName || '',
+              studentEmail: userEmail || ''
+            }));
+          }
+        } else {
+          console.log('❌ No user session found');
+        }
+      } catch (error) {
+        console.error('💥 Error fetching user session:', error);
+      }
+    };
+
+    fetchUserSession();
+  }, []);
+
+  // Fetch teacher from API
   const fetchTeacher = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching teacher:', error);
+      const teacherId = params?.id;
+      if (!teacherId) {
+        console.error('❌ No teacher ID provided');
+        return;
+      }
+      
+      console.log('🔍 Fetching teacher with ID:', teacherId);
+      
+      // Use API endpoint to bypass RLS
+      const response = await fetch(`/api/teachers/${teacherId}`);
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ API fetch failed:', result.error);
         return;
       }
 
+      const data = result.teacher;
+      console.log('✅ Teacher data received from API:', data);
+      console.log('📅 Available days:', data.available_days);
+      console.log('⏰ Available hours:', data.available_hours);
+      console.log('🏫 Class types:', data.class_types);
+      
       setTeacher(data);
     } catch (error) {
-      console.error('Error in fetchTeacher:', error);
+      console.error('💥 Error in fetchTeacher:', error);
     } finally {
       setLoading(false);
     }
@@ -250,7 +298,7 @@ export default function BookSessionPage() {
         const timeStart = time.split('-')[0];
         return timeStart >= start && timeStart < end;
       } else {
-        // Exact match
+        // Exact match for time slots like "morning", "afternoon", etc.
         return availableHour === time;
       }
     });
@@ -407,6 +455,26 @@ export default function BookSessionPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-8">
+                  {/* User Session Info */}
+                  {userSession && (
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-500 rounded-lg">
+                          <CheckCircle className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">
+                            خوش آمدید! 👋
+                          </h4>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            شما با حساب کاربری <strong>{userSession.user.email}</strong> وارد شده‌اید. 
+                            نام و ایمیل شما به طور خودکار پر شده است. فقط شماره تلفن خود را وارد کنید.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Class Type Selection */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -463,32 +531,58 @@ export default function BookSessionPage() {
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <Label className="text-lg font-semibold text-gray-900 dark:text-white">انتخاب روزهای هفته</Label>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {weekDays.map((day) => (
-                        <div key={day.value} className="flex items-center space-x-2">
-                                                     <Checkbox
-                             id={day.value}
-                             checked={bookingForm.selectedDays.includes(day.value)}
-                             onCheckedChange={() => handleDayToggle(day.value)}
-                             disabled={teacher.available_days ? !teacher.available_days.includes(day.value) : false}
-                           />
-                          <Label
-                            htmlFor={day.value}
-                            className={`text-sm cursor-pointer ${
-                              teacher.available_days && !teacher.available_days.includes(day.value)
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : ''
-                            }`}
-                          >
-                            {day.label}
-                          </Label>
-                        </div>
-                      ))}
+                    
+                    {/* Debug Info */}
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200">
+                      <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">🔍 اطلاعات دیباگ:</h4>
+                      <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <div>📅 روزهای در دسترس معلم: {teacher.available_days ? teacher.available_days.join('، ') : 'تنظیم نشده'}</div>
+                        <div>⏰ ساعات در دسترس معلم: {teacher.available_hours ? teacher.available_hours.join('، ') : 'تنظیم نشده'}</div>
+                        <div>🏫 نوع کلاس‌های معلم: {teacher.class_types ? teacher.class_types.join('، ') : 'تنظیم نشده'}</div>
+                      </div>
                     </div>
-                    {teacher.available_days && teacher.available_days.length > 0 && (
-                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {weekDays.map((day) => {
+                        const isAvailable = teacher.available_days ? teacher.available_days.includes(day.value) : true;
+                        const isSelected = bookingForm.selectedDays.includes(day.value);
+                        
+                        return (
+                          <div key={day.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={day.value}
+                              checked={isSelected}
+                              onCheckedChange={() => handleDayToggle(day.value)}
+                              disabled={!isAvailable}
+                            />
+                            <Label
+                              htmlFor={day.value}
+                              className={`text-sm cursor-pointer ${
+                                !isAvailable 
+                                  ? 'text-gray-400 cursor-not-allowed line-through' 
+                                  : isSelected 
+                                    ? 'text-green-600 font-semibold' 
+                                    : 'text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {day.label}
+                              {!isAvailable && <span className="text-xs text-red-500 block">غیرفعال</span>}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {teacher.available_days && teacher.available_days.length > 0 ? (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200">
                         <p className="text-sm text-green-700 dark:text-green-300">
-                          <span className="font-medium">روزهای در دسترس معلم:</span> {teacher.available_days.join('، ')}
+                          <span className="font-medium">✅ روزهای در دسترس معلم:</span> {teacher.available_days.join('، ')}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200">
+                        <p className="text-sm text-red-700 dark:text-red-300">
+                          <span className="font-medium">⚠️ هشدار:</span> معلم هنوز روزهای کاری خود را تنظیم نکرده است. لطفاً با معلم تماس بگیرید.
                         </p>
                       </div>
                     )}
@@ -500,30 +594,48 @@ export default function BookSessionPage() {
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       <Label className="text-lg font-semibold text-gray-900 dark:text-white">انتخاب ساعات</Label>
                     </div>
+                    
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {timeSlots.map((time) => (
-                        <div key={time} className="flex items-center space-x-2">
-                                                     <Checkbox
-                             id={time}
-                             checked={bookingForm.selectedHours.includes(time)}
-                             onCheckedChange={() => handleHourToggle(time)}
-                             disabled={!isTimeAvailable(time)}
-                           />
-                          <Label
-                            htmlFor={time}
-                            className={`text-sm cursor-pointer ${
-                              !isTimeAvailable(time) ? 'text-gray-400 cursor-not-allowed' : ''
-                            }`}
-                          >
-                            {time}
-                          </Label>
-                        </div>
-                      ))}
+                      {timeSlots.map((time) => {
+                        const isAvailable = isTimeAvailable(time.value);
+                        const isSelected = bookingForm.selectedHours.includes(time.value);
+                        
+                        return (
+                          <div key={time.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={time.value}
+                              checked={isSelected}
+                              onCheckedChange={() => handleHourToggle(time.value)}
+                              disabled={!isAvailable}
+                            />
+                            <Label
+                              htmlFor={time.value}
+                              className={`text-sm cursor-pointer ${
+                                !isAvailable 
+                                  ? 'text-gray-400 cursor-not-allowed line-through' 
+                                  : isSelected 
+                                    ? 'text-purple-600 font-semibold' 
+                                    : 'text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {time.label}
+                              {!isAvailable && <span className="text-xs text-red-500 block">غیرفعال</span>}
+                            </Label>
+                          </div>
+                        );
+                      })}
                     </div>
-                    {teacher.available_hours && teacher.available_hours.length > 0 && (
-                      <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    
+                    {teacher.available_hours && teacher.available_hours.length > 0 ? (
+                      <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200">
                         <p className="text-sm text-purple-700 dark:text-purple-300">
-                          <span className="font-medium">ساعات در دسترس معلم:</span> {teacher.available_hours.join('، ')}
+                          <span className="font-medium">✅ ساعات در دسترس معلم:</span> {teacher.available_hours.join('، ')}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200">
+                        <p className="text-sm text-red-700 dark:text-red-300">
+                          <span className="font-medium">⚠️ هشدار:</span> معلم هنوز ساعات کاری خود را تنظیم نکرده است. لطفاً با معلم تماس بگیرید.
                         </p>
                       </div>
                     )}
@@ -553,6 +665,11 @@ export default function BookSessionPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">اطلاعات دانش‌آموز</h3>
+                      {userSession && (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                          ✅ اطلاعات از حساب کاربری شما
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -563,7 +680,14 @@ export default function BookSessionPage() {
                           onChange={(e) => setBookingForm({ ...bookingForm, studentName: e.target.value })}
                           placeholder="نام خود را وارد کنید"
                           required
+                          readOnly={!!userSession}
+                          className={userSession ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : ''}
                         />
+                        {userSession && (
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            این اطلاعات از حساب کاربری شما گرفته شده است
+                          </p>
+                        )}
                       </div>
                       
                       <div className="space-y-2">
@@ -574,6 +698,9 @@ export default function BookSessionPage() {
                           placeholder="09123456789"
                           required
                         />
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          شماره تلفن برای تماس معلم با شما ضروری است
+                        </p>
                       </div>
                     </div>
 
@@ -585,7 +712,14 @@ export default function BookSessionPage() {
                         onChange={(e) => setBookingForm({ ...bookingForm, studentEmail: e.target.value })}
                         placeholder="example@email.com"
                         required
+                        readOnly={!!userSession}
+                        className={userSession ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : ''}
                       />
+                      {userSession && (
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          این اطلاعات از حساب کاربری شما گرفته شده است
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -622,11 +756,16 @@ export default function BookSessionPage() {
                             </div>
                           )}
                           {bookingForm.selectedHours.length > 0 && (
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">ساعات انتخاب شده:</span>
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{bookingForm.selectedHours.join('، ')}</span>
-                            </div>
+                                                    <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">ساعات انتخاب شده:</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {bookingForm.selectedHours.map(hour => {
+                              const timeSlot = timeSlots.find(ts => ts.value === hour);
+                              return timeSlot ? timeSlot.label : hour;
+                            }).join('، ')}
+                          </span>
+                        </div>
                           )}
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>

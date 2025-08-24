@@ -7,6 +7,10 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  // Performance optimizations
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
       fontFamily: {
@@ -99,7 +103,7 @@ const config: Config = {
         '58': '14.5rem',
         '62': '15.5rem',
         '66': '16.5rem',
-        '70': '17.5rem',
+        '70': '7.5rem',
         '74': '18.5rem',
         '78': '19.5rem',
         '82': '20.5rem',
@@ -111,5 +115,9 @@ const config: Config = {
     },
   },
   plugins: [require('tailwindcss-animate')],
+  // Performance optimizations
+  corePlugins: {
+    preflight: true,
+  },
 };
 export default config;

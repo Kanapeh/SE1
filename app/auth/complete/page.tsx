@@ -8,6 +8,18 @@ import { useToast } from '@/hooks/use-toast';
 function AuthCompleteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  if (!searchParams) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">خطا در بارگذاری</h2>
+          <p className="text-gray-600">پارامترهای URL یافت نشد</p>
+        </div>
+      </div>
+    );
+  }
+  
   const userType = searchParams.get('type');
   const code = searchParams.get('code');
   const { toast } = useToast();
@@ -345,7 +357,7 @@ function AuthCompleteContent() {
               title: "ورود موفقیت‌آمیز",
               description: "در حال انتقال به پنل معلم...",
             });
-            router.push('/admin');
+            router.push('/dashboard/teacher');
             return;
           } else {
             console.log("⚠️ OAuth user is inactive teacher");

@@ -8,7 +8,9 @@
     "dev:https": "node scripts/start-https.js",
     "dev:tunnel": "concurrently \"next dev\" \"npx ngrok http 3000\"",
     "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
     "start": "next start",
+    "start:prod": "NODE_ENV=production next start",
     "lint": "next lint",
     "setup-ssl": "node scripts/generate-ssl.js"
   },
@@ -57,6 +59,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "critters": "^0.0.23",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "eslint": "^8.57.0",

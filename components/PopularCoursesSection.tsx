@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, ChevronRight, Clock, Users, BookOpen, Award, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+// Remove supabase import since we'll use API endpoint
 
 interface Teacher {
   id: string;
@@ -18,75 +18,98 @@ interface Teacher {
   experience_years: number | null;
   hourly_rate: number | null;
   levels: string[] | null;
+  created_at: string;
 }
 
-const popularCourses = [
-  {
-    id: "1",
-    title: "مکالمه انگلیسی پیشرفته",
-    teacher: "سپنتا علیزاده",
-    teacherId: "1", // ID معلم در Supabase
-    price: 1200000,
-    duration: "3 ماه",
-    students: 45,
-    rating: 4.9,
-    level: "پیشرفته",
-    icon: "🗣️",
-    gradient: "from-blue-500 to-cyan-500",
-    features: ["مکالمه روان", "لهجه آمریکایی", "تمرین‌های عملی"]
-  },
-  {
-    id: "2",
-    title: "آمادگی آیلتس",
-    teacher: "نجمه کریمی", 
-    teacherId: "3", // ID معلم در Supabase
-    price: 1800000,
-    duration: "4 ماه",
-    students: 32,
-    rating: 4.8,
-    level: "متوسط",
-    icon: "📚",
-    gradient: "from-purple-500 to-pink-500",
-    features: ["شبیه‌سازی آزمون", "نمره 7+", "راهنمایی تخصصی"]
-  },
-  {
-    id: "3",
-    title: "گرامر انگلیسی",
-    teacher: "پارمیدا معصومی",
-    teacherId: "2", // ID معلم در Supabase
-    price: 900000,
-    duration: "2 ماه", 
-    students: 67,
-    rating: 4.7,
-    level: "مبتدی",
-    icon: "📝",
-    gradient: "from-green-500 to-emerald-500",
-    features: ["گرامر کامل", "تمرین‌های تعاملی", "گواهینامه"]
-  }
-];
+interface Course {
+  id: string;
+  title: string;
+  teacher: string;
+  teacherId: string;
+  price: number;
+  duration: string;
+  students: number;
+  rating: number;
+  level: string;
+  icon: string;
+  gradient: string;
+  features: string[];
+}
 
 export default function PopularCoursesSection() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch teachers from Supabase
+  // Fetch teachers from API endpoint
   const fetchTeachers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching teachers:', error);
-        return;
+      const response = await fetch('/api/teachers');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch teachers');
       }
 
-      console.log('Teachers from Supabase:', data);
-      setTeachers(data || []);
+      console.log('Teachers from API:', result.teachers);
+      setTeachers(result.teachers || []);
+      
+      // Create courses based on real teachers
+      if (result.teachers && result.teachers.length > 0) {
+        const generatedCourses = result.teachers.slice(0, 3).map((teacher: Teacher, index: number) => {
+          const courseTemplates = [
+            {
+              title: "مکالمه انگلیسی پیشرفته",
+              icon: "🗣️",
+              gradient: "from-blue-500 to-cyan-500",
+              features: ["مکالمه روان", "لهجه آمریکایی", "تمرین‌های عملی"]
+            },
+            {
+              title: "آمادگی آیلتس",
+              icon: "📚",
+              gradient: "from-purple-500 to-pink-500",
+              features: ["شبیه‌سازی آزمون", "نمره 7+", "راهنمایی تخصصی"]
+            },
+            {
+              title: "گرامر انگلیسی",
+              icon: "📝",
+              gradient: "from-green-500 to-emerald-500",
+              features: ["گرامر کامل", "تمرین‌های تعاملی", "گواهینامه"]
+            }
+          ];
+
+          const template = courseTemplates[index % courseTemplates.length];
+          const basePrice = 800000 + (index * 200000);
+          const baseStudents = 20 + (index * 15);
+          const baseRating = 4.5 + (index * 0.2);
+
+          return {
+            id: `course-${teacher.id}`,
+            title: template.title,
+            teacher: `${teacher.first_name} ${teacher.last_name}`,
+            teacherId: teacher.id,
+            price: basePrice,
+            duration: `${2 + index} ماه`,
+            students: baseStudents,
+            rating: Math.min(5, baseRating),
+            level: teacher.levels && teacher.levels.length > 0 ? teacher.levels[0] : "متوسط",
+            icon: template.icon,
+            gradient: template.gradient,
+            features: template.features
+          };
+        });
+
+        setCourses(generatedCourses);
+      }
     } catch (error) {
       console.error('Error in fetchTeachers:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error stringified:', JSON.stringify(error, null, 2));
     } finally {
       setLoading(false);
     }
@@ -96,13 +119,51 @@ export default function PopularCoursesSection() {
     fetchTeachers();
   }, []);
 
-  // Function to get teacher ID by name
-  const getTeacherIdByName = (teacherName: string) => {
-    const teacher = teachers.find(t => 
-      `${t.first_name} ${t.last_name}` === teacherName
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="py-20 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
+        <div className="container mx-auto relative z-10">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6">
+              <TrendingUp className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              دوره‌های محبوب
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mb-6 rounded-full"></div>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              در حال بارگذاری دوره‌ها...
+            </p>
+          </div>
+        </div>
+      </section>
     );
-    return teacher?.id || "1"; // fallback to "1" if not found
-  };
+  }
+
+  // Show message if no teachers
+  if (teachers.length === 0) {
+    return (
+      <section className="py-20 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
+        <div className="container mx-auto relative z-10">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6">
+              <TrendingUp className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              دوره‌های محبوب
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mb-6 rounded-full"></div>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              در حال حاضر دوره‌ای برای نمایش وجود ندارد. به زودی دوره‌های جدید اضافه خواهند شد.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 px-4 relative overflow-hidden">
@@ -132,12 +193,12 @@ export default function PopularCoursesSection() {
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mb-6 rounded-full"></div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            محبوب‌ترین دوره‌های ما که توسط هزاران دانش‌آموز انتخاب شده‌اند
+            محبوب‌ترین دوره‌های ما که توسط معلمان متخصص و مجرب ارائه می‌شوند
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {popularCourses.map((course, index) => (
+          {courses.map((course, index) => (
             <motion.div
               key={course.id}
               initial={{ opacity: 0, y: 30 }}
@@ -241,7 +302,7 @@ export default function PopularCoursesSection() {
                   </div>
 
                   {/* CTA Button */}
-                  <Link href={`/teachers/${getTeacherIdByName(course.teacher)}`}>
+                  <Link href={`/teachers/${course.teacherId}`}>
                     <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg">
                       <span className="mr-2">🎯</span>
                       مشاهده دوره
@@ -268,7 +329,7 @@ export default function PopularCoursesSection() {
               <h3 className="text-2xl font-bold">آماده شروع یادگیری هستید؟</h3>
             </div>
             <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-              بیش از 1000 دانش‌آموز راضی در حال یادگیری با ما هستند. شما هم به جمع ما بپیوندید!
+              بیش از {teachers.length} معلم متخصص آماده تدریس هستند. شما هم به جمع ما بپیوندید!
             </p>
             <Link href="/courses">
               <Button className="bg-white text-blue-600 px-8 py-3 rounded-2xl font-semibold hover:bg-gray-100 transition-colors transform hover:scale-105">

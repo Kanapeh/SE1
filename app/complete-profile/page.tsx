@@ -171,6 +171,8 @@ function CompleteProfileContent() {
   });
 
   useEffect(() => {
+    if (!searchParams) return;
+    
     const type = searchParams.get('type') || 'student';
     setUserType(type);
     
@@ -291,7 +293,7 @@ function CompleteProfileContent() {
       if (userError) throw userError;
 
       toast.success('پروفایل معلم با موفقیت ثبت شد. پس از تایید ادمین، می‌توانید وارد شوید.');
-      router.push('/login');
+      router.push('/dashboard/teacher');
     } catch (error: any) {
       console.error('Error creating teacher profile:', error);
       toast.error(error.message || 'خطا در ثبت پروفایل');

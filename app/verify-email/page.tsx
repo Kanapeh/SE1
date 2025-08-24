@@ -17,6 +17,8 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (!searchParams) return;
+    
     // Get email from URL params or session storage
     const emailFromParams = searchParams.get('email');
     const emailFromStorage = sessionStorage.getItem('userEmail');
@@ -61,7 +63,14 @@ function VerifyEmailContent() {
 
       if (user?.email_confirmed_at) {
         toast.success("ایمیل شما تایید شده است!");
-        router.push("/login");
+        
+        // Check user type and redirect accordingly
+        const userType = sessionStorage.getItem('userType');
+        if (userType === 'teacher') {
+          router.push("/dashboard/teacher");
+        } else {
+          router.push("/login");
+        }
       } else {
         toast.info("ایمیل هنوز تایید نشده است. لطفاً ایمیل خود را بررسی کنید");
       }
@@ -156,7 +165,14 @@ function VerifyEmailContent() {
             </Button>
 
             <Button
-              onClick={() => router.push("/login")}
+              onClick={() => {
+                const userType = sessionStorage.getItem('userType');
+                if (userType === 'teacher') {
+                  router.push("/dashboard/teacher");
+                } else {
+                  router.push("/login");
+                }
+              }}
               variant="ghost"
               className="w-full"
             >

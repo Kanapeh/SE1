@@ -94,27 +94,32 @@ interface Teacher {
   available_days: string[] | null;
   available_hours: string[] | null;
   bio: string | null;
+  average_rating: number | null;
 }
 
 interface Class {
   id: string;
   teacher_id: string;
   student_id: string;
-  class_date: string;
-  class_time: string;
+  student_name: string;
+  student_email: string;
+  student_phone: string;
+  selected_days: string[];
+  selected_hours: string[];
+  session_type: string;
   duration: number;
+  total_price: number;
   status: string;
-  amount: number;
-  notes: string | null;
+  payment_status: string;
+  transaction_id?: string;
+  notes?: string;
   created_at: string;
-  teacher?: {
-    first_name: string;
-    last_name: string;
-    avatar: string | null;
-  };
   student?: {
+    id: string;
     first_name: string;
     last_name: string;
+    email: string;
+    phone: string | null;
     avatar: string | null;
   };
 }
@@ -134,7 +139,7 @@ interface Notification {
   type: 'success' | 'warning' | 'info' | 'error';
   title: string;
   message: string;
-  time: string;
+  created_at: string;
   read: boolean;
 }
 
@@ -171,6 +176,7 @@ export default function TeacherDashboardPage() {
     thisMonthClasses: 0,
     thisMonthEarnings: 0
   });
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Get current user
   const getCurrentUser = async () => {
@@ -217,28 +223,21 @@ export default function TeacherDashboardPage() {
   // Fetch teacher classes
   const fetchClasses = async (teacherId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('classes')
-        .select(`
-          *,
-          teacher:teachers!classes_teacher_id_fkey (
-            first_name,
-            last_name,
-            avatar
-          ),
-          student:students!classes_student_id_fkey (
-            first_name,
-            last_name,
-            avatar
-          )
-        `)
-        .eq('teacher_id', teacherId)
-        .order('class_date', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      console.log('🔍 Fetching classes for teacher:', teacherId);
+      
+      // Use API endpoint to bypass RLS
+      const response = await fetch(`/api/bookings?teacher_id=${teacherId}`);
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ API error:', result.error);
+        return [];
+      }
+      
+      console.log('✅ Classes fetched from API:', result.bookings);
+      return result.bookings || [];
     } catch (error) {
-      console.error('Error fetching classes:', error);
+      console.error('❌ Error fetching classes:', error);
       return [];
     }
   };
@@ -246,17 +245,124 @@ export default function TeacherDashboardPage() {
   // Fetch teacher schedule
   const fetchSchedule = async (teacherId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('teacher_schedule')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .order('day', { ascending: true });
+      console.log('🔍 Fetching schedule for teacher:', teacherId);
+      
+      // Get teacher profile to access available_days and available_hours
+      const { data: teacherData, error: teacherError } = await supabase
+        .from('teachers')
+        .select('available_days, available_hours')
+        .eq('id', teacherId)
+        .single();
 
-      if (error) throw error;
-      return data || [];
+      if (teacherError) {
+        console.error('❌ Error fetching teacher schedule data:', teacherError);
+        return [];
+      }
+
+      if (!teacherData) {
+        console.log('❌ No teacher data found for schedule');
+        return [];
+      }
+
+      // Convert available days and hours to schedule format
+      const schedule: Schedule[] = [];
+      
+      if (teacherData.available_days && teacherData.available_hours) {
+        teacherData.available_days.forEach((day: string) => {
+          teacherData.available_hours.forEach((hour: string) => {
+            schedule.push({
+              id: `${day}-${hour}`,
+              teacher_id: teacherId,
+              day: day,
+              start_time: hour === 'morning' ? '08:00' : 
+                         hour === 'afternoon' ? '12:00' : 
+                         hour === 'evening' ? '16:00' : '20:00',
+              end_time: hour === 'morning' ? '12:00' : 
+                       hour === 'afternoon' ? '16:00' : 
+                       hour === 'evening' ? '20:00' : '24:00',
+              is_available: true,
+              created_at: new Date().toISOString()
+            });
+          });
+        });
+      }
+
+      console.log('✅ Schedule generated:', schedule);
+      return schedule;
     } catch (error) {
-      console.error('Error fetching schedule:', error);
+      console.error('❌ Error fetching schedule:', error);
       return [];
+    }
+  };
+
+  // Fetch notifications from API
+  const fetchNotifications = async (teacherId: string) => {
+    try {
+      console.log('🔍 Fetching notifications for teacher:', teacherId);
+      
+      const response = await fetch(`/api/notifications?teacher_id=${teacherId}`);
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ API error:', result.error);
+        return [];
+      }
+      
+      console.log('✅ Notifications fetched from API:', result.notifications);
+      return result.notifications || [];
+    } catch (error) {
+      console.error('❌ Error fetching notifications:', error);
+      return [];
+    }
+  };
+
+  // Mark notification as read
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: notificationId, read: true })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update local state
+        const updatedNotifications = notifications.map(n => 
+          n.id === notificationId ? { ...n, read: true } : n
+        );
+        setNotifications(updatedNotifications);
+        console.log('✅ Notification marked as read:', notificationId);
+      } else {
+        console.error('❌ Error marking notification as read:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Error marking notification as read:', error);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllNotificationsAsRead = async () => {
+    try {
+      // Update all notifications locally first
+      const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+      setNotifications(updatedNotifications);
+
+      // Update in database
+      for (const notification of notifications) {
+        if (!notification.read) {
+          await fetch('/api/notifications', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: notification.id, read: true })
+          });
+        }
+      }
+      
+      console.log('✅ All notifications marked as read');
+    } catch (error) {
+      console.error('❌ Error marking all notifications as read:', error);
     }
   };
 
@@ -274,13 +380,13 @@ export default function TeacherDashboardPage() {
     let thisMonthEarnings = 0;
 
     classesData.forEach(cls => {
-      const classDate = new Date(cls.class_date);
+      const classDate = new Date(cls.created_at);
       const isThisMonth = classDate.getMonth() === thisMonth && classDate.getFullYear() === thisYear;
 
-      totalEarnings += cls.amount;
+      totalEarnings += cls.total_price;
       if (isThisMonth) {
         thisMonthClasses++;
-        thisMonthEarnings += cls.amount;
+        thisMonthEarnings += cls.total_price;
       }
     });
 
@@ -323,195 +429,70 @@ export default function TeacherDashboardPage() {
     };
   };
 
-  // Mock notifications
+  // Mock notifications (fallback if no real notifications)
   const generateNotifications = () => {
-    return [
-      {
-        id: '1',
-        type: 'success' as const,
-        title: 'کلاس جدید رزرو شد',
-        message: 'سارا محمدی کلاس انگلیسی سطح متوسط را برای فردا رزرو کرد',
-        time: '2 ساعت پیش',
-        read: false
-      },
-      {
-        id: '2',
-        type: 'info' as const,
-        title: 'امتیاز جدید دریافت کردید',
-        message: 'احمد رضایی به شما 5 ستاره داد',
-        time: '4 ساعت پیش',
-        read: false
-      },
-      {
-        id: '3',
-        type: 'warning' as const,
-        title: 'یادآوری کلاس',
-        message: 'کلاس با فاطمه کریمی در 30 دقیقه آینده شروع می‌شود',
-        time: '1 روز پیش',
-        read: true
-      },
-      {
-        id: '4',
-        type: 'success' as const,
-        title: 'پرداخت دریافت شد',
-        message: 'مبلغ 200,000 تومان برای کلاس دیروز دریافت شد',
-        time: '2 روز پیش',
-        read: true
-      }
-    ];
+    return [];
   };
 
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
-        // Temporarily disabled authentication for testing
-        // const user = await getCurrentUser();
-        // if (!user) {
-        //   router.push('/login');
-        //   return;
-        // }
+        setLoading(true);
+        
+        // Get current authenticated user
+        const user = await getCurrentUser();
+        if (!user) {
+          console.log('❌ No authenticated user found');
+          router.push('/login');
+          return;
+        }
 
-        // For now, create a mock user for testing
-        const mockUser = {
-          id: 'temp-user-id',
-          email: 'teacher@example.com',
-          role: 'teacher'
-        };
-        setCurrentUser(mockUser);
+        console.log('✅ Authenticated user:', user);
 
-        // Create mock teacher profile data for testing
-        const mockProfile = {
-          id: 'temp-profile-id',
-          first_name: 'علی',
-          last_name: 'احمدی',
-          email: 'teacher@example.com',
-          phone: '09123456789',
-          avatar: null,
-          hourly_rate: 200000,
-          location: 'تهران',
-          experience_years: 5,
-          available: true,
-          status: 'active',
-          languages: ['انگلیسی', 'فرانسه'],
-          levels: ['مبتدی', 'متوسط', 'پیشرفته'],
-          available_days: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه'],
-          available_hours: ['09:00', '10:00', '14:00', '15:00'],
-          bio: 'معلم با تجربه 5 ساله در تدریس زبان انگلیسی'
-        };
-        setUserProfile(mockProfile);
+        // Get teacher profile from database
+        const teacherProfile = await getTeacherProfile(user.email!);
+        if (!teacherProfile) {
+          console.log('❌ No teacher profile found for email:', user.email);
+          router.push('/register');
+          return;
+        }
 
-        // Mock classes data for teacher
-        const mockClasses = [
-          {
-            id: '1',
-            teacher_id: 'temp-profile-id',
-            student_id: 'student-1',
-            class_date: '2024-01-15',
-            class_time: '14:00',
-            duration: 60,
-            status: 'scheduled',
-            amount: 200000,
-            notes: 'کلاس انگلیسی سطح متوسط',
-            created_at: '2024-01-10T10:00:00Z',
-            teacher: {
-              first_name: 'علی',
-              last_name: 'احمدی',
-              avatar: null
-            },
-            student: {
-              first_name: 'سارا',
-              last_name: 'محمدی',
-              avatar: null
-            }
-          },
-          {
-            id: '2',
-            teacher_id: 'temp-profile-id',
-            student_id: 'student-2',
-            class_date: '2024-01-16',
-            class_time: '10:00',
-            duration: 60,
-            status: 'completed',
-            amount: 200000,
-            notes: 'کلاس فرانسه سطح مبتدی',
-            created_at: '2024-01-09T10:00:00Z',
-            teacher: {
-              first_name: 'علی',
-              last_name: 'احمدی',
-              avatar: null
-            },
-            student: {
-              first_name: 'احمد',
-              last_name: 'رضایی',
-              avatar: null
-            }
-          },
-          {
-            id: '3',
-            teacher_id: 'temp-profile-id',
-            student_id: 'student-3',
-            class_date: '2024-01-17',
-            class_time: '15:00',
-            duration: 60,
-            status: 'pending',
-            amount: 200000,
-            notes: 'کلاس انگلیسی سطح پیشرفته',
-            created_at: '2024-01-08T10:00:00Z',
-            teacher: {
-              first_name: 'علی',
-              last_name: 'احمدی',
-              avatar: null
-            },
-            student: {
-              first_name: 'فاطمه',
-              last_name: 'کریمی',
-              avatar: null
-            }
-          }
-        ];
-        setClasses(mockClasses);
+        console.log('✅ Teacher profile loaded:', teacherProfile);
 
-        const statsData = calculateStats(mockClasses);
-        setStats(statsData);
-
-        // Mock schedule data for teacher
-        const mockSchedule = [
-          {
-            id: '1',
-            teacher_id: 'temp-profile-id',
-            day: 'شنبه',
-            start_time: '09:00',
-            end_time: '12:00',
-            is_available: true,
-            created_at: '2024-01-01T00:00:00Z'
-          },
-          {
-            id: '2',
-            teacher_id: 'temp-profile-id',
-            day: 'یکشنبه',
-            start_time: '14:00',
-            end_time: '18:00',
-            is_available: true,
-            created_at: '2024-01-01T00:00:00Z'
-          },
-          {
-            id: '3',
-            teacher_id: 'temp-profile-id',
-            day: 'دوشنبه',
-            start_time: '10:00',
-            end_time: '15:00',
-            is_available: true,
-            created_at: '2024-01-01T00:00:00Z'
-          }
-        ];
-        setSchedule(mockSchedule);
-
-        // Set analytics and notifications
+        // Fetch classes and other data
+        const teacherClasses = await fetchClasses(teacherProfile.id);
+        const teacherSchedule = await fetchSchedule(teacherProfile.id);
+        const teacherNotifications = await fetchNotifications(teacherProfile.id);
+        
+        setClasses(teacherClasses);
+        setSchedule(teacherSchedule);
+        setNotifications(teacherNotifications);
         setAnalytics(generateAnalytics());
-        setNotifications(generateNotifications());
+
+        // Calculate stats from real data
+        const realStats = {
+          totalClasses: teacherClasses.length,
+          completedClasses: teacherClasses.filter((c: Class) => c.status === 'completed').length,
+          totalEarnings: teacherClasses.reduce((sum: number, c: Class) => sum + (c.total_price || 0), 0),
+          totalSpent: 0, // Not applicable for teachers
+          averageRating: teacherProfile.average_rating || 0,
+          thisMonthClasses: teacherClasses.filter((c: Class) => {
+            const classDate = new Date(c.created_at);
+            const now = new Date();
+            return classDate.getMonth() === now.getMonth() && classDate.getFullYear() === now.getFullYear();
+          }).length,
+          thisMonthEarnings: teacherClasses.filter((c: Class) => {
+            const classDate = new Date(c.created_at);
+            const now = new Date();
+            return classDate.getMonth() === now.getMonth() && classDate.getFullYear() === now.getFullYear();
+          }).reduce((sum: number, c: Class) => sum + (c.total_price || 0), 0)
+        };
+        
+        setStats(realStats);
+        setLoading(false);
+
       } catch (error) {
-        console.error('Error initializing dashboard:', error);
-      } finally {
+        console.error('❌ Error initializing dashboard:', error);
         setLoading(false);
       }
     };
@@ -546,6 +527,34 @@ export default function TeacherDashboardPage() {
         return <Bell className="w-4 h-4 text-blue-500" />;
     }
   };
+
+  // Control body scroll when sidebar is open
+  useEffect(() => {
+    if (showNotifications) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+
+    return () => {
+      document.body.classList.remove('sidebar-open');
+    };
+  }, [showNotifications]);
+
+  // Handle click outside notifications dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showNotifications && !target.closest('.notifications-container')) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
 
   if (loading) {
     return (
@@ -634,7 +643,12 @@ export default function TeacherDashboardPage() {
             <div className="flex items-center gap-4">
               {/* Notifications */}
               <div className="relative">
-                <Button variant="outline" size="icon" className="relative">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="relative"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
                   <Bell className="w-5 h-5" />
                   {unreadNotifications > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -642,6 +656,71 @@ export default function TeacherDashboardPage() {
                     </span>
                   )}
                 </Button>
+                
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className="notifications-container absolute top-full right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">نوتیفیکیشن‌ها</h3>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.length > 0 ? (
+                        notifications.map((notification) => (
+                          <div 
+                            key={notification.id} 
+                            className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${
+                              !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                            }`}
+                            onClick={() => markNotificationAsRead(notification.id)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-2 h-2 rounded-full mt-2 ${
+                                notification.type === 'success' ? 'bg-green-500' :
+                                notification.type === 'warning' ? 'bg-yellow-500' :
+                                notification.type === 'error' ? 'bg-red-500' :
+                                'bg-blue-500'
+                              }`} />
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                                  {notification.title}
+                                </h4>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                                  {notification.message}
+                                </p>
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {new Date(notification.created_at).toLocaleDateString('fa-IR')}
+                                  </span>
+                                  {!notification.read && (
+                                    <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                                      جدید
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                          هیچ نوتیفیکیشنی ندارید
+                        </div>
+                      )}
+                    </div>
+                    {notifications.length > 0 && (
+                      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          onClick={() => markAllNotificationsAsRead()}
+                        >
+                          علامت‌گذاری همه به عنوان خوانده شده
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <Button variant="outline" onClick={() => router.push('/teachers/schedule')}>
                 <Calendar className="w-4 h-4 mr-2" />
@@ -861,7 +940,7 @@ export default function TeacherDashboardPage() {
                       <div className="flex-1">
                         <h4 className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</h4>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{notification.message}</p>
-                        <span className="text-xs text-gray-500 mt-2 block">{notification.time}</span>
+                        <span className="text-xs text-gray-500 mt-2 block">{new Date(notification.created_at).toLocaleDateString('fa-IR')}</span>
                       </div>
                     </div>
                   ))}
@@ -907,27 +986,27 @@ export default function TeacherDashboardPage() {
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-4">
                             <Avatar className="w-12 h-12">
-                              <AvatarImage src={cls.student?.avatar || ''} alt={`${cls.student?.first_name} ${cls.student?.last_name}`} />
+                              <AvatarImage src="" alt={`${cls.student_name}`} />
                               <AvatarFallback className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                                {cls.student?.first_name[0]}{cls.student?.last_name[0]}
+                                {cls.student_name[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <h4 className="font-semibold text-gray-900 dark:text-white">
-                                {cls.student?.first_name} {cls.student?.last_name}
+                                {cls.student_name}
                               </h4>
                               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 <div className="flex items-center gap-1">
                                   <CalendarIcon className="w-4 h-4" />
-                                  <span>{new Date(cls.class_date).toLocaleDateString('fa-IR')}</span>
+                                  <span>{new Date(cls.created_at).toLocaleDateString('fa-IR')}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-4 h-4" />
-                                  <span>{cls.class_time}</span>
+                                  <span>{cls.selected_hours[0]}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <DollarSign className="w-4 h-4" />
-                                  <span>{cls.amount.toLocaleString()} تومان</span>
+                                  <span>{cls.total_price.toLocaleString()} تومان</span>
                                 </div>
                               </div>
                             </div>
@@ -1031,7 +1110,7 @@ export default function TeacherDashboardPage() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-gray-900 dark:text-white">{notification.title}</h4>
-                          <span className="text-xs text-gray-500">{notification.time}</span>
+                          <span className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('fa-IR')}</span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{notification.message}</p>
                         {!notification.read && (

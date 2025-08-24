@@ -1,19 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Build optimizations
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // Image optimizations
   images: { 
     unoptimized: true,
-    domains: ['localhost', 'images.unsplash.com', 'via.placeholder.com'], // دامنه‌های مجاز برای تصاویر
+    domains: ['localhost', 'images.unsplash.com', 'via.placeholder.com'],
   },
-  // تنظیمات برای performance
-  compress: true,
-  poweredByHeader: false,
-  // تنظیمات برای security
+  
+  // Bundle analyzer (optional - for debugging)
+  // bundleAnalyzer: process.env.ANALYZE === 'true',
+  
+  // Experimental features for performance
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['@/components/ui', 'lucide-react', 'framer-motion'],
+  },
+  
+  // Security headers
   headers: async () => {
     return [
       {

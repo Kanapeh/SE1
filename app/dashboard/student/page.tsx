@@ -98,8 +98,14 @@ import {
 
 interface User {
   id: string;
-  email: string | undefined;
-  role?: string;
+  email: string;
+  user_metadata: {
+    full_name?: string;
+    name?: string;
+    first_name?: string;
+    last_name?: string;
+    avatar_url?: string;
+  };
 }
 
 interface Student {
@@ -116,27 +122,40 @@ interface Student {
   experience_years: number | null;
 }
 
+interface Teacher {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar: string | null;
+}
+
 interface Class {
   id: string;
-  teacher_id: string;
-  student_id: string;
   class_date: string;
   class_time: string;
   duration: number;
   status: string;
-  amount: number;
+  teacher?: Teacher;
+}
+
+interface Booking {
+  id: string;
+  teacher_id: string;
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  student_phone: string;
+  selected_days: string[];
+  selected_hours: string[];
+  session_type: string;
+  duration: number;
+  total_price: number;
+  status: string;
+  payment_status: string;
+  transaction_id: string | null;
   notes: string | null;
   created_at: string;
-  teacher?: {
-    first_name: string;
-    last_name: string;
-    avatar: string | null;
-  };
-  student?: {
-    first_name: string;
-    last_name: string;
-    avatar: string | null;
-  };
+  updated_at: string;
 }
 
 interface ProgressData {
@@ -176,12 +195,11 @@ export default function StudentDashboardPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<Student | null>(null);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [progress, setProgress] = useState<ProgressData | null>(null);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Helper function for better navigation handling
   const handleNavigation = (path: string, description: string) => {
@@ -221,7 +239,7 @@ export default function StudentDashboardPage() {
         setCurrentUser({
           id: user.id,
           email: user.email,
-          role: 'student'
+          user_metadata: user.user_metadata
         });
 
         // Get student profile from database
@@ -241,21 +259,20 @@ export default function StudentDashboardPage() {
         if (studentData) {
           setUserProfile({
             id: studentData.id,
-            first_name: studentData.first_name,
-            last_name: studentData.last_name,
+            first_name: studentData.first_name || 'کاربر',
+            last_name: studentData.last_name || 'جدید',
             email: studentData.email,
             phone: studentData.phone,
             avatar: studentData.avatar,
-            level: studentData.current_language_level,
+            level: studentData.current_language_level || 'مبتدی',
             language: studentData.preferred_languages?.[0] || 'انگلیسی',
-            status: studentData.status,
+            status: studentData.status || 'active',
             goals: studentData.learning_goals,
             experience_years: 0
           });
         }
 
         // Initialize empty data for new student
-        setClasses([]);
         
         // Initialize basic progress data for new student
         const basicProgress: ProgressData = {
@@ -301,12 +318,40 @@ export default function StudentDashboardPage() {
       } catch (error) {
         console.error('Error initializing dashboard:', error);
       } finally {
-        setLoading(false);
+        // setLoading(false); // Removed loading state
       }
     };
 
     initializeDashboard();
   }, [router]);
+
+  useEffect(() => {
+    const fetchRecentBookings = async () => {
+      if (!userProfile) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('student_id', userProfile.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching recent bookings:', error);
+          return;
+        }
+
+        setRecentBookings(data as Booking[]);
+      } catch (error) {
+        console.error('Error fetching recent bookings:', error);
+      }
+    };
+
+    fetchRecentBookings();
+    const interval = setInterval(fetchRecentBookings, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [userProfile]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -335,21 +380,6 @@ export default function StudentDashboardPage() {
         return <Bell className="w-5 h-5 text-blue-500" />;
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-200 border-t-green-500 mx-auto mb-6"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری</h3>
-          <p className="text-gray-600 dark:text-gray-400">داشبورد دانش‌آموز در حال آماده‌سازی است...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!userProfile) {
     return (
@@ -430,7 +460,7 @@ export default function StudentDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm">سطح فعلی</p>
-                  <p className="text-2xl font-bold">{student.level}</p>
+                  <p className="text-2xl font-bold">{student.level || 'مبتدی'}</p>
                   <p className="text-blue-100 text-sm">
                     {progress?.progressPercentage === 0 ? 'شروع کنید' : `${progress?.progressPercentage}% تکمیل شده`}
                   </p>
@@ -579,7 +609,7 @@ export default function StudentDashboardPage() {
                   </Button>
 
                   <Button 
-                    onClick={() => setActiveTab('features')}
+                    onClick={() => handleNavigation('/students/features', 'مشاهده همه امکانات')}
                     className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
                   >
                     <Sparkles className="w-6 h-6" />
@@ -640,7 +670,7 @@ export default function StudentDashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {analytics?.totalClasses === 0 ? (
+                  {recentBookings.length === 0 ? (
                     <div className="text-center py-4">
                       <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
                         <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -653,37 +683,43 @@ export default function StudentDashboardPage() {
                       </p>
                     </div>
                   ) : (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    recentBookings.map((booking, index) => (
+                      <motion.div
+                        key={booking.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-center gap-3"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          booking.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30' :
+                          booking.status === 'confirmed' ? 'bg-blue-100 dark:bg-blue-900/30' :
+                          booking.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                          'bg-gray-100 dark:bg-gray-700'
+                        }`}>
+                          {booking.status === 'completed' ? (
+                            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          ) : booking.status === 'confirmed' ? (
+                            <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          ) : booking.status === 'pending' ? (
+                            <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                          )}
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium">کلاس تکمیل شد</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">2 ساعت پیش</p>
+                          <p className="text-sm font-medium">
+                            {booking.status === 'completed' ? 'کلاس تکمیل شد' :
+                             booking.status === 'confirmed' ? 'کلاس تایید شد' :
+                             booking.status === 'pending' ? 'کلاس در انتظار تایید' :
+                             'وضعیت نامشخص'}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {new Date(booking.created_at).toLocaleDateString('fa-IR')} - {booking.session_type === 'online' ? 'آنلاین' : 'حضوری'}
+                          </p>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                          <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">کلاس جدید رزرو شد</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">1 روز پیش</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                          <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">سطح ارتقا یافت</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">3 روز پیش</p>
-                        </div>
-                      </div>
-                    </>
+                      </motion.div>
+                    ))
                   )}
                 </CardContent>
               </Card>
@@ -706,7 +742,7 @@ export default function StudentDashboardPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {classes.length === 0 ? (
+                {recentBookings.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                       <BookOpen className="w-8 h-8 text-gray-400" />
@@ -722,9 +758,9 @@ export default function StudentDashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {classes.map((cls) => (
+                    {recentBookings.map((booking) => (
                       <motion.div
-                        key={cls.id}
+                        key={booking.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
@@ -732,39 +768,51 @@ export default function StudentDashboardPage() {
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-4">
                             <Avatar className="w-12 h-12">
-                              <AvatarImage src={cls.teacher?.avatar || ''} alt={`${cls.teacher?.first_name} ${cls.teacher?.last_name}`} />
                               <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                                {cls.teacher?.first_name[0]}{cls.teacher?.last_name[0]}
+                                {booking.student_name.split(' ').map(n => n[0]).join('')}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <h4 className="font-semibold text-gray-900 dark:text-white">
-                                {cls.teacher?.first_name} {cls.teacher?.last_name}
+                                {booking.student_name}
                               </h4>
                               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 <div className="flex items-center gap-1">
                                   <CalendarIcon className="w-4 h-4" />
-                                  <span>{new Date(cls.class_date).toLocaleDateString('fa-IR')}</span>
+                                  <span>{new Date(booking.created_at).toLocaleDateString('fa-IR')}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-4 h-4" />
-                                  <span>{cls.class_time}</span>
+                                  <span>{booking.duration} دقیقه</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <CreditCard className="w-4 h-4" />
-                                  <span>{cls.amount.toLocaleString()} تومان</span>
+                                  <span>{booking.total_price.toLocaleString()} تومان</span>
                                 </div>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {booking.session_type === 'online' ? 'آنلاین' : 
+                                   booking.session_type === 'offline' ? 'حضوری' : 
+                                   booking.session_type === 'hybrid' ? 'ترکیبی' : booking.session_type}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {booking.selected_days.join('، ')}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {booking.selected_hours.join('، ')}
+                                </Badge>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            {getStatusBadge(cls.status)}
+                            {getStatusBadge(booking.status)}
                           </div>
                         </div>
                         
-                        {cls.notes && (
+                        {booking.notes && (
                           <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{cls.notes}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{booking.notes}</p>
                           </div>
                         )}
                       </motion.div>
@@ -819,7 +867,7 @@ export default function StudentDashboardPage() {
                         سطح {progress?.currentLevel || 'مبتدی'}
                       </span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {analytics?.totalClasses === 0 ? '0%' : `${progress?.progressPercentage}%`}
+                        {analytics?.totalClasses === 0 ? '0%' : `${progress?.progressPercentage || 0}%`}
                       </span>
                     </div>
                     <Progress 
@@ -829,7 +877,7 @@ export default function StudentDashboardPage() {
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                       {analytics?.totalClasses === 0 
                         ? 'هنوز درسی تکمیل نکرده‌اید' 
-                        : `${progress?.completedLessons} از ${progress?.totalLessons} درس تکمیل شده`
+                        : `${progress?.completedLessons || 0} از ${progress?.totalLessons || 0} درس تکمیل شده`
                       }
                     </p>
                   </div>
@@ -837,7 +885,7 @@ export default function StudentDashboardPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {analytics?.totalClasses === 0 ? '0' : progress?.streak}
+                        {analytics?.totalClasses === 0 ? '0' : (progress?.streak || 0)}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {analytics?.totalClasses === 0 ? 'روز متوالی' : 'روز متوالی'}
@@ -845,7 +893,7 @@ export default function StudentDashboardPage() {
                     </div>
                     <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {analytics?.totalClasses === 0 ? '0' : analytics?.improvementRate}%
+                        {analytics?.totalClasses === 0 ? '0' : (analytics?.improvementRate || 0)}%
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {analytics?.totalClasses === 0 ? 'بهبود' : 'بهبود'}
