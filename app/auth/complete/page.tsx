@@ -341,9 +341,11 @@ function AuthCompleteContent() {
 
         // Check if user has a profile in teachers table
         console.log('🔍 Checking teachers table...');
+        console.log('🔍 User ID to check:', session.user.id);
+        console.log('🔍 User email:', session.user.email);
         const { data: teacherData, error: teacherError } = await supabase
           .from("teachers")
-          .select("id, status")
+          .select("id, status, email, first_name, last_name")
           .eq("id", session.user.id)
           .single();
 
@@ -357,6 +359,7 @@ function AuthCompleteContent() {
         }
 
         if (teacherData) {
+          console.log('✅ Teacher found in database:', teacherData);
           if (teacherData.status === 'active' || teacherData.status === 'Approved') {
             console.log("✅ OAuth user is active/approved teacher");
             toast({
@@ -366,10 +369,12 @@ function AuthCompleteContent() {
             router.push('/dashboard/teacher');
             return;
           } else {
-            console.log("⚠️ OAuth user is inactive teacher");
-            setError('حساب کاربری معلم شما هنوز تایید نشده است. لطفاً منتظر تایید ادمین باشید.');
+            console.log("⚠️ OAuth user is inactive teacher, status:", teacherData.status);
+            setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacherData.status}. لطفاً منتظر تایید ادمین باشید.`);
             return;
           }
+        } else {
+          console.log('❌ No teacher profile found for this user');
         }
 
         // Check if user has a profile in students table
