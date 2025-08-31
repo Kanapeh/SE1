@@ -64,76 +64,69 @@ function AuthCompleteContent() {
         if (code) {
           console.log('🔄 Processing authorization code...');
           
-          // Approach 1: Try direct code exchange
-          try {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          // Use auth state listener approach (more reliable for PKCE)
+          console.log('⏳ Waiting for auth state change...');
+          
+          return new Promise((resolve) => {
+            let resolved = false;
+            let timeoutId: NodeJS.Timeout;
             
-            if (error) {
-              console.error('❌ Direct code exchange failed:', error.message);
-              
-              // If PKCE code verifier issue, try alternative approach
-              if (error.message.includes('code verifier') || error.message.includes('non-empty')) {
-                console.log('🔄 PKCE issue detected, trying auth state listener...');
+            // Set up auth state change listener
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(
+              async (event, session) => {
+                console.log(`🔄 Auth state change: ${event}`);
                 
-                // Wait for Supabase to handle the OAuth callback automatically
-                console.log('⏳ Waiting for auth state change...');
-                
-                return new Promise((resolve) => {
-                  let resolved = false;
-                  
-                  // Set up auth state change listener
-                  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-                    async (event, session) => {
-                      // Only log important events
-                      if (event === 'SIGNED_IN') {
-                        console.log('✅ User signed in via auth state change');
-                      }
-                      
-                      if (event === 'SIGNED_IN' && session && !resolved) {
-                        resolved = true;
-                        subscription?.unsubscribe();
-                        await handleUserSession(session);
-                        resolve(undefined);
-                      }
-                    }
-                  );
-                  
-                  // Fallback: Check for existing session after a delay
-                  setTimeout(async () => {
-                    if (!resolved) {
-                      const { data: { session } } = await supabase.auth.getSession();
-                      if (session) {
-                        resolved = true;
-                        console.log('✅ Session found via direct check');
-                        subscription?.unsubscribe();
-                        await handleUserSession(session);
-                        resolve(undefined);
-                      } else {
-                        resolved = true;
-                        subscription?.unsubscribe();
-                        setError('خطا در احراز هویت. لطفاً دوباره تلاش کنید.');
-                        resolve(undefined);
-                      }
-                    }
-                  }, 5000);
-                });
+                if (event === 'SIGNED_IN' && session && !resolved) {
+                  resolved = true;
+                  clearTimeout(timeoutId);
+                  subscription?.unsubscribe();
+                  console.log('✅ User signed in successfully');
+                  await handleUserSession(session);
+                  resolve(undefined);
+                }
               }
-              
-              setError(`خطا در تبدیل کد احراز هویت: ${error.message}`);
-              return;
-            }
+            );
             
-            console.log('✅ Direct code exchange successful');
+            // Also check for existing session (in case auth state change doesn't fire)
+            const checkSession = async () => {
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session && !resolved) {
+                  resolved = true;
+                  clearTimeout(timeoutId);
+                  subscription?.unsubscribe();
+                  console.log('✅ Session found via direct check');
+                  await handleUserSession(session);
+                  resolve(undefined);
+                }
+              } catch (error) {
+                console.error('❌ Session check failed:', error);
+              }
+            };
             
-            if (data.session) {
-              await handleUserSession(data.session);
-            } else {
-              setError('جلسه کاربری ایجاد نشد');
-            }
-          } catch (error: any) {
-            console.error('💥 Code exchange error:', error);
-            setError('خطا در پردازش احراز هویت. لطفاً دوباره تلاش کنید.');
-          }
+            // Check immediately and then every 500ms
+            checkSession();
+            const intervalId = setInterval(checkSession, 500);
+            
+            // Timeout after 5 seconds
+            timeoutId = setTimeout(() => {
+              if (!resolved) {
+                resolved = true;
+                clearInterval(intervalId);
+                subscription?.unsubscribe();
+                console.log('❌ Auth timeout - no session found');
+                setError('Authentication timeout - please try again');
+                resolve(undefined);
+              }
+            }, 5000);
+            
+            // Clean up interval when resolved
+            const originalResolve = resolve;
+            resolve = (value: any) => {
+              clearInterval(intervalId);
+              originalResolve(value);
+            };
+          });
         } else {
           // No code - maybe session already exists
           console.log('🔍 No authorization code, checking for existing session...');
@@ -219,7 +212,7 @@ function AuthCompleteContent() {
                 title: "ورود موفقیت‌آمیز",
                 description: "در حال انتقال به داشبورد دانش‌آموز...",
               });
-              const dashboardUrl = await getSmartOAuthRedirectUrl('dashboard/student');
+              const dashboardUrl = await getSmartOAuthRedirectUrl('/dashboard/student');
               window.location.href = dashboardUrl;
               return;
             }
