@@ -48,6 +48,35 @@ const createSupabaseClient = () => {
   }
 };
 
+// Function to get the correct site URL for OAuth redirects
+export const getSiteUrl = (): string => {
+  // In production, use environment variable
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+  
+  // In browser, detect current location
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname, port } = window.location;
+    
+    // If we're on localhost, use localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+    }
+    
+    // If we're on production domain, use https
+    if (hostname.includes('vercel.app') || hostname.includes('se1a')) {
+      return `https://${hostname}`;
+    }
+    
+    // Fallback to current origin
+    return window.location.origin;
+  }
+  
+  // Server-side fallback
+  return 'https://se1a.vercel.app';
+};
+
 // Initialize Supabase client with error handling
 export const supabase = createSupabaseClient();
 

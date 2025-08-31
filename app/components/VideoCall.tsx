@@ -178,24 +178,15 @@ export default function VideoCall({
   useEffect(() => {
     const initializeMedia = async () => {
       try {
-        // Check if using non-localhost IP (common issue)
-        const isNonLocalIP = window.location.hostname.match(/^\d+\.\d+\.\d+\.\d+$/) && 
-                            window.location.hostname !== '127.0.0.1';
+        // Get the proper site URL from environment or fallback to current origin
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
         
-        if (isNonLocalIP) {
+        // Check if using non-localhost IP (common issue)
+        if (location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.') && !location.hostname.startsWith('172.') && !location.hostname.startsWith('10.') && location.protocol !== 'https:') {
           console.error('Using IP address instead of localhost - this causes getUserMedia issues');
-          const ipError = {
-            type: 'https-required' as const,
-            message: 'آدرس IP باعث مشکل دوربین می‌شود',
-            suggestions: [
-              `از localhost استفاده کنید: http://localhost:${window.location.port}/students/temp-user-id/video-call`,
-              'یا از HTTPS tunnel استفاده کنید (ngrok، localtunnel)',
-              'IP محلی برای getUserMedia مجاز نیست',
-              'فقط localhost و HTTPS امن محسوب می‌شوند'
-            ]
-          };
-          setMediaError(ipError);
-          setShowPermissionGuide(true);
+          alert(
+            `از localhost استفاده کنید: ${siteUrl}/students/temp-user-id/video-call`,
+          );
           return;
         }
 

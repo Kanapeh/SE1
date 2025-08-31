@@ -44,13 +44,37 @@ export default function PopularCoursesSection() {
   // Fetch teachers from API endpoint
   const fetchTeachers = async () => {
     try {
+      console.log('🔍 Fetching teachers from API...');
+      console.log('Current origin:', window.location.origin);
+      
       const response = await fetch('/api/teachers');
       
+      console.log('API Response status:', response.status);
+      console.log('API Response ok:', response.ok);
+      
       if (!response.ok) {
+        console.error(`❌ API Error: ${response.status} ${response.statusText}`);
+        
+        // Try to get error details
+        try {
+          const errorText = await response.text();
+          console.error('Error response body:', errorText);
+        } catch (e) {
+          console.error('Could not read error response');
+        }
+        
+        // For 404, fall back to empty array instead of crashing
+        if (response.status === 404) {
+          console.warn('⚠️ Teachers API not found, using fallback empty array');
+          setTeachers([]);
+          return;
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const result = await response.json();
+      console.log('✅ API Response:', result);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch teachers');

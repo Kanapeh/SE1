@@ -93,7 +93,8 @@ import {
   Brain,
   Trophy,
   Gift,
-  Gamepad2
+  Gamepad2,
+  X
 } from 'lucide-react';
 
 interface User {
@@ -200,6 +201,8 @@ export default function StudentDashboardPage() {
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showBookingDetails, setShowBookingDetails] = useState(false);
 
   // Helper function for better navigation handling
   const handleNavigation = (path: string, description: string) => {
@@ -763,17 +766,23 @@ export default function StudentDashboardPage() {
                         key={booking.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
+                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group"
+                        onClick={() => {
+                          // Navigate to video call page for this specific booking
+                          if (userProfile?.id) {
+                            router.push(`/students/${userProfile.id}/video-call?booking=${booking.id}`);
+                          }
+                        }}
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-4 flex-1">
                             <Avatar className="w-12 h-12">
                               <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                                 {booking.student_name.split(' ').map(n => n[0]).join('')}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                 {booking.student_name}
                               </h4>
                               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -805,8 +814,45 @@ export default function StudentDashboardPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex flex-col items-end gap-3">
                             {getStatusBadge(booking.status)}
+                            
+                            {/* Video Call Button - Only show for confirmed/active classes */}
+                            {(booking.status === 'confirmed' || booking.status === 'scheduled') && (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent parent click
+                                  router.push(`/students/${userProfile?.id}/video-call?booking=${booking.id}`);
+                                }}
+                                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm px-4 py-2 h-auto"
+                              >
+                                <Video className="w-4 h-4 mr-2" />
+                                {booking.status === 'confirmed' ? 'شروع کلاس' : 'آماده برای کلاس'}
+                              </Button>
+                            )}
+                            
+                            {/* Status-specific actions */}
+                            {booking.status === 'pending' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-yellow-600 border-yellow-300 hover:bg-yellow-50"
+                              >
+                                <Clock className="w-4 h-4 mr-2" />
+                                در انتظار تایید
+                              </Button>
+                            )}
+                            
+                            {booking.status === 'completed' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 border-green-300 hover:bg-green-50"
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                تکمیل شده
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
@@ -815,6 +861,64 @@ export default function StudentDashboardPage() {
                             <p className="text-sm text-gray-600 dark:text-gray-400">{booking.notes}</p>
                           </div>
                         )}
+                        
+                        {/* Quick Actions Row */}
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span>کلیک کنید تا جزئیات کلاس را ببینید</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            {/* View Details Button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedBooking(booking);
+                                setShowBookingDetails(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              جزئیات
+                            </Button>
+                            
+                            {/* Reschedule Button - Only for confirmed/scheduled */}
+                            {(booking.status === 'confirmed' || booking.status === 'scheduled') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Show reschedule modal or navigate to reschedule page
+                                  console.log('Reschedule booking:', booking.id);
+                                }}
+                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              >
+                                <Calendar className="w-4 h-4 mr-1" />
+                                تغییر زمان
+                              </Button>
+                            )}
+                            
+                            {/* Cancel Button - Only for pending/confirmed/scheduled */}
+                            {['pending', 'confirmed', 'scheduled'].includes(booking.status) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Show cancel confirmation modal
+                                  console.log('Cancel booking:', booking.id);
+                                }}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <X className="w-4 h-4 mr-1" />
+                                لغو
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
@@ -1423,6 +1527,166 @@ export default function StudentDashboardPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Booking Details Modal */}
+      {showBookingDetails && selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  جزئیات کلاس
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowBookingDetails(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Class Status */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">وضعیت کلاس:</span>
+                  {getStatusBadge(selectedBooking.status)}
+                </div>
+
+                {/* Class Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">نوع جلسه:</span>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {selectedBooking.session_type === 'online' ? 'آنلاین' : 
+                         selectedBooking.session_type === 'offline' ? 'حضوری' : 
+                         selectedBooking.session_type === 'hybrid' ? 'ترکیبی' : selectedBooking.session_type}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">مدت زمان:</span>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {selectedBooking.duration} دقیقه
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">قیمت:</span>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {selectedBooking.total_price.toLocaleString()} تومان
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">روزهای انتخاب شده:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedBooking.selected_days.map((day, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {day}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">ساعت‌های انتخاب شده:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedBooking.selected_hours.map((hour, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {hour}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {selectedBooking.notes && (
+                  <div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">یادداشت‌ها:</span>
+                    <p className="mt-1 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-gray-700 dark:text-gray-300">
+                      {selectedBooking.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">تاریخ ایجاد:</span>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {new Date(selectedBooking.created_at).toLocaleDateString('fa-IR')}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">آخرین به‌روزرسانی:</span>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {new Date(selectedBooking.updated_at).toLocaleDateString('fa-IR')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  {/* Video Call Button - Only for confirmed/scheduled classes */}
+                  {(selectedBooking.status === 'confirmed' || selectedBooking.status === 'scheduled') && (
+                    <Button
+                      onClick={() => {
+                        if (userProfile?.id) {
+                          router.push(`/students/${userProfile.id}/video-call?booking=${selectedBooking.id}`);
+                          setShowBookingDetails(false);
+                        }
+                      }}
+                      className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      {selectedBooking.status === 'confirmed' ? 'شروع کلاس' : 'آماده برای کلاس'}
+                    </Button>
+                  )}
+
+                  {/* Reschedule Button */}
+                  {['confirmed', 'scheduled'].includes(selectedBooking.status) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        // Show reschedule modal
+                        console.log('Reschedule booking:', selectedBooking.id);
+                      }}
+                      className="flex-1"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      تغییر زمان
+                    </Button>
+                  )}
+
+                  {/* Cancel Button */}
+                  {['pending', 'confirmed', 'scheduled'].includes(selectedBooking.status) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        // Show cancel confirmation
+                        console.log('Cancel booking:', selectedBooking.id);
+                      }}
+                      className="text-red-600 border-red-300 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      لغو کلاس
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 } 

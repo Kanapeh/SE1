@@ -101,10 +101,13 @@ export default function AdminLoginPage() {
     try {
       console.log("🔐 Admin Google OAuth attempt...");
       
+      // Get the proper site URL from environment or fallback to current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/admin/auth/callback`,
+          redirectTo: `${siteUrl}/admin/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -164,7 +167,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Label htmlFor="email" className="text-white mb-2 block">
-                ایمیل ادمین
+                ایمین ادمین
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />

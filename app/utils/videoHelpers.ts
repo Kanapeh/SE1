@@ -128,6 +128,9 @@ export const getBrowserInfo = () => {
   }
 };
 
-export const isHTTPS = (): boolean => {
+export function isSecureContext(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const location = window.location;
   return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-};
+}

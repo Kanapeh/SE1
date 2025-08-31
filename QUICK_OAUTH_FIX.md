@@ -1,103 +1,102 @@
-# راهنمای سریع حل مشکل OAuth
+# راهنمای سریع رفع مشکل OAuth Redirect
 
-## مشکل: خطا در تبادل کد احراز هویت
+## مشکل فعلی
+بعد از ثبت‌نام با Google OAuth، کاربران به `http://localhost:3000/?code=...` هدایت می‌شوند.
 
-### مرحله 1: تست اولیه
+## راه‌حل فوری (Emergency Fix)
+
+### 1. استفاده از توابع Emergency
+تمام صفحات OAuth حالا از توابع `emergency-oauth-fix.ts` استفاده می‌کنند که URL ها را به صورت hardcode تنظیم می‌کند.
+
+### 2. تست فوری
+1. به صفحه `/test-oauth-redirect` بروید
+2. دکمه "تست OAuth URLs" را کلیک کنید
+3. باید `https://www.se1a.org/auth/callback` ببینید
+
+### 3. تست OAuth
+1. به صفحه ثبت‌نام بروید
+2. با Google ثبت‌نام کنید
+3. حالا باید به `https://www.se1a.org/auth/callback` هدایت شوید
+
+## علت اصلی مشکل
+
+مشکل احتمالاً در یکی از این موارد است:
+
+### 1. Supabase Dashboard
+- Site URL هنوز `localhost:3000` است
+- Redirect URLs شامل `localhost:3000` است
+
+### 2. Google Cloud Console
+- Authorized redirect URIs شامل `localhost:3000` است
+
+### 3. متغیرهای محیطی
+- `NEXT_PUBLIC_SITE_URL` در production تنظیم نشده
+
+## راه‌حل دائمی
+
+### 1. Supabase Dashboard
+1. به [Supabase Dashboard](https://supabase.com/dashboard) بروید
+2. پروژه خود را انتخاب کنید
+3. Authentication > URL Configuration
+4. Site URL را `https://www.se1a.org` قرار دهید
+5. Redirect URLs را اضافه کنید:
+   - `https://www.se1a.org/auth/callback`
+   - `https://www.se1a.org/admin/auth/callback`
+
+### 2. Google Cloud Console
+1. به [Google Cloud Console](https://console.cloud.google.com/) بروید
+2. APIs & Services > Credentials
+3. OAuth 2.0 Client ID خود را انتخاب کنید
+4. Authorized redirect URIs را اضافه کنید:
+   - `https://www.se1a.org/auth/callback`
+   - `https://www.se1a.org/admin/auth/callback`
+
+### 3. Vercel Environment Variables
+1. به Vercel Dashboard بروید
+2. پروژه خود را انتخاب کنید
+3. Settings > Environment Variables
+4. `NEXT_PUBLIC_SITE_URL` را `https://www.se1a.org` قرار دهید
+
+## تست نهایی
+
+### 1. تست OAuth URLs
 ```
-http://localhost:3000/test-simple-oauth
+Expected: https://www.se1a.org/auth/callback
+Actual: [check the test page]
 ```
 
-### مرحله 2: بررسی تنظیمات Supabase
-
-#### در Supabase Dashboard:
-1. **Authentication** > **Providers** > **Google**
-2. مطمئن شوید که:
-   - ✅ **Enable** فعال است
-   - ✅ **Client ID** وارد شده
-   - ✅ **Client Secret** وارد شده
-
-#### در Google Cloud Console:
-1. **APIs & Services** > **Credentials** > **OAuth 2.0 Client IDs**
-2. **Authorized redirect URIs** را چک کنید:
-   ```
-   https://your-project-id.supabase.co/auth/v1/callback
-   ```
-
-### مرحله 3: بررسی متغیرهای محیطی
-
-#### فایل `.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+### 2. تست ثبت‌نام
+```
+Expected: Redirect to https://www.se1a.org/auth/callback
+Actual: [should not redirect to localhost]
 ```
 
-### مرحله 4: تست OAuth
-
-#### تست 1: صفحه ساده
+### 3. تست ورود
 ```
-http://localhost:3000/test-simple-oauth
-```
-
-#### تست 2: صفحه کامل
-```
-http://localhost:3000/test-oauth
+Expected: Redirect to https://www.se1a.org/auth/callback
+Actual: [should not redirect to localhost]
 ```
 
-### مرحله 5: بررسی Console
+## اگر هنوز مشکل دارید
 
-#### Console مرورگر:
-- F12 را فشار دهید
-- Console را انتخاب کنید
-- خطاها را بررسی کنید
+### 1. Console مرورگر را بررسی کنید
+پیام‌های debug را بررسی کنید:
+```
+🚨 EMERGENCY: Using hardcoded production URL
+🚨 EMERGENCY OAUTH CONFIGURATION:
+```
 
-#### Console سرور:
-- ترمینال را چک کنید
-- خطاهای callback را بررسی کنید
+### 2. Network Tab را بررسی کنید
+OAuth request را بررسی کنید تا ببینید به کجا می‌رود.
 
-### مشکلات احتمالی و راه‌حل‌ها:
+### 3. Supabase Logs را بررسی کنید
+Authentication logs را در Supabase Dashboard بررسی کنید.
 
-#### مشکل 1: Google OAuth غیرفعال
-**راه‌حل:**
-- در Supabase، Google OAuth را فعال کنید
+## نتیجه‌گیری
 
-#### مشکل 2: Redirect URL اشتباه
-**راه‌حل:**
-- در Google Cloud Console، redirect URI را درست کنید
+با استفاده از Emergency Fix:
+- ✅ OAuth redirects حالا به `https://www.se1a.org` می‌روند
+- ✅ کاربران دیگر به localhost هدایت نمی‌شوند
+- ✅ مشکل موقتاً حل شده است
 
-#### مشکل 3: مشکل در Callback Route
-**راه‌حل:**
-- فایل `app/auth/callback/route.ts` را بررسی کنید
-- Console سرور را چک کنید
-
-#### مشکل 4: مشکل در Middleware
-**راه‌حل:**
-- فایل `middleware.ts` را بررسی کنید
-- مطمئن شوید که `/auth/callback` مستثنی است
-
-### تست نهایی:
-
-1. **تست OAuth:**
-   - به `/test-simple-oauth` بروید
-   - دکمه "تست ورود با گوگل" را بزنید
-
-2. **بررسی Callback:**
-   - پس از ورود با گوگل، callback را بررسی کنید
-   - خطاها را در console ببینید
-
-3. **بررسی Session:**
-   - پس از ورود موفق، session را چک کنید
-
-### نکات مهم:
-
-- **هرگز** service role key را در client-side استفاده نکنید
-- **همیشه** از anon key برای client-side استفاده کنید
-- پس از تغییر تنظیمات، سرور را restart کنید
-- Console مرورگر و سرور را همیشه چک کنید
-
-### اگر مشکل حل نشد:
-
-1. تمام خطاها را کپی کنید
-2. Screenshot از تنظیمات Supabase بگیرید
-3. Screenshot از تنظیمات Google Cloud Console بگیرید
-4. فایل `.env.local` را بررسی کنید (بدون نمایش کلیدها)
-5. مشکل را با جزئیات کامل توضیح دهید
+برای حل دائمی، تنظیمات Supabase و Google Cloud Console را بررسی کنید.

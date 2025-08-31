@@ -44,8 +44,11 @@ export default function GetStartedPage() {
     console.log("Submitting form data:", formData);
 
     try {
+      // Get the proper site URL from environment or fallback to current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      
       // Use absolute URL for API endpoint
-      const apiUrl = `${window.location.origin}/api/requests`;
+      const apiUrl = `${siteUrl}/api/requests`;
       console.log("Sending request to:", apiUrl);
 
       const response = await fetch(apiUrl, {

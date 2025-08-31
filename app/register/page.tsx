@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { emergencyTeacherOAuthRedirect, debugEmergencyOAuth } from "@/lib/emergency-oauth-fix";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Mail, Lock, User, Chrome, GraduationCap } from "lucide-react";
+import { Mail, Lock, Chrome, AlertCircle, User, GraduationCap } from "lucide-react";
 
 function RegisterContent() {
   const [email, setEmail] = useState("");
@@ -38,20 +40,29 @@ function RegisterContent() {
 
   // Handle Google OAuth
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setError(null);
-    
     try {
-      console.log("Starting Google OAuth sign in...");
+      setGoogleLoading(true);
+      setError(null);
+
+      console.log("🚀 Starting Google OAuth sign in...");
       
+      // Log OAuth configuration for debugging
+      debugEmergencyOAuth();
+      
+      // Get the proper OAuth redirect URL
+      const redirectUrl = emergencyTeacherOAuthRedirect(userType);
+      
+      console.log("Current origin:", window.location.origin);
+      console.log("Final redirect URL:", redirectUrl);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          },
+          }
         }
       });
 

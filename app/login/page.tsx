@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase, clearSupabaseStorage, checkSessionWithRetry } from "@/lib/supabase";
+import { getSmartOAuthRedirectUrl, logOAuthConfig } from "@/lib/oauth-utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,7 @@ function LoginPageContent() {
     toast.success(message);
     
     // Check if there's a redirectTo parameter
-    const redirectTo = searchParams.get('redirectTo');
+    const redirectTo = searchParams?.get('redirectTo');
     const targetPath = redirectTo && redirectTo.startsWith('/') ? redirectTo : defaultPath;
     
     console.log(`🔄 Redirecting to: ${targetPath}`);
@@ -61,8 +62,8 @@ function LoginPageContent() {
 
   // Check for OAuth errors from URL params
   useEffect(() => {
-    const errorParam = searchParams.get('error');
-    const detailsParam = searchParams.get('details');
+    const errorParam = searchParams?.get('error');
+    const detailsParam = searchParams?.get('details');
     
     if (errorParam) {
       let errorMessage = '';
@@ -144,29 +145,27 @@ function LoginPageContent() {
 
   // Handle Google OAuth
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setError(null);
-    
     try {
-      console.log("🚀 Starting Google OAuth sign in with PKCE...");
-      console.log("Current origin:", window.location.origin);
-      console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      setGoogleLoading(true);
+      setError(null);
+
+      console.log("🔄 Starting Google OAuth with PKCE...");
       
-      // Validate Supabase connection first
-      try {
-        const { error: healthCheck } = await supabase.auth.getSession();
-        if (healthCheck) {
-          console.error("❌ Supabase health check failed:", healthCheck);
-          throw new Error("اتصال به سرور برقرار نیست. لطفاً اینترنت خود را بررسی کنید.");
-        }
-      } catch (healthError: any) {
-        if (healthError.message?.includes("fetch")) {
-          throw new Error("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
-        }
-        throw healthError;
+      // Ensure we're on client side
+      if (typeof window === 'undefined') {
+        throw new Error('OAuth can only be initiated from client side');
       }
       
-      // Sign out to clear any existing session but preserve PKCE state
+      // Log OAuth configuration for debugging
+      logOAuthConfig();
+      
+      // Get the proper OAuth redirect URL (smart detection)
+      const redirectUrl = getSmartOAuthRedirectUrl();
+      
+      console.log("Current origin:", window.location.origin);
+      console.log("Final redirect URL:", redirectUrl);
+      
+      // Clear any existing sessions first
       await supabase.auth.signOut();
       
       // Don't clear all storage immediately - let PKCE establish first
@@ -178,7 +177,7 @@ function LoginPageContent() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

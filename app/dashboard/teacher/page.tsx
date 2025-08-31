@@ -68,7 +68,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Percent
+  Percent,
+  Video
 } from 'lucide-react';
 
 interface User {
@@ -177,6 +178,15 @@ export default function TeacherDashboardPage() {
     thisMonthEarnings: 0
   });
   const [showNotifications, setShowNotifications] = useState(false);
+  const [activeVideoCalls, setActiveVideoCalls] = useState<Array<{
+    id: string;
+    student_id: string;
+    student_name: string;
+    student_email: string;
+    booking_id: string;
+    started_at: string;
+    status: 'waiting' | 'active' | 'ended';
+  }>>([]);
 
   // Get current user
   const getCurrentUser = async () => {
@@ -315,6 +325,52 @@ export default function TeacherDashboardPage() {
       return [];
     }
   };
+
+  // Fetch active video calls for teacher
+  const fetchActiveVideoCalls = async (teacherId: string) => {
+    try {
+      console.log('🔍 Fetching active video calls for teacher:', teacherId);
+      
+      // Get active bookings that might have video calls
+      const { data: activeBookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          student_id,
+          student_name,
+          student_email,
+          status,
+          created_at
+        `)
+        .eq('teacher_id', teacherId)
+        .eq('status', 'confirmed')
+        .order('created_at', { ascending: false });
+
+      if (bookingsError) {
+        console.error('❌ Error fetching active bookings:', bookingsError);
+        return [];
+      }
+
+      // Convert to video call format
+      const videoCalls = activeBookings?.map(booking => ({
+        id: `call-${booking.id}`,
+        student_id: booking.student_name,
+        student_name: booking.student_name,
+        student_email: booking.student_email,
+        booking_id: booking.id,
+        started_at: booking.created_at,
+        status: 'waiting' as const
+      })) || [];
+
+      console.log('✅ Active video calls fetched:', videoCalls);
+      return videoCalls;
+    } catch (error) {
+      console.error('❌ Error fetching active video calls:', error);
+      return [];
+    }
+  };
+
+
 
   // Mark notification as read
   const markNotificationAsRead = async (notificationId: string) => {
@@ -463,10 +519,12 @@ export default function TeacherDashboardPage() {
         const teacherClasses = await fetchClasses(teacherProfile.id);
         const teacherSchedule = await fetchSchedule(teacherProfile.id);
         const teacherNotifications = await fetchNotifications(teacherProfile.id);
+        const teacherActiveVideoCalls = await fetchActiveVideoCalls(teacherProfile.id);
         
         setClasses(teacherClasses);
         setSchedule(teacherSchedule);
         setNotifications(teacherNotifications);
+        setActiveVideoCalls(teacherActiveVideoCalls);
         setAnalytics(generateAnalytics());
 
         // Calculate stats from real data
@@ -951,6 +1009,96 @@ export default function TeacherDashboardPage() {
 
           {/* Classes Tab */}
           <TabsContent value="classes" className="space-y-6">
+            {/* Active Video Calls */}
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                  <Video className="w-5 h-5" />
+                  تماس‌های تصویری فعال ({activeVideoCalls.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Debug Info */}
+                <div className="mb-4 p-2 bg-blue-100 text-blue-800 text-xs rounded">
+                  Debug: Teacher ID: {teacher.id} | Active Calls Count: {activeVideoCalls.length}
+                </div>
+                {activeVideoCalls.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Video className="w-8 h-8 text-green-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2">هیچ تماس فعالی ندارید</h3>
+                    <p className="text-green-600 dark:text-green-400">دانش‌آموزان می‌توانند برای شروع کلاس با شما تماس بگیرند</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activeVideoCalls.map((call) => (
+                      <div key={call.id} className="p-4 bg-white/80 dark:bg-gray-800/80 border border-green-200 dark:border-green-700 rounded-lg hover:shadow-md transition-shadow">
+                        {/* Debug Info */}
+                        <div className="mb-2 p-1 bg-blue-100 text-blue-800 text-xs rounded">
+                          Debug: Teacher ID: {teacher.id} | Call ID: {call.id} | Booking ID: {call.booking_id}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                              <Video className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                {call.student_name}
+                              </h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {call.student_email}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Clock className="w-4 h-4 text-green-500" />
+                                <span className="text-xs text-green-600 dark:text-green-400">
+                                  {new Date(call.started_at).toLocaleTimeString('fa-IR')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                              {call.status === 'waiting' ? 'در انتظار' : call.status === 'active' ? 'فعال' : 'پایان یافته'}
+                            </Badge>
+                            <Button 
+                              onClick={() => {
+                                alert('دکمه کلیک شد!'); // تست ساده
+                                console.log('Clicking join call button:', { teacherId: teacher.id, bookingId: call.booking_id });
+                                if (teacher.id && call.booking_id) {
+                                  const targetUrl = `/teachers/${teacher.id}/video-call?booking=${call.booking_id}`;
+                                  console.log('Navigating to:', targetUrl);
+                                  console.log('Current location:', window.location.href);
+                                  
+                                  // Get the proper site URL from environment or fallback to current origin
+                                  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+                                  
+                                  // Use window.location for absolute navigation
+                                  const baseUrl = siteUrl; // Use environment variable instead of hardcoded localhost
+                                  const fullUrl = `${baseUrl}${targetUrl}`;
+                                  console.log('Full URL:', fullUrl);
+                                  window.location.href = fullUrl;
+                                } else {
+                                  console.error('Missing teacher.id or call.booking_id:', { teacherId: teacher.id, bookingId: call.booking_id });
+                                  alert('خطا: اطلاعات ناقص');
+                                }
+                              }}
+                              className="bg-green-500 hover:bg-green-600 text-white"
+                              size="sm"
+                            >
+                              <Video className="w-4 h-4 mr-2" />
+                              پیوستن به تماس
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
               <CardHeader>
                 <div className="flex items-center justify-between">

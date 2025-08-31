@@ -89,3 +89,47 @@ export async function PATCH(request: Request) {
     }, { status: 500 });
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { teacher_id, type, title, message } = body;
+
+    if (!teacher_id || !type || !title || !message) {
+      return NextResponse.json({ 
+        error: 'teacher_id, type, title, and message are required' 
+      }, { status: 400 });
+    }
+
+    // Create new notification
+    const { data: notification, error } = await supabase
+      .from('notifications')
+      .insert({
+        teacher_id,
+        type,
+        title,
+        message,
+        read: false
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error creating notification:', error);
+      return NextResponse.json({ 
+        error: error.message 
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      notification,
+      success: true 
+    });
+
+  } catch (error) {
+    console.error('💥 Unexpected error:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error' 
+    }, { status: 500 });
+  }
+}

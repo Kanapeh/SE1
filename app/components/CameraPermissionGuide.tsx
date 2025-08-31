@@ -192,8 +192,8 @@ export default function CameraPermissionGuide({ isVisible, onClose, onRetry }: C
                     ))}
                   </div>
                   {location.protocol !== 'https:' && location.hostname !== 'localhost' && (
-                    <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                      <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      <p className="text-red-700 dark:text-red-300 text-sm">
                         ⚠️ تماس تصویری نیاز به اتصال HTTPS دارد. از localhost استفاده کنید یا SSL نصب کنید.
                       </p>
                     </div>

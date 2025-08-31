@@ -53,10 +53,13 @@ export default function TestPKCEPage() {
     try {
       console.log('🚀 Starting Google OAuth...');
       
+      // Get the proper site URL from environment or fallback to current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${siteUrl}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

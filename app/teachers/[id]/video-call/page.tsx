@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,8 @@ import {
   User,
   Star,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -61,188 +62,181 @@ interface ClassSession {
   student?: Student;
 }
 
+interface Booking {
+  id: string;
+  teacher_id: string;
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  student_phone: string;
+  selected_days: string[];
+  selected_hours: string[];
+  session_type: string;
+  duration: number;
+  total_price: number;
+  status: string;
+  payment_status: string;
+  transaction_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function TeacherVideoCallPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const teacherId = params?.id as string;
+  const bookingId = searchParams?.get('booking');
 
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [currentClass, setCurrentClass] = useState<ClassSession | null>(null);
   const [isCallActive, setIsCallActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+
+  const addDebugInfo = (message: string) => {
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   useEffect(() => {
     const fetchTeacherAndClassData = async () => {
       try {
         setLoading(true);
-        
-        // Get current logged-in user
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError || !user) {
-          console.error('Error getting current user:', authError);
+        setError(null);
+        addDebugInfo('شروع بارگذاری اطلاعات کلاس');
+
+        if (!teacherId || !bookingId) {
+          setError('شناسه معلم یا کلاس یافت نشد');
+          setLoading(false);
           return;
         }
 
-        console.log('Current user:', user.email);
-        console.log('Teacher ID from URL:', teacherId);
-        
-        // Fetch teacher data from database
+        addDebugInfo(`درخواست برای معلم: ${teacherId} و کلاس: ${bookingId}`);
+
+        // Fetch teacher data
         const { data: teacherData, error: teacherError } = await supabase
           .from('teachers')
           .select('*')
           .eq('id', teacherId)
           .single();
 
-        console.log('Teacher query result:', { teacherData, teacherError });
-
         if (teacherError) {
           console.error('Error fetching teacher:', teacherError);
+          setError(`خطا در دریافت اطلاعات معلم: ${teacherError.message}`);
+          setLoading(false);
           return;
         }
 
-        if (teacherData) {
-          console.log('Setting teacher data:', teacherData);
-          setTeacher({
-            id: teacherData.id,
-            first_name: teacherData.first_name,
-            last_name: teacherData.last_name,
-            email: teacherData.email,
-            phone: teacherData.phone,
-            avatar: teacherData.avatar,
-            bio: teacherData.bio,
-            hourly_rate: teacherData.hourly_rate || 0,
-            experience_years: teacherData.experience_years || 0,
-            languages: teacherData.languages || [],
-            specialties: teacherData.teaching_methods || [],
-            rating: 0, // Will be calculated later
-            total_students: 0, // Will be calculated later
-            total_classes: 0, // Will be calculated later
-            availability: teacherData.available_days || []
-          });
+        if (!teacherData) {
+          setError('اطلاعات معلم یافت نشد');
+          setLoading(false);
+          return;
         }
 
-        // Fetch current logged-in student data
-        let { data: studentData, error: studentError } = await supabase
+        addDebugInfo('اطلاعات معلم دریافت شد');
+        setTeacher({
+          id: teacherData.id,
+          first_name: teacherData.first_name,
+          last_name: teacherData.last_name,
+          email: teacherData.email,
+          phone: teacherData.phone,
+          avatar: teacherData.avatar,
+          bio: teacherData.bio,
+          hourly_rate: teacherData.hourly_rate || 0,
+          experience_years: teacherData.experience_years || 0,
+          languages: teacherData.languages || [],
+          specialties: teacherData.teaching_methods || [],
+          rating: teacherData.rating || 0,
+          total_students: 0,
+          total_classes: 0,
+          availability: teacherData.available_days || []
+        });
+
+        // Fetch booking data
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('id', bookingId)
+          .single();
+
+        if (bookingError) {
+          console.error('Error fetching booking:', bookingError);
+          setError(`خطا در دریافت اطلاعات کلاس: ${bookingError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        if (!bookingData) {
+          setError('اطلاعات کلاس یافت نشد');
+          setLoading(false);
+          return;
+        }
+
+        addDebugInfo('اطلاعات کلاس دریافت شد');
+
+        // Fetch student data
+        const { data: studentData, error: studentError } = await supabase
           .from('students')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', bookingData.student_id)
           .single();
 
         if (studentError) {
           console.error('Error fetching student:', studentError);
-          // Try to find student by email if id doesn't match
-          const { data: studentByEmail, error: emailError } = await supabase
-            .from('students')
-            .select('*')
-            .eq('email', user.email)
-            .single();
-          
-          if (emailError) {
-            console.error('Error fetching student by email:', emailError);
-            // Create a default student if none found
-            const defaultStudent = {
-              id: user.id,
-              first_name: 'دانش‌آموز',
-              last_name: 'فعلی',
-              email: user.email || 'unknown@example.com',
-              avatar: null,
-              level: 'متوسط',
-              language: 'انگلیسی'
-            };
-            
-            // Create default class with current student
-            const defaultClass: ClassSession = {
-              id: `class-${teacherId}-${Date.now()}`,
-              student_id: user.id,
-              teacher_id: teacherId,
-              scheduled_time: new Date().toISOString(),
-              duration: 60,
-              status: 'scheduled',
-              subject: 'کلاس آنلاین',
-              notes: 'کلاس آنلاین با معلم',
-              student: defaultStudent
-            };
-            setCurrentClass(defaultClass);
-            return;
-          }
-          
-          if (studentByEmail) {
-            studentData = studentByEmail;
-          }
+          setError(`خطا در دریافت اطلاعات دانشجو: ${studentError.message}`);
+          setLoading(false);
+          return;
         }
 
-        if (studentData) {
-          // Fetch or create class session for current student and teacher
-          const { data: classData, error: classError } = await supabase
-            .from('classes')
-            .select('*')
-            .eq('teacher_id', teacherId)
-            .eq('student_id', studentData.id)
-            .eq('status', 'scheduled')
-            .gte('scheduled_time', new Date().toISOString())
-            .order('scheduled_time', { ascending: true })
-            .limit(1)
-            .single();
-
-          if (classError) {
-            console.log('No existing class found, creating default class');
-            // Create a new class session for current student
-            const newClass: ClassSession = {
-              id: `class-${teacherId}-${studentData.id}-${Date.now()}`,
-              student_id: studentData.id,
-              teacher_id: teacherId,
-              scheduled_time: new Date().toISOString(),
-              duration: 60,
-              status: 'scheduled',
-              subject: 'کلاس آنلاین',
-              notes: 'کلاس آنلاین با معلم',
-              student: {
-                id: studentData.id,
-                first_name: studentData.first_name,
-                last_name: studentData.last_name,
-                email: studentData.email,
-                avatar: studentData.avatar,
-                level: studentData.education_level || 'متوسط',
-                language: studentData.preferred_languages?.[0] || 'انگلیسی'
-              }
-            };
-            setCurrentClass(newClass);
-          } else if (classData) {
-            // Use existing class data
-            const currentClassData: ClassSession = {
-              id: classData.id,
-              student_id: classData.student_id,
-              teacher_id: classData.teacher_id,
-              scheduled_time: classData.scheduled_time,
-              duration: classData.duration,
-              status: classData.status as any,
-              subject: classData.subject || 'کلاس آنلاین',
-              notes: classData.notes || 'کلاس آنلاین',
-              student: {
-                id: studentData.id,
-                first_name: studentData.first_name,
-                last_name: studentData.last_name,
-                email: studentData.email,
-                avatar: studentData.avatar,
-                level: studentData.education_level || 'متوسط',
-                language: studentData.preferred_languages?.[0] || 'انگلیسی'
-              }
-            };
-            setCurrentClass(currentClassData);
-          }
+        if (!studentData) {
+          setError('اطلاعات دانشجو یافت نشد');
+          setLoading(false);
+          return;
         }
+
+        addDebugInfo('اطلاعات دانشجو دریافت شد');
+
+        // Create class session from booking data
+        const classSession: ClassSession = {
+          id: bookingData.id,
+          student_id: bookingData.student_id,
+          teacher_id: bookingData.teacher_id,
+          scheduled_time: bookingData.created_at,
+          duration: bookingData.duration,
+          status: 'scheduled',
+          subject: `کلاس ${studentData.first_name} ${studentData.last_name}`,
+          notes: bookingData.notes,
+          student: {
+            id: studentData.id,
+            first_name: studentData.first_name,
+            last_name: studentData.last_name,
+            email: studentData.email,
+            avatar: studentData.avatar,
+            level: studentData.current_language_level || 'متوسط',
+            language: studentData.preferred_languages?.[0] || 'انگلیسی'
+          }
+        };
+
+        setCurrentClass(classSession);
+        addDebugInfo('کلاس با موفقیت ایجاد شد');
+
       } catch (error) {
         console.error('Error in fetchTeacherAndClassData:', error);
+        setError(`خطای غیرمنتظره: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
     };
 
-    if (teacherId) {
+    if (teacherId && bookingId) {
       fetchTeacherAndClassData();
+    } else {
+      setError('اطلاعات کافی برای بارگذاری موجود نیست');
+      setLoading(false);
     }
-  }, [teacherId]);
+  }, [teacherId, bookingId]);
 
   const handleCallStart = () => {
     setIsCallActive(true);
@@ -258,7 +252,7 @@ export default function TeacherVideoCallPage() {
     }
     // Redirect to teacher dashboard after call ends
     setTimeout(() => {
-      router.push(`/teachers/${teacherId}`);
+      router.push('/dashboard/teacher');
     }, 2000);
   };
 
@@ -288,9 +282,69 @@ export default function TeacherVideoCallPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-500 mx-auto mb-6"></div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری</h3>
-          <p className="text-gray-600 dark:text-gray-400">اتاق کلاس در حال آماده‌سازی است...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-500 mx-auto mb-6"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری اطلاعات کلاس</h3>
+          <p className="text-gray-600 dark:text-gray-400">لطفاً صبر کنید...</p>
+          {bookingId && (
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              شناسه کلاس: {bookingId}
+            </p>
+          )}
+          
+          {/* Debug Info */}
+          <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg max-w-md mx-auto">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">اطلاعات دیباگ:</p>
+            <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1 max-h-32 overflow-y-auto">
+              {debugInfo.length === 0 ? (
+                <p>در حال شروع...</p>
+              ) : (
+                debugInfo.map((info, index) => (
+                  <div key={index} className="font-mono">{info}</div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 max-w-md mx-4">
+            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">خطا در بارگذاری</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => window.location.reload()}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              >
+                <Loader2 className="w-4 h-4 mr-2" />
+                تلاش مجدد
+              </Button>
+              
+              <Button 
+                onClick={() => router.push('/dashboard/teacher')}
+                variant="outline"
+                className="w-full"
+              >
+                بازگشت به داشبورد
+              </Button>
+            </div>
+            {bookingId && (
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
+                شناسه کلاس: {bookingId}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -307,7 +361,7 @@ export default function TeacherVideoCallPage() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">کلاس یافت نشد</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">کلاس مورد نظر پیدا نشد یا لغو شده است</p>
             <Button 
-              onClick={() => router.push(`/teachers/${teacherId}`)}
+              onClick={() => router.push('/dashboard/teacher')}
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
             >
               بازگشت به داشبورد

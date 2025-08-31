@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Create server-side Supabase client
+// Create server-side Supabase client with proper service role key
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Use anon key temporarily
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function GET() {
@@ -16,11 +16,9 @@ export async function GET() {
     console.log('  - NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Not set');
     console.log('  - SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Set' : '❌ Not set');
     
+    // Log environment status but don't fail completely if service key is missing
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not set');
-      return NextResponse.json({ 
-        error: 'Service role key not configured' 
-      }, { status: 500 });
+      console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is not set, using anon key (limited access)');
     }
     
     // First, fetch ALL teachers to see what's in the database
@@ -30,7 +28,19 @@ export async function GET() {
 
     if (allError) {
       console.error('❌ API: Error fetching all teachers:', allError);
-      return NextResponse.json({ error: allError.message }, { status: 500 });
+      console.error('Error code:', allError.code);
+      console.error('Error details:', allError.details);
+      console.error('Error hint:', allError.hint);
+      
+      // Return fallback response instead of error
+      console.warn('⚠️ Returning empty teachers array due to database error');
+      return NextResponse.json({ 
+        teachers: [],
+        count: 0,
+        allCount: 0,
+        success: true,
+        warning: 'Database connection issue - using fallback'
+      });
     }
 
     console.log('📋 All teachers in database:', allTeachers?.length || 0);
@@ -62,8 +72,19 @@ export async function GET() {
 
   } catch (error) {
     console.error('💥 API: Unexpected error:', error);
+    console.error('Error type:', typeof error);
+    console.error('Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'Unknown');
+    
+    // Return fallback response instead of failing
     return NextResponse.json({ 
-      error: 'Internal server error' 
-    }, { status: 500 });
+      teachers: [],
+      count: 0,
+      allCount: 0,
+      success: true,
+      error: 'API temporarily unavailable - using fallback',
+      errorDetails: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }

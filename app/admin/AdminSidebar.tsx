@@ -22,40 +22,45 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <aside className="fixed right-0 top-0 h-screen w-64 bg-background border-l border-border p-4">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold text-foreground">پنل مدیریت</h1>
-        <p className="text-sm text-muted-foreground">مدیریت مرکز آموزشی</p>
-      </div>
+    <aside className="fixed right-0 top-0 h-screen w-64 bg-background border-l border-border p-4 z-30 lg:z-auto">
+      {/* Mobile overlay */}
+      <div className="lg:hidden fixed inset-0 bg-black/50 z-20" onClick={() => {}} />
+      
+      <div className="relative z-30 h-full flex flex-col">
+        <div className="mb-8">
+          <h1 className="text-xl font-bold text-foreground">پنل مدیریت</h1>
+          <p className="text-sm text-muted-foreground">مدیریت مرکز آموزشی</p>
+        </div>
 
-      <nav className="space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center space-x-2 p-3 rounded-lg transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-muted"
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="flex-1 space-y-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center space-x-2 p-3 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground hover:bg-muted"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div className="absolute bottom-4 right-4 left-4">
-        <Link
-          href="/"
-          className="flex items-center justify-center space-x-2 p-3 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors"
-        >
-          <span>خروج از پنل مدیریت</span>
-        </Link>
+        <div className="mt-4">
+          <Link
+            href="/"
+            className="flex items-center justify-center space-x-2 p-3 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors"
+          >
+            <span>خروج از پنل مدیریت</span>
+          </Link>
+        </div>
       </div>
     </aside>
   );

@@ -217,7 +217,8 @@ function TeacherRegistrationForm() {
 
     try {
       // تغییر redirect URL برای جلوگیری از مشکلات
-      const redirectUrl = `${window.location.origin}/auth/callback?user_type=teacher&email=${encodeURIComponent(formData.email)}`;
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const redirectUrl = `${siteUrl}/auth/callback?user_type=teacher&email=${encodeURIComponent(formData.email)}`;
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,

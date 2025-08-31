@@ -97,11 +97,14 @@ export default function TestSupabasePage() {
         anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Not set"
       });
       
+      // Get the proper site URL from environment or fallback to current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      
       const { data, error } = await supabase.auth.signUp({
         email: testEmail,
         password: testPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
           data: {
             full_name: "Test User",
             user_type: "student",

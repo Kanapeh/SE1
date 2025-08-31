@@ -21,17 +21,20 @@ export default function TestSimpleOAuthPage() {
       console.log('Current origin:', window.location.origin);
       console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
       
+      // Get the proper site URL from environment or fallback to current origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      
       // Clear any existing auth state
       await supabase.auth.signOut();
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${siteUrl}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          },
+          }
         }
       });
 

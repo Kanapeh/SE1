@@ -13,7 +13,16 @@ const nextConfig = {
   
   images: { 
     unoptimized: false,
-    domains: ['localhost', 'images.unsplash.com', 'via.placeholder.com'],
+    domains: [
+      'localhost', 
+      '172.20.10.10', // Add local network IP
+      'images.unsplash.com', 
+      'via.placeholder.com',
+      // Add your production domain here
+      'www.se1a.org', // Production domain
+      'se1a.org', // Production domain without www
+      process.env.NEXT_PUBLIC_SITE_URL?.replace('https://', '').replace('http://', '') || 'localhost'
+    ].filter(Boolean),
     formats: ['image/webp', 'image/avif'],
   },
   
@@ -22,6 +31,13 @@ const nextConfig = {
     optimizePackageImports: ['@/components/ui', 'lucide-react', 'framer-motion'],
   },
   
+  // Environment-based configuration
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.se1a.org',
+  },
+  
+  // Add headers for better security and OAuth support
   headers: async () => {
     return [
       {
@@ -39,7 +55,25 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          // Add CORS headers for OAuth
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.NODE_ENV === 'production' 
+              ? process.env.NEXT_PUBLIC_SITE_URL || 'https://www.se1a.org'
+              : '*', // Allow all origins in development
+          },
         ],
+      },
+    ];
+  },
+  
+  // Add redirects for OAuth compatibility
+  async redirects() {
+    return [
+      {
+        source: '/auth/callback',
+        destination: '/auth/complete',
+        permanent: false,
       },
     ];
   },

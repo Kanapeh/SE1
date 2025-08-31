@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import PKCEDebugger from "@/components/PKCEDebugger";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import ClientOnly from "@/components/ClientOnly";
+import SchemaOrg from "@/components/SchemaOrg";
 
 // فونت اصلی - Vazirmatn (بهترین فونت فارسی)
 const vazirmatn = Vazirmatn({
@@ -118,35 +119,11 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* Schema.org Organization and Logo Markup */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
-              "alternateName": "SE1A Academy",
-              "url": "https://www.se1a.org",
-              "logo": {
-                "@type": "ImageObject",
-                "url": "https://www.se1a.org/images/logo.png",
-                "width": 1200,
-                "height": 630,
-                "alt": "سِ وان - مرکز تخصصی آموزش زبان انگلیسی"
-              },
-              "image": "https://www.se1a.org/images/logo.png",
-              "description": "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
-              "sameAs": [
-                "https://www.instagram.com/se1a_academy",
-                "https://www.youtube.com/@Se1-academy"
-              ]
-            })
-          }}
-        />
+        {/* Meta tags and other head content will be here */}
       </head>
       <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`} suppressHydrationWarning>
         <ClientOnly>
+          <SchemaOrg />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
