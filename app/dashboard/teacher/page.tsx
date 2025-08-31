@@ -687,7 +687,96 @@ export default function TeacherDashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-between">
+          {/* Mobile Layout */}
+          <div className="block md:hidden">
+            <div className="flex items-center gap-3 mb-4">
+              <Avatar className="w-12 h-12 border-2 border-white dark:border-gray-800 shadow-lg">
+                <AvatarImage src={teacher.avatar || ''} alt={`${teacher.first_name} ${teacher.last_name}`} />
+                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold">
+                  {teacher.first_name[0]}{teacher.last_name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {teacher.first_name} {teacher.last_name}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {teacher.location}
+                </p>
+              </div>
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <Bell className="w-4 h-4" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Button variant="outline" onClick={() => router.push('/teachers/schedule')} className="flex items-center justify-center gap-2 h-12">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm">مدیریت برنامه</span>
+              </Button>
+              <Button onClick={() => router.push('/teachers/profile')} className="flex items-center justify-center gap-2 h-12">
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">تنظیمات</span>
+              </Button>
+            </div>
+
+            {showNotifications && (
+              <div className="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-64 overflow-y-auto">
+                <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">اعلان‌ها</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowNotifications(false)}
+                      className="h-6 w-6 p-0"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    اعلانی وجود ندارد
+                  </div>
+                ) : (
+                  <div>
+                    {notifications.slice(0, 3).map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${
+                          !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                        }`}
+                        onClick={() => markNotificationAsRead(notification.id)}
+                      >
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {notification.title}
+                        </h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          {notification.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="relative">
                 <Avatar className="w-16 h-16 border-4 border-white dark:border-gray-800 shadow-lg">
@@ -898,22 +987,25 @@ export default function TeacherDashboardPage() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <TabsTrigger value="overview" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
               <BarChart3 className="w-4 h-4" />
-              نمای کلی
+              <span className="hidden sm:inline">نمای کلی</span>
+              <span className="sm:hidden">کلی</span>
             </TabsTrigger>
-            <TabsTrigger value="classes" className="flex items-center gap-2">
+            <TabsTrigger value="classes" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
               <BookOpen className="w-4 h-4" />
-              کلاس‌ها
+              <span>کلاس‌ها</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger value="analytics" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
               <TrendingUp className="w-4 h-4" />
-              تحلیل‌ها
+              <span className="hidden sm:inline">تحلیل‌ها</span>
+              <span className="sm:hidden">آمار</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <TabsTrigger value="notifications" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
               <Bell className="w-4 h-4" />
-              اعلان‌ها
+              <span className="hidden sm:inline">اعلان‌ها</span>
+              <span className="sm:hidden">اعلان</span>
             </TabsTrigger>
           </TabsList>
 
