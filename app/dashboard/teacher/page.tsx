@@ -557,7 +557,7 @@ export default function TeacherDashboardPage() {
           completedClasses: teacherClasses.filter((c: Class) => c.status === 'completed').length,
           totalEarnings: teacherClasses.reduce((sum: number, c: Class) => sum + (c.total_price || 0), 0),
           totalSpent: 0, // Not applicable for teachers
-          averageRating: teacherProfile.average_rating || 0,
+          averageRating: teacher.average_rating || 0,
           thisMonthClasses: teacherClasses.filter((c: Class) => {
             const classDate = new Date(c.created_at);
             const now = new Date();
