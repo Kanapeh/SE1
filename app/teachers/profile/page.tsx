@@ -126,14 +126,33 @@ export default function TeacherProfilePage() {
         return;
       }
 
+      // Debug current user
+      console.log('🔍 Current user:', {
+        id: user.id,
+        email: user.email,
+        metadata: user.user_metadata
+      });
+
       // Fetch teacher profile using API
+      console.log('🔍 Fetching teacher profile...');
       const response = await fetch(`/api/teacher-profile?user_id=${user.id}&email=${user.email}`);
       
       if (!response.ok) {
         if (response.status === 404) {
-          router.push('/register');
+          console.log('❌ Teacher profile not found, checking if user needs to register as teacher');
+          
+          // Check if user should be redirected to teacher registration
+          const debugResponse = await fetch(`/api/current-user-debug`);
+          if (debugResponse.ok) {
+            const debugData = await debugResponse.json();
+            console.log('🔍 Debug data:', debugData);
+          }
+          
+          // Redirect to teacher registration
+          router.push('/register/teacher');
           return;
         }
+        console.error('❌ Failed to load teacher profile:', response.status, response.statusText);
         throw new Error('Failed to load profile');
       }
 
