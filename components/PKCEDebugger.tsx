@@ -18,7 +18,8 @@ export default function PKCEDebugger() {
         
         // Check auth state
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          console.log('🔐 Auth state change:', event, session?.user?.id);
+          // Comment out console.log to reduce noise
+          // console.log('🔐 Auth state change:', event, session?.user?.id);
           setDebugInfo((prev: any) => ({
             ...prev,
             lastAuthEvent: event,

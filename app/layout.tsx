@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import Footer from "@/app/components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import PKCEDebugger from "@/components/PKCEDebugger";
+// import PKCEDebugger from "@/components/PKCEDebugger";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import ClientOnly from "@/components/ClientOnly";
 import SchemaOrg from "@/components/SchemaOrg";
@@ -137,7 +137,7 @@ export default function RootLayout({
             <Footer />
             <FloatingWhatsApp />
             <Toaster position="top-center" richColors />
-            <PKCEDebugger />
+            {/* <PKCEDebugger /> */}
           </ThemeProvider>
         </ClientOnly>
       </body>

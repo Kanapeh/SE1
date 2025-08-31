@@ -156,6 +156,13 @@ function LoginPageContent() {
         throw new Error('OAuth can only be initiated from client side');
       }
       
+      // Clear any existing OAuth state first
+      await supabase.auth.signOut();
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
+      
+      console.log('🧹 Cleared existing auth state');
+      
       // Log OAuth configuration for debugging
       logOAuthConfig();
       

@@ -59,91 +59,27 @@ function AuthCompleteContent() {
           return;
         }
         
-        // If we have an authorization code, try different approaches
+        // If we have an authorization code, exchange it for a session
         if (code) {
-          console.log('🔄 Processing authorization code...');
+          console.log('🔄 Exchanging authorization code for session...');
           
-          // Approach 1: Try direct code exchange
-          try {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (error) {
-              console.error('❌ Direct code exchange failed:', error.message);
-              
-              // If PKCE code verifier issue, try alternative approach
-              if (error.message.includes('code verifier') || error.message.includes('non-empty')) {
-                console.log('🔄 PKCE issue detected, trying auth state listener...');
-                
-                // Wait for Supabase to handle the OAuth callback automatically
-                console.log('⏳ Waiting for auth state change...');
-                
-                return new Promise((resolve) => {
-                  let resolved = false;
-                  
-                  // Set up auth state change listener
-                  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-                    async (event, session) => {
-                      // Only log important events
-                      if (event === 'SIGNED_IN') {
-                        console.log('✅ User signed in via auth state change');
-                      }
-                      
-                      if (event === 'SIGNED_IN' && session && !resolved) {
-                        resolved = true;
-                        subscription?.unsubscribe();
-                        await handleUserSession(session);
-                        resolve(undefined);
-                      }
-                    }
-                  );
-                  
-                  // Fallback: Check for existing session after a delay
-                  setTimeout(async () => {
-                    if (!resolved) {
-                      const { data: { session } } = await supabase.auth.getSession();
-                      if (session) {
-                        resolved = true;
-                        console.log('✅ Session found via direct check');
-                        subscription?.unsubscribe();
-                        await handleUserSession(session);
-                        resolve(undefined);
-                      } else {
-                        resolved = true;
-                        subscription?.unsubscribe();
-                        setError('خطا در احراز هویت. لطفاً دوباره تلاش کنید.');
-                        resolve(undefined);
-                      }
-                    }
-                  }, 5000);
-                });
-              }
-              
-              setError(`خطا در تبدیل کد احراز هویت: ${error.message}`);
-              return;
-            }
-            
-            console.log('✅ Direct code exchange successful');
-            
-            if (data.session) {
-              await handleUserSession(data.session);
-            } else {
-              setError('جلسه کاربری ایجاد نشد');
-            }
-          } catch (error: any) {
-            console.error('💥 Code exchange error:', error);
-            setError('خطا در پردازش احراز هویت. لطفاً دوباره تلاش کنید.');
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (error) {
+            console.error('❌ Code exchange failed:', error.message);
+            setError(`خطا در تبدیل کد احراز هویت: ${error.message}`);
+            return;
+          }
+          
+          console.log('✅ PKCE code exchange successful');
+          
+          if (data.session) {
+            await handleUserSession(data.session);
+          } else {
+            setError('جلسه کاربری ایجاد نشد');
           }
         } else {
-          // No code - maybe session already exists
-          console.log('🔍 No authorization code, checking for existing session...');
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session) {
-            console.log('✅ Existing session found');
-            await handleUserSession(session);
-          } else {
-            setError('کد احراز هویت یافت نشد');
-          }
+          setError('کد احراز هویت یافت نشد');
         }
       } catch (error: any) {
         console.error('💥 Unexpected error in completeAuth:', error);

@@ -14,7 +14,7 @@ const createSupabaseClient = () => {
       throw new Error('Invalid Supabase URL format');
     }
 
-    console.log('🔧 Initializing Supabase client with URL:', supabaseConfig.url);
+    // console.log('🔧 Initializing Supabase client with URL:', supabaseConfig.url);
     
     return createBrowserClient(
       supabaseConfig.url,
@@ -27,7 +27,7 @@ const createSupabaseClient = () => {
           flowType: 'pkce',
           storage: typeof window !== 'undefined' ? window.localStorage : undefined,
           storageKey: 'supabase-auth-token',
-          debug: process.env.NODE_ENV === 'development',
+          debug: false, // Disable to reduce console noise
         },
         global: {
           headers: {

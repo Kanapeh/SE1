@@ -46,6 +46,13 @@ function RegisterContent() {
 
       console.log("🚀 Starting Google OAuth sign in...");
       
+      // Clear any existing OAuth state first
+      await supabase.auth.signOut();
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
+      
+      console.log('🧹 Cleared existing auth state');
+      
       // Log OAuth configuration for debugging
       logOAuthConfig();
       
