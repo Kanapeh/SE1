@@ -203,10 +203,15 @@ export default function BookSessionPage() {
     setIsSubmitting(true);
 
     try {
+      // Calculate number of sessions
+      const numberOfSessions = bookingForm.selectedDays.length * bookingForm.selectedHours.length;
+      
       // Prepare booking data
       const bookingData = {
         teacher_id: params.id,
-        student_id: '', // Will be set in confirm page
+        teacher_name: teacher ? `${teacher.first_name} ${teacher.last_name}` : '',
+        teacher_avatar: teacher?.avatar || '',
+        teacher_hourly_rate: teacher?.hourly_rate || 0,
         selectedDays: bookingForm.selectedDays,
         selectedHours: bookingForm.selectedHours,
         sessionType: bookingForm.sessionType,
@@ -215,12 +220,13 @@ export default function BookSessionPage() {
         studentPhone: bookingForm.studentPhone,
         studentEmail: bookingForm.studentEmail,
         notes: bookingForm.notes,
-        totalPrice: calculateTotalPrice()
+        totalPrice: calculateTotalPrice(),
+        numberOfSessions: numberOfSessions
       };
 
-      // Navigate to confirmation page with booking data
+      // Navigate to payment page with booking data
       const bookingDataStr = encodeURIComponent(JSON.stringify(bookingData));
-      router.push(`/teachers/${params.id}/book/confirm?booking=${bookingDataStr}`);
+      router.push(`/payment?booking=${bookingDataStr}`);
       setIsSubmitting(false);
     } catch (error) {
       console.error('Error preparing booking:', error);
@@ -229,9 +235,14 @@ export default function BookSessionPage() {
   };
 
   const calculateTotalPrice = () => {
-    if (!teacher || !bookingForm.duration) return 0;
+    if (!teacher || !bookingForm.duration || !bookingForm.selectedDays.length || !bookingForm.selectedHours.length) return 0;
+    
     const duration = parseInt(bookingForm.duration);
-    return (teacher.hourly_rate || 0) * (duration / 60);
+    const pricePerHour = teacher.hourly_rate || 0;
+    const hoursPerSession = duration / 60;
+    const numberOfSessions = bookingForm.selectedDays.length * bookingForm.selectedHours.length;
+    
+    return Math.round(pricePerHour * hoursPerSession * numberOfSessions);
   };
 
   const handleDayToggle = (day: string) => {

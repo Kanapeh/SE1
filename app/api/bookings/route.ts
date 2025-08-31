@@ -21,8 +21,12 @@ export async function POST(request: Request) {
       session_type, 
       duration, 
       total_price, 
+      number_of_sessions,
       notes,
-      transaction_id 
+      transaction_id,
+      receipt_image,
+      payment_notes,
+      payment_status
     } = body;
 
     console.log('🔍 Creating booking:', {
@@ -58,10 +62,14 @@ export async function POST(request: Request) {
         session_type,
         duration,
         total_price,
+        number_of_sessions: number_of_sessions || 1,
         notes: notes || '',
-        payment_status: transaction_id ? 'paid' : 'pending',
+        payment_status: payment_status || 'pending',
+        payment_method: 'card_to_card',
         transaction_id: transaction_id || null,
-        status: 'confirmed'
+        receipt_image: receipt_image || null,
+        payment_notes: payment_notes || null,
+        status: 'pending_payment'
       })
       .select()
       .single();

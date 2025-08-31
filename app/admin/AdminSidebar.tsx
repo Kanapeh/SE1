@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpen, Users, Settings, FileText, DollarSign, MessageSquare, MessageCircle, GraduationCap } from "lucide-react";
+import { Home, BookOpen, Users, Settings, FileText, DollarSign, MessageSquare, MessageCircle, GraduationCap, CreditCard } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ export default function AdminSidebar() {
     { href: "/admin/courses", label: "مدیریت دوره‌ها", icon: BookOpen },
     { href: "/admin/blog", label: "مدیریت وبلاگ", icon: FileText },
     { href: "/admin/students", label: "مدیریت دانش‌آموزان", icon: Users },
+    { href: "/admin/payments", label: "مدیریت پرداخت‌ها", icon: CreditCard },
     { href: "/admin/requests", label: "درخواست‌ها", icon: FileText },
     { href: "/admin/pricing", label: "مدیریت قیمت‌ها", icon: DollarSign },
     { href: "/admin/messages", label: "پیام‌ها", icon: MessageSquare },
