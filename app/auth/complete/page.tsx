@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase, clearPKCEState } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { getSmartOAuthRedirectUrl } from '@/lib/oauth-utils';
 
 function AuthCompleteContent() {
   const router = useRouter();
@@ -198,11 +199,40 @@ function AuthCompleteContent() {
           }
         } catch (error) {
           console.error('💥 Teacher check error:', error);
-          console.log('⚠️ Teacher check failed, continuing to profile completion...');
+          console.log('⚠️ Teacher check failed, continuing to student check...');
         }
 
-        // If not teacher, redirect to complete profile
-        console.log("ℹ️ User has no teacher profile, redirecting to complete profile");
+        // Check if user has a student profile
+        try {
+          console.log('🔍 Checking student profile for user:', session.user.id, session.user.email);
+          
+          const response = await fetch(`/api/student-profile?user_id=${session.user.id}&email=${session.user.email}`);
+          
+          if (response.ok) {
+            const result = await response.json();
+            const student = result.student;
+            console.log('✅ Student profile found:', student);
+            
+            if (student.status === 'active') {
+              console.log("✅ OAuth user is active student, redirecting to dashboard");
+              toast({
+                title: "ورود موفقیت‌آمیز",
+                description: "در حال انتقال به داشبورد دانش‌آموز...",
+              });
+              const dashboardUrl = await getSmartOAuthRedirectUrl('dashboard/student');
+              window.location.href = dashboardUrl;
+              return;
+            }
+          } else if (response.status === 404) {
+            console.log('❌ No student profile found');
+          }
+        } catch (error) {
+          console.error('💥 Student check error:', error);
+          console.log('⚠️ Student check failed, continuing to profile completion...');
+        }
+
+        // If neither teacher nor student, redirect to complete profile
+        console.log("ℹ️ User has no teacher or student profile, redirecting to complete profile");
         console.log("🔍 UserType for redirect:", userType);
         
         toast({
@@ -215,7 +245,8 @@ function AuthCompleteContent() {
           : '/complete-profile';
         
         console.log("🚀 Redirecting to:", redirectUrl);
-        router.push(redirectUrl);
+        const completeProfileUrl = await getSmartOAuthRedirectUrl(redirectUrl.startsWith('/') ? redirectUrl.substring(1) : redirectUrl);
+        window.location.href = completeProfileUrl;
       } catch (error: any) {
         console.error('💥 Unexpected error in handleUserSession:', error);
         setError('خطای غیرمنتظره در پردازش ورود. لطفاً دوباره تلاش کنید.');
