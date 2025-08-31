@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -124,80 +125,233 @@ export default function StudentProfilePage() {
   const [activeTab, setActiveTab] = useState('personal');
   const [showPassword, setShowPassword] = useState(false);
   const [newGoal, setNewGoal] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
-    // Mock profile data
-    const mockProfile: StudentProfile = {
-      id: 'student-1',
-      first_name: 'سارا',
-      last_name: 'محمدی',
-      email: 'sara.mohammadi@example.com',
-      phone: '09123456789',
-      avatar: null,
-      birth_date: '1995-03-15',
-      gender: 'female',
-      country: 'ایران',
-      city: 'تهران',
-      bio: 'دانشجوی زبان انگلیسی با علاقه به یادگیری زبان‌های مختلف و سفر به کشورهای مختلف جهان.',
-      level: 'متوسط',
-      primary_language: 'انگلیسی',
-      learning_goals: [
-        'یادگیری زبان انگلیسی برای کار',
-        'آمادگی برای آزمون آیلتس',
-        'مکالمه روان در سفر',
-        'خواندن کتاب‌های انگلیسی'
-      ],
-      experience_years: 2,
-      study_preferences: {
-        preferred_time: 'عصر',
-        session_duration: 60,
-        group_size: 'انفرادی',
-        learning_style: 'تعاملی'
-      },
-      notifications: {
-        email_notifications: true,
-        sms_notifications: false,
-        push_notifications: true,
-        class_reminders: true,
-        progress_updates: true,
-        promotional_emails: false
-      },
-      privacy_settings: {
-        profile_visibility: 'public',
-        show_progress: true,
-        allow_messages: true,
-        show_online_status: true
+    const fetchStudentProfile = async () => {
+      try {
+        setLoading(true);
+        
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.error('No authenticated user found:', userError);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
+        console.log('🔍 Fetching student profile for user:', user.id, user.email);
+        
+        // Fetch student profile using API endpoint
+        const response = await fetch(`/api/student-profile?user_id=${user.id}&email=${user.email}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          const student = result.student;
+          console.log('✅ Student profile loaded:', student);
+          
+          // Convert database format to profile format
+          const profileData: StudentProfile = {
+            id: student.id,
+            first_name: student.first_name || '',
+            last_name: student.last_name || '',
+            email: student.email || user.email || '',
+            phone: student.phone || '',
+            avatar: student.avatar || null,
+            birth_date: student.birth_date || '',
+            gender: student.gender || 'other',
+            country: student.country || 'ایران',
+            city: student.city || '',
+            bio: student.bio || '',
+            level: student.level || 'مبتدی',
+            primary_language: student.primary_language || 'فارسی',
+            learning_goals: Array.isArray(student.learning_goals) ? student.learning_goals : 
+                         student.learning_goals ? [student.learning_goals] : [],
+            experience_years: student.experience_years || 0,
+            study_preferences: {
+              preferred_time: student.preferred_time || 'morning',
+              session_duration: student.session_duration || 60,
+              group_size: student.group_size || 'individual',
+              learning_style: student.learning_style || 'interactive'
+            },
+            notifications: {
+              email_notifications: student.email_notifications ?? true,
+              sms_notifications: student.sms_notifications ?? false,
+              push_notifications: student.push_notifications ?? true,
+              class_reminders: student.class_reminders ?? true,
+              progress_updates: student.progress_updates ?? true,
+              promotional_emails: student.promotional_emails ?? false
+            },
+            privacy_settings: {
+              profile_visibility: student.profile_visibility || 'public',
+              show_progress: student.show_progress ?? true,
+              allow_messages: student.allow_messages ?? true,
+              show_online_status: student.show_online_status ?? true
+            }
+          };
+          
+          setProfile(profileData);
+        } else if (response.status === 404) {
+          console.log('❌ No student profile found');
+          setProfile(null);
+        } else {
+          console.error('❌ Failed to fetch student profile:', response.status);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('💥 Error fetching student profile:', error);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    setProfile(mockProfile);
-    setLoading(false);
+    fetchStudentProfile();
   }, []);
 
   const handleSave = async () => {
-    setSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setSaving(false);
+    if (!profile) return;
+    
+    try {
+      setSaving(true);
+      
+      // Update student profile
+      const response = await fetch('/api/student-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          phone: profile.phone,
+          birth_date: profile.birth_date,
+          gender: profile.gender,
+          country: profile.country,
+          city: profile.city,
+          bio: profile.bio,
+          level: profile.level,
+          primary_language: profile.primary_language,
+          learning_goals: profile.learning_goals,
+          experience_years: profile.experience_years,
+          preferred_time: profile.study_preferences.preferred_time,
+          session_duration: profile.study_preferences.session_duration,
+          group_size: profile.study_preferences.group_size,
+          learning_style: profile.study_preferences.learning_style,
+          email_notifications: profile.notifications.email_notifications,
+          sms_notifications: profile.notifications.sms_notifications,
+          push_notifications: profile.notifications.push_notifications,
+          class_reminders: profile.notifications.class_reminders,
+          progress_updates: profile.notifications.progress_updates,
+          promotional_emails: profile.notifications.promotional_emails,
+          profile_visibility: profile.privacy_settings.profile_visibility,
+          show_progress: profile.privacy_settings.show_progress,
+          allow_messages: profile.privacy_settings.allow_messages,
+          show_online_status: profile.privacy_settings.show_online_status
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Profile updated successfully');
+        alert('پروفایل با موفقیت به‌روزرسانی شد');
+      } else {
+        const error = await response.json();
+        console.error('❌ Profile update failed:', error);
+        alert(error.error || 'خطا در به‌روزرسانی پروفایل');
+      }
+    } catch (error) {
+      console.error('💥 Profile update error:', error);
+      alert('خطا در به‌روزرسانی پروفایل');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addGoal = () => {
     if (newGoal.trim() && profile) {
+      const currentGoals = Array.isArray(profile.learning_goals) ? profile.learning_goals : [];
       setProfile({
         ...profile,
-        learning_goals: [...profile.learning_goals, newGoal.trim()]
+        learning_goals: [...currentGoals, newGoal.trim()]
       });
       setNewGoal('');
     }
   };
 
   const removeGoal = (index: number) => {
-    if (profile) {
+    if (profile && Array.isArray(profile.learning_goals)) {
       const updatedGoals = profile.learning_goals.filter((_, i) => i !== index);
       setProfile({
         ...profile,
         learning_goals: updatedGoals
       });
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile) return;
+
+    // Validate file type and size
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('لطفاً یک فایل تصویر معتبر (JPG, PNG, WebP) انتخاب کنید');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('حجم فایل نباید بیشتر از 5 مگابایت باشد');
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+
+      // Convert to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Upload avatar
+      const response = await fetch('/api/upload-avatar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          avatar: base64,
+          userType: 'student',
+          userId: profile.id
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Avatar uploaded successfully');
+        
+        // Update profile state
+        setProfile({
+          ...profile,
+          avatar: result.avatar
+        });
+        
+        alert('عکس پروفایل با موفقیت آپلود شد');
+      } else {
+        const error = await response.json();
+        console.error('❌ Avatar upload failed:', error);
+        alert(error.error || 'خطا در آپلود عکس پروفایل');
+      }
+    } catch (error) {
+      console.error('💥 Avatar upload error:', error);
+      alert('خطا در آپلود عکس پروفایل');
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -289,9 +443,34 @@ export default function StudentProfilePage() {
                         {profile.first_name[0]}{profile.last_name[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <Button size="sm" variant="outline" className="absolute bottom-0 right-0 w-8 h-8 rounded-full p-0">
-                      <Camera className="w-4 h-4" />
-                    </Button>
+                    <div className="absolute bottom-0 right-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        id="avatar-upload"
+                        disabled={uploadingAvatar}
+                      />
+                      <label htmlFor="avatar-upload">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-8 h-8 rounded-full p-0 cursor-pointer"
+                          type="button"
+                          disabled={uploadingAvatar}
+                          asChild
+                        >
+                          <span>
+                            {uploadingAvatar ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
+                            ) : (
+                              <Camera className="w-4 h-4" />
+                            )}
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                     {profile.first_name} {profile.last_name}
@@ -328,7 +507,7 @@ export default function StudentProfilePage() {
                       <span className="text-sm">اهداف</span>
                     </div>
                     <span className="font-semibold text-blue-600 dark:text-blue-400">
-                      {profile.learning_goals.length}
+                      {Array.isArray(profile.learning_goals) ? profile.learning_goals.length : 0}
                     </span>
                   </div>
                 </div>
@@ -468,7 +647,7 @@ export default function StudentProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        {profile.learning_goals.map((goal, index) => (
+                        {Array.isArray(profile.learning_goals) && profile.learning_goals.map((goal, index) => (
                           <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                             <span className="text-sm">{goal}</span>
                             <Button

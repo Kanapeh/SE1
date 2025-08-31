@@ -453,7 +453,7 @@ export default function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Link href="/register?type=student" onClick={() => setIsSidebarOpen(false)}>
+                  <Link href="/login" onClick={() => setIsSidebarOpen(false)}>
                     <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-2 border-green-200/50 dark:border-green-700/50 hover:border-green-300 dark:hover:border-green-600 hover:shadow-2xl transition-all duration-500 p-4">
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -477,7 +477,7 @@ export default function Header() {
                           <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
                             دانش‌آموز هستم
                           </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ثبت‌نام به عنوان دانش‌آموز و شروع یادگیری</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ورود به سیستم و مدیریت کلاس‌ها</p>
                           <div className="flex items-center space-x-2 text-xs text-green-600 dark:text-green-400">
                             <Target className="w-3 h-3" />
                             <span>رسیدن به اهداف</span>

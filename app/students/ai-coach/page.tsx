@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import StudentPageLayout, { Student } from '@/components/StudentPageLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  ArrowLeft,
   Bot,
   Brain,
   Target,
@@ -32,122 +31,69 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Plus,
-  Minus,
-  Eye,
-  EyeOff,
   Zap,
   Heart,
   Smile,
-  Frown,
-  Meh,
   Activity,
-  BarChart3,
-  LineChart,
-  PieChart,
-  Target as TargetIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Lightbulb as LightbulbIcon,
-  MessageCircle as MessageCircleIcon,
-  Send as SendIcon,
-  Mic as MicIcon,
-  MicOff as MicOffIcon,
-  Volume2 as Volume2Icon,
-  VolumeX as VolumeXIcon,
-  Settings as SettingsIcon,
-  BookOpen as BookOpenIcon,
-  Clock as ClockIcon,
-  Star as StarIcon,
-  CheckCircle as CheckCircleIcon,
-  AlertCircle as AlertCircleIcon,
-  XCircle as XCircleIcon,
-  Plus as PlusIcon,
-  Minus as MinusIcon,
-  Eye as EyeIcon,
-  EyeOff as EyeOffIcon,
-  Zap as ZapIcon,
-  Heart as HeartIcon,
-  Smile as SmileIcon,
-  Frown as FrownIcon,
-  Meh as MehIcon,
-  Activity as ActivityIcon,
-  BarChart3 as BarChart3Icon,
-  LineChart as LineChartIcon,
-  PieChart as PieChartIcon
+  BarChart3
 } from 'lucide-react';
 
 interface AICoach {
   id: string;
   name: string;
-  avatar: string;
+  avatar: string | null;
   personality: string;
   expertise: string[];
-  mood: 'happy' | 'neutral' | 'concerned';
+  mood: 'happy' | 'excited' | 'thinking' | 'encouraging';
   energy: number;
   totalSessions: number;
   averageRating: number;
 }
 
-interface LearningAnalysis {
-  strengths: Strength[];
-  weaknesses: Weakness[];
-  recommendations: Recommendation[];
-  progressTrend: 'improving' | 'stable' | 'declining';
-  nextMilestone: string;
-  estimatedTimeToMilestone: number;
-}
-
-interface Strength {
-  id: string;
-  skill: string;
-  score: number;
-  description: string;
-  trend: 'up' | 'stable' | 'down';
-}
-
-interface Weakness {
-  id: string;
-  skill: string;
-  score: number;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  suggestedExercises: string[];
-}
-
-interface Recommendation {
-  id: string;
-  type: 'lesson' | 'exercise' | 'practice' | 'review';
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  estimatedTime: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  tags: string[];
-}
-
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'ai';
   content: string;
+  sender: 'user' | 'coach';
   timestamp: Date;
-  type: 'text' | 'voice' | 'image';
-  mood?: 'happy' | 'neutral' | 'sad';
+  type: 'text' | 'voice' | 'exercise';
+  mood?: 'happy' | 'excited' | 'thinking' | 'encouraging';
 }
 
-interface PracticeSession {
-  id: string;
-  title: string;
-  type: 'conversation' | 'grammar' | 'vocabulary' | 'listening' | 'reading';
-  duration: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  completed: boolean;
-  score?: number;
-  feedback?: string;
+interface LearningAnalysis {
+  strengths: Array<{
+    id: string;
+    skill: string;
+    score: number;
+    description: string;
+    trend: 'up' | 'down' | 'stable';
+  }>;
+  weaknesses: Array<{
+    id: string;
+    skill: string;
+    score: number;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+    suggestedExercises: string[];
+  }>;
+  recommendations: Array<{
+    id: string;
+    type: 'lesson' | 'practice' | 'exercise' | 'assessment';
+    title: string;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+    estimatedTime: number;
+    difficulty: 'easy' | 'medium' | 'hard';
+    tags: string[];
+  }>;
+  overallScore: number;
+  learningStyle: string;
+  preferredTime: string;
+  lastAssessment: string;
 }
 
 export default function AICoachPage() {
   const router = useRouter();
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [coach, setCoach] = useState<AICoach | null>(null);
   const [analysis, setAnalysis] = useState<LearningAnalysis | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -155,651 +101,551 @@ export default function AICoachPage() {
   const [activeTab, setActiveTab] = useState('chat');
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Mock AI coach data
-    const mockCoach: AICoach = {
+  const handleStudentLoaded = (student: Student) => {
+    setCurrentStudent(student);
+    
+    // Initialize AI coach data based on student info
+    const studentCoach: AICoach = {
       id: 'coach-1',
       name: 'سارا هوشمند',
-      avatar: '/api/placeholder/100/100',
+      avatar: null,
       personality: 'مهربان و تشویق‌کننده، با تخصص در روش‌های یادگیری تعاملی',
       expertise: ['مکالمه انگلیسی', 'گرامر پیشرفته', 'آمادگی آیلتس', 'زبان تجاری'],
       mood: 'happy',
       energy: 95,
-      totalSessions: 47,
-      averageRating: 4.8
+      totalSessions: 0,
+      averageRating: 5.0
     };
 
-    // Mock learning analysis
-    const mockAnalysis: LearningAnalysis = {
+    // Initialize learning analysis based on student level
+    const levelScore = student.level === 'مبتدی' ? 30 : student.level === 'متوسط' ? 60 : 80;
+    
+    const studentAnalysis: LearningAnalysis = {
       strengths: [
         {
           id: 'str-1',
-          skill: 'مکالمه',
-          score: 85,
-          description: 'توانایی خوب در مکالمه روزمره',
+          skill: 'انگیزه یادگیری',
+          score: 90,
+          description: 'انگیزه بالا برای یادگیری زبان انگلیسی',
           trend: 'up'
         },
         {
           id: 'str-2',
-          skill: 'واژگان',
-          score: 78,
-          description: 'دایره واژگان گسترده',
-          trend: 'up'
+          skill: 'تعامل',
+          score: 75,
+          description: 'مشارکت فعال در فرآیند یادگیری',
+          trend: 'stable'
         }
       ],
       weaknesses: [
         {
           id: 'weak-1',
-          skill: 'گرامر پیشرفته',
-          score: 45,
-          description: 'نیاز به تمرین بیشتر در ساختارهای پیچیده',
+          skill: 'ارزیابی جامع',
+          score: 20,
+          description: 'نیاز به انجام تست‌های تکمیلی برای شناخت بهتر نقاط قوت و ضعف',
           priority: 'high',
-          suggestedExercises: ['تمرین زمان‌های پیچیده', 'جمله‌سازی پیشرفته', 'تحلیل متن']
-        },
-        {
-          id: 'weak-2',
-          skill: 'شنیداری',
-          score: 62,
-          description: 'درک گفتار سریع نیاز به بهبود دارد',
-          priority: 'medium',
-          suggestedExercises: ['گوش دادن به پادکست‌ها', 'تماشای فیلم بدون زیرنویس', 'تمرین با لهجه‌های مختلف']
+          suggestedExercises: ['تست تعیین سطح کامل', 'ارزیابی مهارت‌های چهارگانه', 'تست شخصیت یادگیری']
         }
       ],
       recommendations: [
         {
           id: 'rec-1',
-          type: 'lesson',
-          title: 'زمان‌های پیچیده در انگلیسی',
-          description: 'تمرین جامع روی زمان‌های گذشته کامل و آینده کامل',
+          type: 'assessment',
+          title: 'تست تعیین سطح جامع',
+          description: 'ارزیابی کامل مهارت‌های شما برای تنظیم برنامه آموزشی',
           priority: 'high',
           estimatedTime: 45,
           difficulty: 'medium',
-          tags: ['گرامر', 'پیشرفته', 'زمان‌ها']
+          tags: ['ارزیابی', 'تعیین سطح', 'مهارت‌ها']
         },
         {
           id: 'rec-2',
-          type: 'practice',
-          title: 'مکالمه با لهجه‌های مختلف',
-          description: 'تمرین شنیداری با لهجه‌های آمریکایی، بریتانیایی و استرالیایی',
-          priority: 'medium',
-          estimatedTime: 30,
+          type: 'lesson',
+          title: 'آشنایی با مربی هوشمند',
+          description: 'راهنمای استفاده از امکانات مربی هوش مصنوعی',
+          priority: 'high',
+          estimatedTime: 20,
           difficulty: 'easy',
-          tags: ['شنیداری', 'لهجه', 'مکالمه']
+          tags: ['راهنما', 'آموزش', 'شروع']
+        },
+        {
+          id: 'rec-3',
+          type: 'practice',
+          title: 'مکالمه روزانه',
+          description: 'تمرین مکالمه ساده برای شروع راحت',
+          priority: 'medium',
+          estimatedTime: 15,
+          difficulty: 'easy',
+          tags: ['مکالمه', 'روزانه', 'شروع']
         }
       ],
-      progressTrend: 'improving',
-      nextMilestone: 'سطح B2',
-      estimatedTimeToMilestone: 8
+      overallScore: levelScore,
+      learningStyle: 'تعاملی',
+      preferredTime: 'صبح',
+      lastAssessment: new Date().toISOString().split('T')[0]
     };
 
-    // Mock chat messages
-    const mockMessages: ChatMessage[] = [
+    // Welcome messages based on student
+    const welcomeMessages: ChatMessage[] = [
       {
         id: 'msg-1',
-        sender: 'ai',
-        content: 'سلام! چطور هستید؟ امروز چه کاری می‌خواهید انجام دهیم؟',
-        timestamp: new Date(Date.now() - 60000),
+        content: `سلام ${student.first_name} عزیز! من سارا هستم، مربی هوش مصنوعی شما. خیلی خوشحالم که با شما آشنا شدم! 😊`,
+        sender: 'coach',
+        timestamp: new Date(Date.now() - 3 * 60 * 1000),
         type: 'text',
         mood: 'happy'
       },
       {
         id: 'msg-2',
-        sender: 'user',
-        content: 'سلام سارا! می‌خواهم روی گرامر کار کنم',
-        timestamp: new Date(Date.now() - 30000),
-        type: 'text'
+        content: `می‌بینم که سطح فعلی شما "${student.level}" است. این عالیه! من اینجا هستم تا در تمام مراحل یادگیری کنارتان باشم. 🎯`,
+        sender: 'coach',
+        timestamp: new Date(Date.now() - 2 * 60 * 1000),
+        type: 'text',
+        mood: 'encouraging'
       },
       {
         id: 'msg-3',
-        sender: 'ai',
-        content: 'عالی! بر اساس تحلیل من، شما در گرامر پیشرفته نیاز به تمرین بیشتری دارید. پیشنهاد می‌کنم با درس "زمان‌های پیچیده" شروع کنیم.',
-        timestamp: new Date(Date.now() - 15000),
+        content: 'چه چیزی بیش از همه علاقه‌مندید امروز یاد بگیرید؟ من برای شروع چند پیشنهاد دارم! 💡',
+        sender: 'coach',
+        timestamp: new Date(Date.now() - 1 * 60 * 1000),
         type: 'text',
-        mood: 'happy'
+        mood: 'excited'
       }
     ];
 
-    setCoach(mockCoach);
-    setAnalysis(mockAnalysis);
-    setChatMessages(mockMessages);
-    setLoading(false);
-  }, []);
+    setCoach(studentCoach);
+    setAnalysis(studentAnalysis);
+    setChatMessages(welcomeMessages);
+  };
 
-  const sendMessage = () => {
-    if (newMessage.trim()) {
-      const userMessage: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        sender: 'user',
-        content: newMessage,
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      content: newMessage,
+      sender: 'user',
+      timestamp: new Date(),
+      type: 'text'
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setNewMessage('');
+
+    // Simulate AI response based on message content
+    setTimeout(() => {
+      const message = newMessage.toLowerCase();
+      let response = '';
+      let mood: ChatMessage['mood'] = 'thinking';
+
+      if (message.includes('سلام') || message.includes('hello')) {
+        response = 'سلام! چه خبر؟ چطور می‌تونم کمکتون کنم؟ 😊';
+        mood = 'happy';
+      } else if (message.includes('گرامر') || message.includes('grammar')) {
+        response = 'گرامر خیلی مهمه! بیایید با قواعد ساده شروع کنیم. کدوم بخش رو میخواید تمرین کنیم؟ 📚';
+        mood = 'encouraging';
+      } else if (message.includes('مکالمه') || message.includes('speaking')) {
+        response = 'مکالمه بهترین راه یادگیری زبانه! بیایید با جملات ساده شروع کنیم. آماده‌اید؟ 🗣️';
+        mood = 'excited';
+      } else if (message.includes('تست') || message.includes('test')) {
+        response = 'تست‌ها خیلی مفیدن برای اندازه‌گیری پیشرفت! می‌تونیم یه تست کوتاه شروع کنیم. موافقید؟ 📊';
+        mood = 'encouraging';
+      } else {
+        const responses = [
+          'جالبه! بذارید این موضوع رو بیشتر بررسی کنیم 🤔',
+          'متشکرم که این رو مطرح کردید! این نکته مهمیه 💡',
+          'خیلی خوب! این دقیقاً چیزیه که باید روش کار کنیم 🎯',
+          'عالی! بیایید قدم به قدم پیش بریم 📝',
+          'سوال خوبی پرسیدید! من جواب کاملی براتون دارم ✨'
+        ];
+        response = responses[Math.floor(Math.random() * responses.length)];
+        mood = 'thinking';
+      }
+      
+      const aiResponse: ChatMessage = {
+        id: `msg-${Date.now() + 1}`,
+        content: response,
+        sender: 'coach',
         timestamp: new Date(),
-        type: 'text'
+        type: 'text',
+        mood: mood
       };
+      setChatMessages(prev => [...prev, aiResponse]);
+    }, 1500);
+  };
 
-      setChatMessages(prev => [...prev, userMessage]);
-      setNewMessage('');
-
-      // Simulate AI response
+  const toggleListening = () => {
+    setIsListening(!isListening);
+    if (!isListening) {
+      // Simulate speech recognition
       setTimeout(() => {
-        const aiResponse: ChatMessage = {
-          id: `msg-${Date.now() + 1}`,
-          sender: 'ai',
-          content: 'متوجه شدم! بیایید روی این موضوع کار کنیم. چه سوال خاصی دارید؟',
+        const speechMessage: ChatMessage = {
+          id: `msg-${Date.now()}`,
+          content: 'پیام صوتی ضبط شد: "سلام، میخوام گرامر تمرین کنم"',
+          sender: 'user',
           timestamp: new Date(),
-          type: 'text',
-          mood: 'happy'
+          type: 'voice'
         };
-        setChatMessages(prev => [...prev, aiResponse]);
-      }, 1000);
+        setChatMessages(prev => [...prev, speechMessage]);
+        setIsListening(false);
+      }, 3000);
     }
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
   };
 
   const getMoodIcon = (mood: string) => {
     switch (mood) {
-      case 'happy': return <Smile className="w-5 h-5 text-green-500" />;
-      case 'neutral': return <Meh className="w-5 h-5 text-yellow-500" />;
-      case 'sad': return <Frown className="w-5 h-5 text-red-500" />;
-      default: return <Smile className="w-5 h-5 text-green-500" />;
+      case 'happy': return <Smile className="w-4 h-4 text-yellow-500" />;
+      case 'excited': return <Zap className="w-4 h-4 text-orange-500" />;
+      case 'encouraging': return <Heart className="w-4 h-4 text-pink-500" />;
+      default: return <Brain className="w-4 h-4 text-blue-500" />;
     }
   };
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up': return <TrendingUp className="w-4 h-4 text-green-500" />;
-      case 'down': return <TrendingDown className="w-4 h-4 text-red-500" />;
-      default: return <Activity className="w-4 h-4 text-blue-500" />;
-    }
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
+  const getPriorityBadge = (priority: string) => {
+    const colors = {
+      high: 'bg-red-100 text-red-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      low: 'bg-green-100 text-green-800'
+    };
+    const labels = {
+      high: 'اولویت بالا',
+      medium: 'اولویت متوسط',
+      low: 'اولویت پایین'
+    };
+    return <Badge className={colors[priority as keyof typeof colors]}>{labels[priority as keyof typeof labels]}</Badge>;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-500 mx-auto mb-6"></div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری</h3>
-          <p className="text-gray-600 dark:text-gray-400">مربی هوشمند در حال آماده‌سازی است...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!coach) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
-            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bot className="w-10 h-10 text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">مربی یافت نشد</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">لطفا ابتدا ثبت‌نام کنید</p>
-            <Button 
-              onClick={() => router.push('/register')}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-            >
-              ثبت‌نام
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                onClick={() => router.push('/dashboard/student')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                بازگشت به داشبورد
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  مربی هوشمند
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  یادگیری شخصی‌سازی شده با هوش مصنوعی
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline">
-                <Settings className="w-4 h-4 mr-2" />
-                تنظیمات
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Coach Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
-          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm">انرژی مربی</p>
-                  <p className="text-2xl font-bold">{coach.energy}%</p>
-                  <p className="text-blue-100 text-sm">آماده برای کمک</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Zap className="w-8 h-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm">جلسات انجام شده</p>
-                  <p className="text-2xl font-bold">{coach.totalSessions}</p>
-                  <p className="text-green-100 text-sm">جلسه</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <BookOpen className="w-8 h-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">امتیاز متوسط</p>
-                  <p className="text-2xl font-bold">{coach.averageRating}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <Star className="w-4 h-4" />
-                    <span className="text-sm text-purple-100">از 5</span>
+    <StudentPageLayout
+      title="مربی هوشمند"
+      description="مربی هوش مصنوعی شخصی شما برای یادگیری بهتر زبان"
+      onStudentLoaded={handleStudentLoaded}
+    >
+      {coach && analysis && (
+        <div className="space-y-6">
+          {/* Coach Info Card */}
+          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <Avatar className="w-16 h-16">
+                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-lg">
+                    🤖
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{coach.name}</h2>
+                    {getMoodIcon(coach.mood)}
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{coach.personality}</p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Activity className="w-4 h-4 text-green-500" />
+                      <span>انرژی: {coach.energy}%</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      <span>{coach.averageRating.toFixed(1)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="w-4 h-4 text-blue-500" />
+                      <span>{coach.totalSessions} جلسه</span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Star className="w-8 h-8" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-3">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">تخصص‌ها:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {coach.expertise.map((skill, index) => (
+                    <Badge key={index} variant="secondary">{skill}</Badge>
+                  ))}
                 </div>
               </div>
+              <Progress value={coach.energy} className="h-2" />
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm">وضعیت یادگیری</p>
-                  <p className="text-2xl font-bold">
-                    {analysis?.progressTrend === 'improving' ? 'در حال بهبود' : 
-                     analysis?.progressTrend === 'stable' ? 'ثابت' : 'نیاز به توجه'}
-                  </p>
-                  <p className="text-orange-100 text-sm">روند کلی</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <TrendingUp className="w-8 h-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          {/* Main Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <TabsTrigger value="chat" className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                گفتگو
+              </TabsTrigger>
+              <TabsTrigger value="analysis" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                تحلیل
+              </TabsTrigger>
+              <TabsTrigger value="recommendations" className="flex items-center gap-2">
+                <Lightbulb className="w-4 h-4" />
+                پیشنهادات
+              </TabsTrigger>
+            </TabsList>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              چت با مربی
-            </TabsTrigger>
-            <TabsTrigger value="analysis" className="flex items-center gap-2">
-              <Brain className="w-4 h-4" />
-              تحلیل یادگیری
-            </TabsTrigger>
-            <TabsTrigger value="recommendations" className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
-              توصیه‌ها
-            </TabsTrigger>
-            <TabsTrigger value="practice" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              تمرین‌ها
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Chat Interface */}
-              <div className="lg:col-span-2">
-                <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0 h-96">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={coach.avatar} alt={coach.name} />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-                          {coach.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{coach.name}</h3>
-                        <div className="flex items-center gap-2">
-                          {getMoodIcon(coach.mood)}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">آنلاین</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="h-64 overflow-y-auto space-y-4 mb-4">
-                      {chatMessages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-xs lg:max-w-md p-3 rounded-lg ${
-                              message.sender === 'user'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                            }`}
-                          >
-                            <p className="text-sm">{message.content}</p>
-                            <p className="text-xs opacity-70 mt-1">
-                              {message.timestamp.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Input
-                        placeholder="پیام خود را بنویسید..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                        className="flex-1"
-                      />
+            {/* Chat Tab */}
+            <TabsContent value="chat" className="space-y-4">
+              <Card className="h-96 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5" />
+                      گفتگو با مربی
+                    </CardTitle>
+                    <div className="flex gap-2">
                       <Button
-                        size="sm"
                         variant="outline"
-                        onClick={() => setIsListening(!isListening)}
+                        size="sm"
+                        onClick={toggleMute}
+                        className={isMuted ? 'text-red-500' : ''}
+                      >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleListening}
+                        className={isListening ? 'text-red-500 animate-pulse' : ''}
                       >
                         {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                       </Button>
-                      <Button size="sm" onClick={sendMessage}>
-                        <Send className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex flex-col h-72">
+                  {/* Chat Messages */}
+                  <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+                    {chatMessages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-xs px-4 py-2 rounded-lg ${
+                            message.sender === 'user'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            {message.sender === 'coach' && message.mood && getMoodIcon(message.mood)}
+                            <div>
+                              <p className="text-sm">{message.content}</p>
+                              <p className="text-xs opacity-70 mt-1">
+                                {message.timestamp.toLocaleTimeString('fa-IR', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-              {/* Coach Info */}
-              <div className="lg:col-span-1">
+                  {/* Message Input */}
+                  <div className="flex gap-2">
+                    <Input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="پیام خود را بنویسید..."
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleSendMessage} size="sm">
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Analysis Tab */}
+            <TabsContent value="analysis" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Overall Score */}
                 <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Bot className="w-5 h-5" />
-                      درباره مربی
+                      <Target className="w-5 h-5" />
+                      نمره کلی
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
                     <div className="text-center">
-                      <Avatar className="w-20 h-20 mx-auto mb-4">
-                        <AvatarImage src={coach.avatar} alt={coach.name} />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xl">
-                          {coach.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                        {coach.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        {coach.personality}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">تخصص‌ها:</h4>
-                      <div className="space-y-2">
-                        {coach.expertise.map((skill, index) => (
-                          <Badge key={index} className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            {skill}
-                          </Badge>
-                        ))}
+                      <div className={`text-4xl font-bold mb-2 ${getScoreColor(analysis.overallScore)}`}>
+                        {analysis.overallScore}
+                      </div>
+                      <Progress value={analysis.overallScore} className="h-3 mb-4" />
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">سبک یادگیری</p>
+                          <p className="font-semibold">{analysis.learningStyle}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">زمان ترجیحی</p>
+                          <p className="font-semibold">{analysis.preferredTime}</p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            </div>
-          </TabsContent>
 
-          {/* Analysis Tab */}
-          <TabsContent value="analysis" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Strengths */}
-              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-green-500" />
-                    نقاط قوت
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {analysis?.strengths.map((strength) => (
-                    <div key={strength.id} className="p-4 border border-green-200 dark:border-green-800 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">{strength.skill}</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                            {strength.score}%
-                          </span>
-                          {getTrendIcon(strength.trend)}
+                {/* Strengths */}
+                <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-600">
+                      <TrendingUp className="w-5 h-5" />
+                      نقاط قوت
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {analysis.strengths.map((strength) => (
+                        <div key={strength.id} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold">{strength.skill}</h4>
+                            <div className="flex items-center gap-1">
+                              {strength.trend === 'up' && <TrendingUp className="w-4 h-4 text-green-500" />}
+                              <span className={`font-bold ${getScoreColor(strength.score)}`}>
+                                {strength.score}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{strength.description}</p>
+                          <Progress value={strength.score} className="h-2 mt-2" />
                         </div>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{strength.description}</p>
-                      <Progress value={strength.score} className="h-2 mt-2" />
+                      ))}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Weaknesses */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-500" />
-                    نیاز به بهبود
+                  <CardTitle className="flex items-center gap-2 text-orange-600">
+                    <TrendingDown className="w-5 h-5" />
+                    نقاط قابل بهبود
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {analysis?.weaknesses.map((weakness) => (
-                    <div key={weakness.id} className="p-4 border border-red-200 dark:border-red-800 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">{weakness.skill}</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-red-600 dark:text-red-400">
-                            {weakness.score}%
-                          </span>
-                          <Badge className={getPriorityColor(weakness.priority)}>
-                            {weakness.priority}
-                          </Badge>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analysis.weaknesses.map((weakness) => (
+                      <div key={weakness.id} className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold">{weakness.skill}</h4>
+                          <div className="flex items-center gap-2">
+                            {getPriorityBadge(weakness.priority)}
+                            <span className={`font-bold ${getScoreColor(weakness.score)}`}>
+                              {weakness.score}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{weakness.description}</p>
+                        <Progress value={weakness.score} className="h-2 mb-3" />
+                        <div>
+                          <h5 className="font-medium text-sm mb-2">تمرین‌های پیشنهادی:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {weakness.suggestedExercises.map((exercise, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {exercise}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{weakness.description}</p>
-                      <div className="space-y-2">
-                        <h5 className="text-sm font-medium text-gray-900 dark:text-white">تمرینات پیشنهادی:</h5>
-                        <div className="space-y-1">
-                          {weakness.suggestedExercises.map((exercise, index) => (
-                            <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                              <CheckCircle className="w-3 h-3 text-green-500" />
-                              {exercise}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <Progress value={weakness.score} className="h-2 mt-2" />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
-            </div>
+            </TabsContent>
 
-            {/* Next Milestone */}
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  هدف بعدی
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center p-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg">
-                    <Target className="w-12 h-12 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2">هدف بعدی</h3>
-                    <p className="text-2xl font-bold">{analysis?.nextMilestone}</p>
-                  </div>
-                  
-                  <div className="text-center p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-lg">
-                    <Clock className="w-12 h-12 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2">زمان تخمینی</h3>
-                    <p className="text-2xl font-bold">{analysis?.estimatedTimeToMilestone} هفته</p>
-                  </div>
-                  
-                  <div className="text-center p-6 bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-lg">
-                    <TrendingUp className="w-12 h-12 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2">روند پیشرفت</h3>
-                    <p className="text-2xl font-bold">
-                      {analysis?.progressTrend === 'improving' ? 'در حال بهبود' : 
-                       analysis?.progressTrend === 'stable' ? 'ثابت' : 'نیاز به توجه'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Recommendations Tab */}
-          <TabsContent value="recommendations" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {analysis?.recommendations.map((recommendation) => (
-                <Card key={recommendation.id} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Lightbulb className="w-5 h-5" />
-                        {recommendation.title}
-                      </CardTitle>
-                      <Badge className={getPriorityColor(recommendation.priority)}>
-                        {recommendation.priority}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-gray-600 dark:text-gray-400">{recommendation.description}</p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {recommendation.estimatedTime} دقیقه
-                        </span>
+            {/* Recommendations Tab */}
+            <TabsContent value="recommendations" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {analysis.recommendations.map((rec) => (
+                  <Card key={rec.id} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg mb-2">{rec.title}</CardTitle>
+                          <div className="flex items-center gap-2 mb-2">
+                            {getPriorityBadge(rec.priority)}
+                            <Badge variant="secondary">{rec.type}</Badge>
+                          </div>
+                        </div>
+                        <div className="text-right text-sm">
+                          <div className="flex items-center gap-1 text-gray-500">
+                            <Clock className="w-4 h-4" />
+                            <span>{rec.estimatedTime} دقیقه</span>
+                          </div>
+                        </div>
                       </div>
-                      <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                        {recommendation.difficulty}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {recommendation.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    <Button className="w-full">
-                      شروع تمرین
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Practice Tab */}
-          <TabsContent value="practice" className="space-y-6">
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  تمرینات پیشنهادی
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
-                    <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      تمرین مکالمه
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      مکالمه با AI در موقعیت‌های مختلف
-                    </p>
-                    <Button>شروع تمرین</Button>
-                  </div>
-                  
-                  <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
-                    <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      تمرین گرامر
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      تمرین ساختارهای گرامری پیچیده
-                    </p>
-                    <Button>شروع تمرین</Button>
-                  </div>
-                  
-                  <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
-                    <Volume2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                      تمرین شنیداری
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      گوش دادن و درک گفتار
-                    </p>
-                    <Button>شروع تمرین</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">
+                        {rec.description}
+                      </p>
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {rec.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        onClick={() => {
+                          // Simulate starting a recommendation
+                          const startMessage: ChatMessage = {
+                            id: `msg-${Date.now()}`,
+                            content: `شروع کردم: "${rec.title}"`,
+                            sender: 'user',
+                            timestamp: new Date(),
+                            type: 'text'
+                          };
+                          setChatMessages(prev => [...prev, startMessage]);
+                          
+                          setTimeout(() => {
+                            const responseMessage: ChatMessage = {
+                              id: `msg-${Date.now() + 1}`,
+                              content: `عالی! بیایید با "${rec.title}" شروع کنیم. این ${rec.estimatedTime} دقیقه وقت می‌بره. آماده‌اید؟ 🚀`,
+                              sender: 'coach',
+                              timestamp: new Date(),
+                              type: 'text',
+                              mood: 'excited'
+                            };
+                            setChatMessages(prev => [...prev, responseMessage]);
+                          }, 1000);
+                          
+                          setActiveTab('chat');
+                        }}
+                      >
+                        شروع
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+    </StudentPageLayout>
   );
-} 
+}

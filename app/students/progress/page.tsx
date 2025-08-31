@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import StudentPageLayout, { Student } from '@/components/StudentPageLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  ArrowLeft,
   TrendingUp,
+  TrendingDown,
   Target,
   Award,
   Calendar,
@@ -18,7 +18,6 @@ import {
   BookOpen,
   Star,
   CheckCircle,
-  AlertCircle,
   Activity,
   BarChart3,
   LineChart,
@@ -28,45 +27,12 @@ import {
   Flame,
   Heart,
   Smile,
-  Languages,
-  GraduationCap,
-  Clock3,
-  UserCheck,
-  CalendarDays,
-  Clock4,
-  DollarSign,
-  TrendingDown,
-  BarChart,
+  Brain,
+  Users,
+  Settings,
   Download,
-  MessageCircle,
-  Headphones,
-  PenTool,
-  Target as TargetIcon,
-  Award as AwardIcon,
-  Calendar as CalendarIcon,
-  Clock as ClockIcon,
-  BookOpen as BookOpenIcon,
-  Star as StarIcon,
-  CheckCircle as CheckCircleIcon,
-  AlertCircle as AlertCircleIcon,
-  Activity as ActivityIcon,
-  BarChart3 as BarChart3Icon,
-  LineChart as LineChartIcon,
-  PieChart as PieChartIcon,
-  Zap as ZapIcon,
-  Trophy as TrophyIcon,
-  Flame as FlameIcon,
-  Heart as HeartIcon,
-  Smile as SmileIcon,
-  Languages as LanguagesIcon,
-  GraduationCap as GraduationCapIcon,
-  Clock3 as Clock3Icon,
-  UserCheck as UserCheckIcon,
-  CalendarDays as CalendarDaysIcon,
-  Clock4 as Clock4Icon,
-  DollarSign as DollarSignIcon,
-  TrendingDown as TrendingDownIcon,
-  BarChart as BarChartIcon
+  Share2,
+  RefreshCw
 } from 'lucide-react';
 
 interface ProgressData {
@@ -80,673 +46,530 @@ interface ProgressData {
   weeklyProgress: number;
   monthlyGoal: number;
   monthlyProgress: number;
-  totalStudyTime: number;
-  averageStudyTime: number;
-  improvementRate: number;
-  accuracyRate: number;
-  completionRate: number;
-}
-
-interface LessonProgress {
-  id: string;
-  title: string;
-  category: string;
-  status: 'completed' | 'in_progress' | 'not_started';
-  score: number;
-  timeSpent: number;
-  completedAt?: string;
-}
-
-interface WeeklyProgress {
-  week: string;
-  lessonsCompleted: number;
-  studyTime: number;
-  accuracy: number;
-  streak: number;
+  totalStudyHours: number;
+  averageScore: number;
 }
 
 interface SkillProgress {
   skill: string;
   currentLevel: number;
   maxLevel: number;
-  progress: number;
-  description: string;
+  improvement: number;
+  lastUpdated: string;
+  icon: any;
+  color: string;
 }
 
-export default function StudentProgressPage() {
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  color: string;
+  earnedDate: string;
+  category: string;
+}
+
+interface StudySession {
+  id: string;
+  date: string;
+  duration: number;
+  topics: string[];
+  score: number;
+  type: 'lesson' | 'practice' | 'test';
+}
+
+export default function ProgressPage() {
   const router = useRouter();
-  const [progress, setProgress] = useState<ProgressData | null>(null);
-  const [lessons, setLessons] = useState<LessonProgress[]>([]);
-  const [weeklyData, setWeeklyData] = useState<WeeklyProgress[]>([]);
-  const [skills, setSkills] = useState<SkillProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [progressData, setProgressData] = useState<ProgressData | null>(null);
+  const [skillsProgress, setSkillsProgress] = useState<SkillProgress[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [recentSessions, setRecentSessions] = useState<StudySession[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    // Check if user is new (no classes taken yet)
-    const isNewUser = true; // This should be fetched from actual user data
+  const handleStudentLoaded = (student: Student) => {
+    setCurrentStudent(student);
     
-    if (isNewUser) {
-      // Empty progress data for new user
-      const emptyProgress: ProgressData = {
-        currentLevel: 'مبتدی',
-        nextLevel: 'ابتدایی',
-        progressPercentage: 0,
-        completedLessons: 0,
-        totalLessons: 0,
-        streak: 0,
-        weeklyGoal: 2,
-        weeklyProgress: 0,
-        monthlyGoal: 8,
-        monthlyProgress: 0,
-        totalStudyTime: 0,
-        averageStudyTime: 0,
-        improvementRate: 0,
-        accuracyRate: 0,
-        completionRate: 0
-      };
-      setProgress(emptyProgress);
-    } else {
-      // Mock progress data for existing user
-      const existingProgress: ProgressData = {
-        currentLevel: 'متوسط',
-        nextLevel: 'پیشرفته',
-        progressPercentage: 75,
-        completedLessons: 15,
-        totalLessons: 20,
-        streak: 7,
-        weeklyGoal: 5,
-        weeklyProgress: 3,
-        monthlyGoal: 20,
-        monthlyProgress: 15,
-        totalStudyTime: 45,
-        averageStudyTime: 3,
-        improvementRate: 85,
-        accuracyRate: 92,
-        completionRate: 78
-      };
-      setProgress(existingProgress);
-    }
+    // Initialize progress data based on student level
+    const levelMapping = {
+      'مبتدی': { current: 1, next: 2, percentage: 25 },
+      'ابتدایی': { current: 2, next: 3, percentage: 40 },
+      'متوسط': { current: 3, next: 4, percentage: 60 },
+      'متوسط رو به بالا': { current: 4, next: 5, percentage: 75 },
+      'پیشرفته': { current: 5, next: 6, percentage: 90 }
+    };
 
-    // Lessons data based on user status
-    if (isNewUser) {
-      // Empty lessons for new user
-      setLessons([]);
-    } else {
-      // Mock lessons data for existing user
-      const mockLessons: LessonProgress[] = [
-        {
-          id: '1',
-          title: 'مکالمه روزمره',
-          category: 'مکالمه',
-          status: 'completed',
-          score: 95,
-          timeSpent: 45,
-          completedAt: '2024-01-15'
-        },
-        {
-          id: '2',
-          title: 'گرامر زمان حال',
-          category: 'گرامر',
-          status: 'completed',
-          score: 88,
-          timeSpent: 60,
-          completedAt: '2024-01-14'
-        },
-        {
-          id: '3',
-          title: 'واژگان تجاری',
-          category: 'واژگان',
-          status: 'in_progress',
-          score: 65,
-          timeSpent: 30
-        },
-        {
-          id: '4',
-          title: 'شنیداری پیشرفته',
-          category: 'شنیداری',
-          status: 'not_started',
-          score: 0,
-          timeSpent: 0
-        },
-        {
-          id: '5',
-          title: 'نوشتاری رسمی',
-          category: 'نوشتاری',
-          status: 'completed',
-          score: 92,
-          timeSpent: 75,
-          completedAt: '2024-01-13'
-        }
-      ];
-      setLessons(mockLessons);
-    }
+    const currentMapping = levelMapping[student.level as keyof typeof levelMapping] || levelMapping['مبتدی'];
+    
+    const studentProgress: ProgressData = {
+      currentLevel: student.level || 'مبتدی',
+      nextLevel: student.level === 'پیشرفته' ? 'تسلط کامل' : 'ابتدایی',
+      progressPercentage: currentMapping.percentage,
+      completedLessons: Math.floor(currentMapping.percentage / 10),
+      totalLessons: 20,
+      streak: Math.floor(Math.random() * 7) + 1,
+      weeklyGoal: 3,
+      weeklyProgress: Math.floor(Math.random() * 3) + 1,
+      monthlyGoal: 12,
+      monthlyProgress: Math.floor(Math.random() * 8) + 2,
+      totalStudyHours: Math.floor(currentMapping.percentage / 5),
+      averageScore: Math.floor(currentMapping.percentage + Math.random() * 20)
+    };
 
-    // Weekly and skills data based on user status
-    if (isNewUser) {
-      // Empty data for new user
-      setWeeklyData([]);
-      setSkills([]);
-    } else {
-      // Mock data for existing user
-      const mockWeeklyData: WeeklyProgress[] = [
-        { week: 'هفته 1', lessonsCompleted: 3, studyTime: 12, accuracy: 85, streak: 3 },
-        { week: 'هفته 2', lessonsCompleted: 4, studyTime: 15, accuracy: 88, streak: 5 },
-        { week: 'هفته 3', lessonsCompleted: 5, studyTime: 18, accuracy: 92, streak: 7 },
-        { week: 'هفته 4', lessonsCompleted: 3, studyTime: 10, accuracy: 90, streak: 7 }
-      ];
+    const studentSkills: SkillProgress[] = [
+      {
+        skill: 'مکالمه',
+        currentLevel: Math.floor(currentMapping.percentage / 20) + 1,
+        maxLevel: 5,
+        improvement: Math.floor(Math.random() * 15) + 5,
+        lastUpdated: '2 روز پیش',
+        icon: Users,
+        color: 'from-blue-500 to-cyan-600'
+      },
+      {
+        skill: 'شنیداری',
+        currentLevel: Math.floor(currentMapping.percentage / 25) + 1,
+        maxLevel: 5,
+        improvement: Math.floor(Math.random() * 12) + 3,
+        lastUpdated: '3 روز پیش',
+        icon: Heart,
+        color: 'from-pink-500 to-rose-600'
+      },
+      {
+        skill: 'خواندن',
+        currentLevel: Math.floor(currentMapping.percentage / 15) + 1,
+        maxLevel: 5,
+        improvement: Math.floor(Math.random() * 18) + 8,
+        lastUpdated: '1 روز پیش',
+        icon: BookOpen,
+        color: 'from-green-500 to-emerald-600'
+      },
+      {
+        skill: 'نوشتار',
+        currentLevel: Math.floor(currentMapping.percentage / 30) + 1,
+        maxLevel: 5,
+        improvement: Math.floor(Math.random() * 10) + 2,
+        lastUpdated: '4 روز پیش',
+        icon: PieChart,
+        color: 'from-purple-500 to-violet-600'
+      },
+      {
+        skill: 'گرامر',
+        currentLevel: Math.floor(currentMapping.percentage / 18) + 1,
+        maxLevel: 5,
+        improvement: Math.floor(Math.random() * 16) + 6,
+        lastUpdated: '1 روز پیش',
+        icon: Brain,
+        color: 'from-orange-500 to-red-600'
+      },
+      {
+        skill: 'واژگان',
+        currentLevel: Math.floor(currentMapping.percentage / 12) + 1,
+        maxLevel: 5,
+        improvement: Math.floor(Math.random() * 20) + 10,
+        lastUpdated: 'امروز',
+        icon: Zap,
+        color: 'from-yellow-500 to-amber-600'
+      }
+    ];
 
-      const mockSkills: SkillProgress[] = [
-        {
-          skill: 'مکالمه',
-          currentLevel: 4,
-          maxLevel: 5,
-          progress: 80,
-          description: 'توانایی مکالمه در موقعیت‌های روزمره'
-        },
-        {
-          skill: 'گرامر',
-          currentLevel: 3,
-          maxLevel: 5,
-          progress: 60,
-          description: 'درک و استفاده از ساختارهای گرامری'
-        },
-        {
-          skill: 'واژگان',
-          currentLevel: 4,
-          maxLevel: 5,
-          progress: 80,
-          description: 'دایره واژگان گسترده و متنوع'
-        },
-        {
-          skill: 'شنیداری',
-          currentLevel: 3,
-          maxLevel: 5,
-          progress: 60,
-          description: 'درک گفتار در سرعت‌های مختلف'
-        },
-        {
-          skill: 'نوشتاری',
-          currentLevel: 4,
-          maxLevel: 5,
-          progress: 80,
-          description: 'نوشتن متون رسمی و غیررسمی'
-        }
-      ];
-      setWeeklyData(mockWeeklyData);
-      setSkills(mockSkills);
-    }
+    const studentAchievements: Achievement[] = [
+      {
+        id: 'first-lesson',
+        title: 'اولین قدم',
+        description: 'اولین درس خود را تکمیل کردید',
+        icon: Star,
+        color: 'from-yellow-500 to-orange-600',
+        earnedDate: '1 هفته پیش',
+        category: 'شروع'
+      },
+      {
+        id: 'streak-3',
+        title: 'مداوم',
+        description: '3 روز متوالی مطالعه کردید',
+        icon: Flame,
+        color: 'from-red-500 to-pink-600',
+        earnedDate: '3 روز پیش',
+        category: 'مداومت'
+      },
+      {
+        id: 'perfect-score',
+        title: 'نمره کامل',
+        description: 'نمره 100 در یک تست گرفتید',
+        icon: Trophy,
+        color: 'from-blue-500 to-cyan-600',
+        earnedDate: '2 روز پیش',
+        category: 'موفقیت'
+      }
+    ];
 
-    setLoading(false);
-  }, []);
+    const studentSessions: StudySession[] = [
+      {
+        id: 'session-1',
+        date: 'امروز',
+        duration: 25,
+        topics: ['گرامر پایه', 'زمان حال ساده'],
+        score: 85,
+        type: 'lesson'
+      },
+      {
+        id: 'session-2',
+        date: 'دیروز',
+        duration: 30,
+        topics: ['واژگان روزانه', 'خانواده'],
+        score: 92,
+        type: 'practice'
+      },
+      {
+        id: 'session-3',
+        date: '2 روز پیش',
+        duration: 45,
+        topics: ['تست سطح‌یابی'],
+        score: 78,
+        type: 'test'
+      }
+    ];
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">تکمیل شده</Badge>;
-      case 'in_progress':
-        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">در حال انجام</Badge>;
-      case 'not_started':
-        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">شروع نشده</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+    setProgressData(studentProgress);
+    setSkillsProgress(studentSkills);
+    setAchievements(studentAchievements);
+    setRecentSessions(studentSessions);
+  };
+
+  const getSessionTypeIcon = (type: string) => {
+    switch (type) {
+      case 'lesson': return <BookOpen className="w-4 h-4" />;
+      case 'practice': return <Target className="w-4 h-4" />;
+      case 'test': return <CheckCircle className="w-4 h-4" />;
+      default: return <Activity className="w-4 h-4" />;
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'مکالمه':
-        return <MessageCircle className="w-4 h-4 text-blue-500" />;
-      case 'گرامر':
-        return <BookOpen className="w-4 h-4 text-green-500" />;
-      case 'واژگان':
-        return <Languages className="w-4 h-4 text-purple-500" />;
-      case 'شنیداری':
-        return <Headphones className="w-4 h-4 text-orange-500" />;
-      case 'نوشتاری':
-        return <PenTool className="w-4 h-4 text-red-500" />;
-      default:
-        return <BookOpen className="w-4 h-4 text-gray-500" />;
-    }
+  const getSessionTypeBadge = (type: string) => {
+    const types = {
+      lesson: { label: 'درس', color: 'bg-blue-100 text-blue-800' },
+      practice: { label: 'تمرین', color: 'bg-green-100 text-green-800' },
+      test: { label: 'آزمون', color: 'bg-purple-100 text-purple-800' }
+    };
+    const typeInfo = types[type as keyof typeof types] || { label: type, color: 'bg-gray-100 text-gray-800' };
+    return <Badge className={typeInfo.color}>{typeInfo.label}</Badge>;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-500 mx-auto mb-6"></div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">در حال بارگذاری</h3>
-          <p className="text-gray-600 dark:text-gray-400">پیشرفت شما در حال آماده‌سازی است...</p>
-        </div>
-      </div>
-    );
-  }
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-600';
+    if (score >= 70) return 'text-yellow-600';
+    if (score >= 50) return 'text-orange-600';
+    return 'text-red-600';
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                onClick={() => router.push('/dashboard/student')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                بازگشت به داشبورد
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  پیشرفت من
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  پیگیری پیشرفت و دستاوردهای یادگیری
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                دانلود گزارش
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
-          <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm">سطح فعلی</p>
-                  <p className="text-2xl font-bold">{progress?.currentLevel}</p>
-                  <p className="text-blue-100 text-sm">{progress?.progressPercentage}% تکمیل شده</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <GraduationCap className="w-8 h-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm">درس‌های تکمیل شده</p>
-                  <p className="text-2xl font-bold">{progress?.completedLessons}</p>
-                  <p className="text-green-100 text-sm">از {progress?.totalLessons} درس</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <CheckCircle className="w-8 h-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">روزهای متوالی</p>
-                  <p className="text-2xl font-bold">{progress?.streak}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <Flame className="w-4 h-4" />
-                    <span className="text-sm text-purple-100">روز مطالعه</span>
+    <StudentPageLayout
+      title="پیگیری پیشرفت"
+      description="آمار و نمودارهای دقیق از پیشرفت یادگیری شما"
+      onStudentLoaded={handleStudentLoaded}
+    >
+      {progressData && (
+        <div className="space-y-6">
+          {/* Overview Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">سطح فعلی</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{progressData.currentLevel}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Activity className="w-8 h-8" />
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span>پیشرفت به سطح بعد</span>
+                    <span>{progressData.progressPercentage}%</span>
+                  </div>
+                  <Progress value={progressData.progressPercentage} className="h-2" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm">نرخ بهبود</p>
-                  <p className="text-2xl font-bold">{progress?.improvementRate}%</p>
-                  <p className="text-orange-100 text-sm">در ماه گذشته</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <TrendingUp className="w-8 h-8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              نمای کلی
-            </TabsTrigger>
-            <TabsTrigger value="lessons" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              درس‌ها
-            </TabsTrigger>
-            <TabsTrigger value="skills" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              مهارت‌ها
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              تحلیل‌ها
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Level Progress */}
-              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    پیشرفت سطح
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">سطح {progress?.currentLevel}</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{progress?.progressPercentage}%</span>
-                    </div>
-                    <Progress value={progress?.progressPercentage || 0} className="h-3" />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                      {progress?.completedLessons} از {progress?.totalLessons} درس تکمیل شده
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">درس‌های تکمیل شده</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {progressData.completedLessons}/{progressData.totalLessons}
                     </p>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {progress?.streak}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">روز متوالی</div>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {progress?.accuracyRate}%
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">دقت</div>
-                    </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-white" />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span>تکمیل شده</span>
+                    <span>{Math.round((progressData.completedLessons / progressData.totalLessons) * 100)}%</span>
+                  </div>
+                  <Progress value={(progressData.completedLessons / progressData.totalLessons) * 100} className="h-2" />
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Weekly Goals */}
-              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    اهداف هفتگی
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">درس‌های هفته</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {progress?.weeklyProgress}/{progress?.weeklyGoal}
-                      </span>
-                    </div>
-                    <Progress value={(progress?.weeklyProgress || 0) / (progress?.weeklyGoal || 1) * 100} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">زمان مطالعه</span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {progress?.totalStudyTime} ساعت
-                      </span>
-                    </div>
-                    <Progress value={(progress?.totalStudyTime || 0) / 50 * 100} className="h-2" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {progress?.averageStudyTime}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">ساعت/روز</div>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {progress?.completionRate}%
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">تکمیل</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Lessons Tab */}
-          <TabsContent value="lessons" className="space-y-6">
             <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  درس‌های من
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {lessons.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BookOpen className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">هنوز درسی ندارید</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">برای شروع یادگیری، اولین کلاس خود را رزرو کنید</p>
-                    <Button 
-                      onClick={() => router.push('/teachers')}
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                    >
-                      مشاهده معلمان
-                    </Button>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">روزهای متوالی</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{progressData.streak}</p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {lessons.map((lesson) => (
-                      <motion.div
-                        key={lesson.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                              {getCategoryIcon(lesson.category)}
+                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                    <Flame className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    بهترین رکورد: {progressData.streak + 2} روز
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">میانگین نمره</p>
+                    <p className={`text-2xl font-bold ${getScoreColor(progressData.averageScore)}`}>
+                      {progressData.averageScore}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-violet-600 rounded-xl flex items-center justify-center">
+                    <Star className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    از {recentSessions.length} جلسه اخیر
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                کلی
+              </TabsTrigger>
+              <TabsTrigger value="skills" className="flex items-center gap-2">
+                <Brain className="w-4 h-4" />
+                مهارت‌ها
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="flex items-center gap-2">
+                <Trophy className="w-4 h-4" />
+                دستاوردها
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                تاریخچه
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Weekly Progress */}
+                <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      پیشرفت هفتگی
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span>هدف هفتگی</span>
+                          <span>{progressData.weeklyProgress}/{progressData.weeklyGoal} جلسه</span>
+                        </div>
+                        <Progress value={(progressData.weeklyProgress / progressData.weeklyGoal) * 100} className="h-3" />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span>هدف ماهانه</span>
+                          <span>{progressData.monthlyProgress}/{progressData.monthlyGoal} جلسه</span>
+                        </div>
+                        <Progress value={(progressData.monthlyProgress / progressData.monthlyGoal) * 100} className="h-3" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mt-6">
+                        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{progressData.totalStudyHours}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">ساعت مطالعه</div>
+                        </div>
+                        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">{achievements.length}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">دستاورد</div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Activity */}
+                <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="w-5 h-5" />
+                      فعالیت‌های اخیر
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {recentSessions.slice(0, 4).map((session, index) => (
+                        <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                              {getSessionTypeIcon(session.type)}
                             </div>
                             <div>
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
-                                {lesson.title}
-                              </h4>
-                              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                <span>{lesson.category}</span>
-                                <span>{lesson.timeSpent} دقیقه</span>
-                                {lesson.score > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                    {lesson.score}%
-                                  </span>
-                                )}
-                              </div>
+                              <div className="font-medium text-sm">{session.topics[0]}</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">{session.date}</div>
                             </div>
                           </div>
                           <div className="text-right">
-                            {getStatusBadge(lesson.status)}
-                          </div>
-                        </div>
-                        
-                        {lesson.status === 'in_progress' && (
-                          <div className="mt-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">پیشرفت</span>
-                              <span className="text-sm font-medium">{lesson.score}%</span>
+                            <div className={`font-bold text-sm ${getScoreColor(session.score)}`}>
+                              {session.score}
                             </div>
-                            <Progress value={lesson.score} className="h-2" />
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {session.duration} دقیقه
+                            </div>
                           </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Skills Tab */}
-          <TabsContent value="skills" className="space-y-6">
-            {skills.length === 0 ? (
-              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-8">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Target className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">هنوز مهارتی ندارید</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">با شرکت در کلاس‌ها، مهارت‌های خود را توسعه دهید</p>
-                    <Button 
-                      onClick={() => router.push('/teachers')}
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-                    >
-                      مشاهده معلمان
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {skills.map((skill) => (
-                  <Card key={skill.skill} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className="w-5 h-5" />
-                        {skill.skill}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">سطح {skill.currentLevel} از {skill.maxLevel}</span>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{skill.progress}%</span>
                         </div>
-                        <Progress value={skill.progress} className="h-3" />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Skills Tab */}
+            <TabsContent value="skills" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {skillsProgress.map((skill) => (
+                  <Card key={skill.skill} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{skill.skill}</CardTitle>
+                        <div className={`w-10 h-10 bg-gradient-to-r ${skill.color} rounded-lg flex items-center justify-center`}>
+                          <skill.icon className="w-5 h-5 text-white" />
+                        </div>
                       </div>
-                      
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {skill.description}
-                      </p>
-                      
-                      <div className="flex items-center gap-2">
-                        {[...Array(skill.maxLevel)].map((_, index) => (
-                          <div
-                            key={index}
-                            className={`w-4 h-4 rounded-full ${
-                              index < skill.currentLevel
-                                ? 'bg-gradient-to-r from-blue-500 to-purple-600'
-                                : 'bg-gray-200 dark:bg-gray-700'
-                            }`}
-                          />
-                        ))}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span>سطح فعلی</span>
+                            <span>{skill.currentLevel}/{skill.maxLevel}</span>
+                          </div>
+                          <Progress value={(skill.currentLevel / skill.maxLevel) * 100} className="h-2" />
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">بهبود:</span>
+                          <div className="flex items-center gap-1">
+                            <TrendingUp className="w-4 h-4 text-green-500" />
+                            <span className="text-green-600 font-medium">+{skill.improvement}%</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          آخرین به‌روزرسانی: {skill.lastUpdated}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            )}
-          </TabsContent>
+            </TabsContent>
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Weekly Chart */}
+            {/* Achievements Tab */}
+            <TabsContent value="achievements" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {achievements.map((achievement) => (
+                  <Card key={achievement.id} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+                    <CardContent className="p-6">
+                      <div className="text-center">
+                        <div className={`w-16 h-16 bg-gradient-to-r ${achievement.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                          <achievement.icon className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">{achievement.title}</h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{achievement.description}</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <Badge variant="secondary">{achievement.category}</Badge>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">{achievement.earnedDate}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* History Tab */}
+            <TabsContent value="history" className="space-y-6">
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <LineChart className="w-5 h-5" />
-                    روند هفتگی
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="w-5 h-5" />
+                      تاریخچه جلسات
+                    </CardTitle>
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      دانلود گزارش
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-800 flex items-center justify-center">
-                    <div className="text-center">
-                      <LineChart className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        نمودار روند هفتگی
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        نمایش پیشرفت در طول هفته
-                      </p>
-                    </div>
+                  <div className="space-y-4">
+                    {recentSessions.map((session) => (
+                      <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                            {getSessionTypeIcon(session.type)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">{session.date}</span>
+                              {getSessionTypeBadge(session.type)}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              موضوعات: {session.topics.join('، ')}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              مدت زمان: {session.duration} دقیقه
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-2xl font-bold ${getScoreColor(session.score)}`}>
+                            {session.score}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">امتیاز</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Performance Stats */}
-              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
-                    آمار عملکرد
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {progress?.accuracyRate}%
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">دقت کلی</div>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {progress?.completionRate}%
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">نرخ تکمیل</div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">میانگین امتیاز</span>
-                      <span className="text-sm font-medium">4.2/5</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">کلاس‌های شرکت کرده</span>
-                      <span className="text-sm font-medium">12</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">ساعت مطالعه</span>
-                      <span className="text-sm font-medium">{progress?.totalStudyTime}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+    </StudentPageLayout>
   );
-} 
+}
