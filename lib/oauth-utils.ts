@@ -58,18 +58,31 @@ export const getOAuthRedirectUrl = (path: string = '/auth/callback'): string => 
 export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): string => {
   console.log('🤖 Smart OAuth URL Detection Started');
   
-  // Always use environment variables first for consistency
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    const envUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${path}`;
-    console.log('🔧 Using environment SITE_URL (consistent):', envUrl);
-    return envUrl;
-  }
-  
-  // Development environment detection
+  // PRIORITY 1: Check if we're in development mode (localhost should always stay local)
   if (process.env.NODE_ENV === 'development') {
     const devUrl = `http://localhost:3000${path}`;
-    console.log('🧪 Development environment detected:', devUrl);
+    console.log('🧪 Development environment detected - using localhost:', devUrl);
     return devUrl;
+  }
+  
+  // PRIORITY 2: Browser environment detection for localhost
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname, port } = window.location;
+    console.log('🌍 Browser environment detected:', { protocol, hostname, port });
+    
+    // If we're on localhost, always use localhost regardless of env vars
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      const localUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}${path}`;
+      console.log('🏠 Localhost detected - using local URL:', localUrl);
+      return localUrl;
+    }
+  }
+  
+  // PRIORITY 3: Environment variables for production
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    const envUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${path}`;
+    console.log('🔧 Using environment SITE_URL (production):', envUrl);
+    return envUrl;
   }
   
   // Browser environment - only as fallback
@@ -134,6 +147,7 @@ export const logOAuthConfig = (): void => {
     console.log('Current location:', window.location.href);
     console.log('Current origin:', window.location.origin);
     console.log('Current hostname:', window.location.hostname);
+    console.log('Is localhost?:', window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     console.log('Current protocol:', window.location.protocol);
     console.log('Current port:', window.location.port);
     console.log('OAuth redirect URL:', getOAuthRedirectUrl());
