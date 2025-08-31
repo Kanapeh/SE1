@@ -166,33 +166,20 @@ function AuthCompleteContent() {
         // Clear PKCE state after successful authentication
         clearPKCEState();
 
-        // Check if user has a profile in teachers table
-        console.log('🔍 Checking teachers table...');
+        // Check if user is a teacher using API endpoint (bypasses RLS issues)
+        console.log('🔍 Checking if user is a teacher...');
         console.log('🔍 User ID to check:', session.user.id);
         console.log('🔍 User email:', session.user.email);
         
         try {
-          const { data: teacherData, error: teacherError } = await supabase
-            .from("teachers")
-            .select("id, status, email, first_name, last_name")
-            .eq("id", session.user.id)
-            .single();
-
-          console.log('🔍 Teacher query result:', { teacherData, teacherError });
-
-          if (teacherError) {
-            console.log('❌ Teacher query error:', teacherError);
-            if (teacherError.code !== 'PGRST116') {
-              console.error('❌ Unexpected teacher query error:', teacherError);
-            }
-          }
-
-          if (teacherData) {
-            console.log('✅ Teacher found in database:', teacherData);
-            console.log('✅ Teacher status check:', teacherData.status);
+          const response = await fetch(`/api/teacher-profile?user_id=${session.user.id}&email=${session.user.email}`);
+          
+          if (response.ok) {
+            const { teacher } = await response.json();
+            console.log('✅ Teacher found:', teacher);
             
-            if (teacherData.status === 'active' || teacherData.status === 'Approved') {
-              console.log("✅ OAuth user is active/approved teacher - redirecting to teacher dashboard");
+            if (teacher.status === 'active' || teacher.status === 'Approved') {
+              console.log("✅ Teacher is approved - redirecting to teacher dashboard");
               toast({
                 title: "ورود موفقیت‌آمیز",
                 description: "در حال انتقال به پنل معلم...",
@@ -200,16 +187,18 @@ function AuthCompleteContent() {
               router.push('/dashboard/teacher');
               return;
             } else {
-              console.log("⚠️ OAuth user is inactive teacher, status:", teacherData.status);
-              setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacherData.status}. لطفاً منتظر تایید ادمین باشید.`);
+              console.log("⚠️ Teacher not approved:", teacher.status);
+              setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacher.status}. لطفاً منتظر تایید ادمین باشید.`);
               return;
             }
+          } else if (response.status === 404) {
+            console.log('ℹ️ User is not a teacher, continuing to profile completion...');
           } else {
-            console.log('❌ No teacher profile found for this user ID');
+            console.error('❌ Teacher check failed:', response.status);
           }
         } catch (error) {
-          console.error('💥 Teacher check exception:', error);
-          console.log('⚠️ Teacher check failed, continuing to complete profile...');
+          console.error('💥 Teacher check error:', error);
+          console.log('⚠️ Teacher check failed, continuing to profile completion...');
         }
 
         // If not teacher, redirect to complete profile

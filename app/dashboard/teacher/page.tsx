@@ -505,21 +505,43 @@ export default function TeacherDashboardPage() {
 
         console.log('✅ Authenticated user:', user);
 
-        // Get teacher profile from database
-        const teacherProfile = await getTeacherProfile(user.email!);
-        if (!teacherProfile) {
-          console.log('❌ No teacher profile found for email:', user.email);
+        // Get teacher profile using API endpoint (bypasses RLS issues)
+        try {
+          console.log('🔍 Fetching teacher profile for user:', user.id, user.email);
+          
+          const response = await fetch(`/api/teacher-profile?user_id=${user.id}&email=${user.email}`);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.log('❌ No teacher profile found, redirecting to registration');
+              router.push('/register');
+              return;
+            }
+            throw new Error(`Teacher profile fetch failed: ${response.status}`);
+          }
+          
+          const { teacher } = await response.json();
+          console.log('✅ Teacher profile loaded:', teacher);
+          
+          // Check if teacher is approved
+          if (teacher.status !== 'active' && teacher.status !== 'Approved') {
+            console.log('⚠️ Teacher not approved:', teacher.status);
+            router.push('/register?error=not_approved');
+            return;
+          }
+          
+          setUserProfile(teacher);
+        } catch (error) {
+          console.error('💥 Teacher profile fetch error:', error);
           router.push('/register');
           return;
         }
 
-        console.log('✅ Teacher profile loaded:', teacherProfile);
-
         // Fetch classes and other data
-        const teacherClasses = await fetchClasses(teacherProfile.id);
-        const teacherSchedule = await fetchSchedule(teacherProfile.id);
-        const teacherNotifications = await fetchNotifications(teacherProfile.id);
-        const teacherActiveVideoCalls = await fetchActiveVideoCalls(teacherProfile.id);
+        const teacherClasses = await fetchClasses(teacher.id);
+        const teacherSchedule = await fetchSchedule(teacher.id);
+        const teacherNotifications = await fetchNotifications(teacher.id);
+        const teacherActiveVideoCalls = await fetchActiveVideoCalls(teacher.id);
         
         setClasses(teacherClasses);
         setSchedule(teacherSchedule);
