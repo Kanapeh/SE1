@@ -160,86 +160,74 @@ function AuthCompleteContent() {
         // Clear PKCE state after successful authentication
         clearPKCEState();
 
-        // Check if user is a teacher using API endpoint (bypasses RLS issues)
-        console.log('🔍 Checking if user is a teacher...');
-        console.log('🔍 User ID to check:', session.user.id);
-        console.log('🔍 User email:', session.user.email);
-        
-        try {
-          const response = await fetch(`/api/teacher-profile?user_id=${session.user.id}&email=${session.user.email}`);
+        // Show progress message
+        toast({
+          title: "در حال بررسی پروفایل...",
+          description: "لطفاً کمی صبر کنید",
+        });
+
+        // Check profiles simultaneously for better performance
+        const [teacherResponse, studentResponse] = await Promise.allSettled([
+          fetch(`/api/teacher-profile?user_id=${session.user.id}&email=${session.user.email}`),
+          fetch(`/api/student-profile?user_id=${session.user.id}&email=${session.user.email}`)
+        ]);
+
+        // Check teacher profile
+        if (teacherResponse.status === 'fulfilled' && teacherResponse.value.ok) {
+          const { teacher } = await teacherResponse.value.json();
+          console.log('✅ Teacher profile found:', teacher.first_name, teacher.last_name);
           
-          if (response.ok) {
-            const { teacher } = await response.json();
-            console.log('✅ Teacher found:', teacher);
+          if (teacher.status === 'active' || teacher.status === 'Approved') {
+            console.log("✅ Redirecting to teacher dashboard");
+            toast({
+              title: "خوش آمدید!",
+              description: `سلام ${teacher.first_name}، به پنل معلم خود خوش آمدید`,
+            });
             
-            if (teacher.status === 'active' || teacher.status === 'Approved') {
-              console.log("✅ Teacher is approved - redirecting to teacher dashboard");
-              toast({
-                title: "ورود موفقیت‌آمیز",
-                description: "در حال انتقال به پنل معلم...",
-              });
-              router.push('/dashboard/teacher');
-              return;
-            } else {
-              console.log("⚠️ Teacher not approved:", teacher.status);
-              setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacher.status}. لطفاً منتظر تایید ادمین باشید.`);
-              return;
-            }
-          } else if (response.status === 404) {
-            console.log('ℹ️ User is not a teacher, continuing to profile completion...');
+            // Use router.replace for faster navigation
+            router.replace('/dashboard/teacher');
+            return;
           } else {
-            console.error('❌ Teacher check failed:', response.status);
+            console.log("⚠️ Teacher not approved:", teacher.status);
+            setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacher.status}. لطفاً منتظر تایید ادمین باشید.`);
+            return;
           }
-        } catch (error) {
-          console.error('💥 Teacher check error:', error);
-          console.log('⚠️ Teacher check failed, continuing to student check...');
         }
 
-        // Check if user has a student profile
-        try {
-          console.log('🔍 Checking student profile for user:', session.user.id, session.user.email);
+        // Check student profile
+        if (studentResponse.status === 'fulfilled' && studentResponse.value.ok) {
+          const result = await studentResponse.value.json();
+          const student = result.student;
+          console.log('✅ Student profile found:', student.first_name, student.last_name);
           
-          const response = await fetch(`/api/student-profile?user_id=${session.user.id}&email=${session.user.email}`);
-          
-          if (response.ok) {
-            const result = await response.json();
-            const student = result.student;
-            console.log('✅ Student profile found:', student);
+          if (student.status === 'active') {
+            console.log("✅ Redirecting to student dashboard");
+            toast({
+              title: "خوش آمدید!",
+              description: `سلام ${student.first_name}، به داشبورد خود خوش آمدید`,
+            });
             
-            if (student.status === 'active') {
-              console.log("✅ OAuth user is active student, redirecting to dashboard");
-              toast({
-                title: "ورود موفقیت‌آمیز",
-                description: "در حال انتقال به داشبورد دانش‌آموز...",
-              });
-              const dashboardUrl = await getSmartOAuthRedirectUrl('/dashboard/student');
-              window.location.href = dashboardUrl;
-              return;
-            }
-          } else if (response.status === 404) {
-            console.log('❌ No student profile found');
+            // Direct redirect for better performance
+            const dashboardUrl = `${window.location.origin}/dashboard/student`;
+            window.location.replace(dashboardUrl);
+            return;
           }
-        } catch (error) {
-          console.error('💥 Student check error:', error);
-          console.log('⚠️ Student check failed, continuing to profile completion...');
         }
 
-        // If neither teacher nor student, redirect to complete profile
-        console.log("ℹ️ User has no teacher or student profile, redirecting to complete profile");
-        console.log("🔍 UserType for redirect:", userType);
+        // No profile found - redirect to complete profile
+        console.log("ℹ️ No active profile found, redirecting to complete profile");
         
         toast({
-          title: "ورود موفقیت‌آمیز",
+          title: "تکمیل پروفایل",
           description: `لطفاً پروفایل ${userType === 'teacher' ? 'معلم' : 'دانش‌آموز'} خود را تکمیل کنید`,
         });
         
         const redirectUrl = userType 
-          ? `/complete-profile?type=${userType}`
-          : '/complete-profile';
+          ? `complete-profile?type=${userType}`
+          : 'complete-profile';
         
-        console.log("🚀 Redirecting to:", redirectUrl);
-        const completeProfileUrl = await getSmartOAuthRedirectUrl(redirectUrl.startsWith('/') ? redirectUrl.substring(1) : redirectUrl);
-        window.location.href = completeProfileUrl;
+        const completeProfileUrl = `${window.location.origin}/${redirectUrl}`;
+        window.location.replace(completeProfileUrl);
       } catch (error: any) {
         console.error('💥 Unexpected error in handleUserSession:', error);
         setError('خطای غیرمنتظره در پردازش ورود. لطفاً دوباره تلاش کنید.');
@@ -251,16 +239,39 @@ function AuthCompleteContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <div className="max-w-md w-full space-y-8 p-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            {/* Enhanced loading animation */}
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            
             <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              در حال تکمیل ورود...
+              تکمیل ورود
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              لطفاً صبر کنید تا احراز هویت شما تکمیل شود
+              در حال بررسی اطلاعات شما...
             </p>
+            
+            {/* Progress steps */}
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-500">احراز هویت</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                <span className="text-xs text-gray-400">بررسی پروفایل</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                <span className="text-xs text-gray-400">هدایت به داشبورد</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
