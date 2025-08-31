@@ -178,10 +178,21 @@ function AuthCompleteContent() {
             .eq("id", session.user.id)
             .single();
 
+          console.log('🔍 Teacher query result:', { teacherData, teacherError });
+
+          if (teacherError) {
+            console.log('❌ Teacher query error:', teacherError);
+            if (teacherError.code !== 'PGRST116') {
+              console.error('❌ Unexpected teacher query error:', teacherError);
+            }
+          }
+
           if (teacherData) {
             console.log('✅ Teacher found in database:', teacherData);
+            console.log('✅ Teacher status check:', teacherData.status);
+            
             if (teacherData.status === 'active' || teacherData.status === 'Approved') {
-              console.log("✅ OAuth user is active/approved teacher");
+              console.log("✅ OAuth user is active/approved teacher - redirecting to teacher dashboard");
               toast({
                 title: "ورود موفقیت‌آمیز",
                 description: "در حال انتقال به پنل معلم...",
@@ -194,10 +205,11 @@ function AuthCompleteContent() {
               return;
             }
           } else {
-            console.log('❌ No teacher profile found for this user');
+            console.log('❌ No teacher profile found for this user ID');
           }
         } catch (error) {
-          console.log('⚠️ Teacher check failed, continuing to student check...');
+          console.error('💥 Teacher check exception:', error);
+          console.log('⚠️ Teacher check failed, continuing to complete profile...');
         }
 
         // If not teacher, redirect to complete profile
