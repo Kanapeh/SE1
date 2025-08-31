@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AvatarUploader from '@/components/AvatarUploader';
 import { 
   User,
   Camera,
@@ -298,22 +299,15 @@ export default function TeacherProfilePage() {
             <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
               <CardContent className="p-6">
                 <div className="text-center">
-                  <div className="relative inline-block">
-                    <Avatar className="w-24 h-24 mx-auto mb-4">
-                      <AvatarImage src={profile.avatar || ''} alt={`${profile.first_name} ${profile.last_name}`} />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-2xl">
-                        {profile.first_name[0]}{profile.last_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="absolute bottom-0 right-0 w-8 h-8 rounded-full p-0"
-                    >
-                      <Camera className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <AvatarUploader
+                    currentAvatar={profile.avatar}
+                    teacherId={profile.id}
+                    teacherName={`${profile.first_name} ${profile.last_name}`}
+                    onAvatarUpdate={(newAvatar) => {
+                      setProfile(prev => prev ? {...prev, avatar: newAvatar} : null);
+                    }}
+                  />
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-4">
                     {profile.first_name} {profile.last_name}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">{profile.email}</p>
