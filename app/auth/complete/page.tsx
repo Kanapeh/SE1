@@ -44,6 +44,22 @@ function AuthCompleteContent() {
         console.log('Retry count:', retryCount);
         console.log('Authorization code:', code ? 'Present' : 'Missing');
         
+        // Check for OAuth errors in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+        const errorCode = urlParams.get('error_code');
+        
+        if (error) {
+          console.error('🚨 OAuth Error detected:', { error, errorCode, errorDescription });
+          if (error === 'server_error' && errorCode === 'flow_state_not_found') {
+            setError('مشکل در تنظیمات OAuth. لطفاً مجدد تلاش کنید و اطمینان حاصل کنید که redirect URL در Google Console درست است.');
+            return;
+          }
+          setError(`خطای OAuth: ${errorDescription || error}`);
+          return;
+        }
+        
         // Test Supabase client health
         console.log('🔍 Testing Supabase client health...');
         try {
