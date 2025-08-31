@@ -506,6 +506,7 @@ export default function TeacherDashboardPage() {
         console.log('✅ Authenticated user:', user);
 
         // Get teacher profile using API endpoint (bypasses RLS issues)
+        let teacher;
         try {
           console.log('🔍 Fetching teacher profile for user:', user.id, user.email);
           
@@ -520,7 +521,8 @@ export default function TeacherDashboardPage() {
             throw new Error(`Teacher profile fetch failed: ${response.status}`);
           }
           
-          const { teacher } = await response.json();
+          const result = await response.json();
+          teacher = result.teacher;
           console.log('✅ Teacher profile loaded:', teacher);
           
           // Check if teacher is approved
