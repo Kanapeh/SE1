@@ -247,16 +247,29 @@ export default function StudentDashboardPage() {
           user_metadata: user.user_metadata
         });
 
-        // Get student profile from database
-        const { data: studentData, error: profileError } = await supabase
-          .from('students')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching student profile:', profileError);
-          // Redirect to complete profile if profile doesn't exist
+        // Get student profile using API endpoint (bypasses RLS issues)
+        let studentData;
+        try {
+          console.log('🔍 Fetching student profile for user:', user.id, user.email);
+          
+          const response = await fetch(`/api/student-profile?user_id=${user.id}&email=${user.email}`);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.log('❌ No student profile found, redirecting to complete profile');
+              const profileUrl = await getSmartOAuthRedirectUrl('complete-profile?type=student');
+              window.location.href = profileUrl;
+              return;
+            }
+            throw new Error(`Student profile fetch failed: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          studentData = result.student;
+          console.log('✅ Student profile loaded:', studentData);
+          
+        } catch (error) {
+          console.error('💥 Student profile fetch error:', error);
           const profileUrl = await getSmartOAuthRedirectUrl('complete-profile?type=student');
           window.location.href = profileUrl;
           return;
