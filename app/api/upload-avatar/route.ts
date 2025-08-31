@@ -10,8 +10,38 @@ export async function POST(request: NextRequest) {
     const file = formData.get('avatar') as File;
     const teacherId = formData.get('teacherId') as string;
 
-    if (!file) {
-      return NextResponse.json({ error: 'فایلی انتخاب نشده است' }, { status: 400 });
+    // Handle avatar removal (empty file)
+    if (!file || file.size === 0) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseUrl || !supabaseServiceRoleKey) {
+        return NextResponse.json({ error: 'خطای پیکربندی سرور' }, { status: 500 });
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: { persistSession: false },
+      });
+
+      // Remove avatar from database
+      const { error } = await supabase
+        .from('teachers')
+        .update({ 
+          avatar: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', teacherId);
+
+      if (error) {
+        console.error('Error removing teacher avatar:', error);
+        return NextResponse.json({ error: 'خطا در حذف تصویر پروفایل' }, { status: 500 });
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        avatar: null,
+        message: 'تصویر پروفایل حذف شد'
+      });
     }
 
     if (!teacherId) {

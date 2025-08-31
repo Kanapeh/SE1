@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AvatarUploader from '@/components/AvatarUploader';
+import { supabase } from '@/lib/supabase';
 import { 
   User,
   Camera,
@@ -111,45 +112,77 @@ export default function TeacherProfilePage() {
   const [newSpecialty, setNewSpecialty] = useState('');
 
   useEffect(() => {
-    // Mock profile data
-    const mockProfile: TeacherProfile = {
-      id: '1',
-      first_name: 'علی',
-      last_name: 'احمدی',
-      email: 'ali.ahmadi@example.com',
-      phone: '09123456789',
-      avatar: null,
-      bio: 'معلم با تجربه 5 ساله در تدریس زبان انگلیسی و فرانسه. متخصص در آمادگی آزمون‌های بین‌المللی و مکالمه روزمره.',
-      hourly_rate: 200000,
-      location: 'تهران',
-      experience_years: 5,
-      available: true,
-      status: 'active',
-      languages: ['انگلیسی', 'فرانسه'],
-      levels: ['مبتدی', 'متوسط', 'پیشرفته'],
-      available_days: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه'],
-      available_hours: ['09:00', '10:00', '14:00', '15:00'],
-      education: 'کارشناسی ارشد زبان انگلیسی - دانشگاه تهران',
-      certifications: ['CELTA', 'TESOL', 'IELTS Examiner'],
-      specialties: ['آمادگی آیلتس', 'مکالمه تجاری', 'گرامر پیشرفته'],
-      social_links: {
-        linkedin: 'linkedin.com/in/ali-ahmadi',
-        instagram: '@ali_teacher',
-        website: 'www.aliteacher.com'
-      },
-      preferences: {
-        notifications: true,
-        email_notifications: true,
-        sms_notifications: false,
-        auto_accept_bookings: false,
-        max_students_per_class: 1,
-        min_booking_notice: 24
-      }
-    };
-
-    setProfile(mockProfile);
-    setLoading(false);
+    loadTeacherProfile();
   }, []);
+
+  const loadTeacherProfile = async () => {
+    try {
+      setLoading(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      // Fetch teacher profile using API
+      const response = await fetch(`/api/teacher-profile?user_id=${user.id}&email=${user.email}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          router.push('/register');
+          return;
+        }
+        throw new Error('Failed to load profile');
+      }
+
+      const result = await response.json();
+      const teacher = result.teacher;
+
+      // Convert to TeacherProfile format
+      const teacherProfile: TeacherProfile = {
+        id: teacher.id,
+        first_name: teacher.first_name,
+        last_name: teacher.last_name,
+        email: teacher.email,
+        phone: teacher.phone || '',
+        avatar: teacher.avatar,
+        bio: teacher.bio || '',
+        hourly_rate: teacher.hourly_rate || 200000,
+        location: teacher.location || '',
+        experience_years: teacher.experience_years || 0,
+        available: teacher.available !== false,
+        status: teacher.status === 'Approved' ? 'active' : 'inactive',
+        languages: teacher.languages || [],
+        levels: teacher.levels || [],
+        available_days: teacher.available_days || [],
+        available_hours: teacher.available_hours || [],
+        education: teacher.education || '',
+        certifications: teacher.certificates || [],
+        specialties: teacher.teaching_methods || [],
+        social_links: {
+          linkedin: '',
+          instagram: '',
+          website: ''
+        },
+        preferences: {
+          notifications: true,
+          email_notifications: true,
+          sms_notifications: false,
+          auto_accept_bookings: false,
+          max_students_per_class: teacher.max_students_per_class || 1,
+          min_booking_notice: 24
+        }
+      };
+
+      setProfile(teacherProfile);
+    } catch (error) {
+      console.error('Error loading teacher profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);

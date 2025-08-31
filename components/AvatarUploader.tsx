@@ -117,7 +117,7 @@ export default function AvatarUploader({
       setError(null);
 
       const formData = new FormData();
-      formData.append('avatar', '');
+      formData.append('avatar', new File([], ''));
       formData.append('teacherId', teacherId);
 
       const response = await fetch('/api/upload-avatar', {
@@ -125,12 +125,19 @@ export default function AvatarUploader({
         body: formData,
       });
 
+      const result = await response.json();
+
       if (response.ok) {
         setAvatar(null);
         onAvatarUpdate?.(null);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(result.error || 'خطا در حذف تصویر');
       }
     } catch (error) {
       console.error('Error removing avatar:', error);
+      setError('خطا در حذف تصویر');
     } finally {
       setUploading(false);
     }
