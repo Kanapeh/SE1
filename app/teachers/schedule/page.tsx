@@ -53,6 +53,7 @@ export default function TeacherSchedulePage() {
   const [schedule, setSchedule] = useState<ScheduleDay[]>([]);
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newTimeSlot, setNewTimeSlot] = useState({
     startTime: '09:00',
     endTime: '10:00',
@@ -71,7 +72,24 @@ export default function TeacherSchedulePage() {
   ];
 
   useEffect(() => {
-    // Initialize schedule with mock data
+    loadSchedule();
+  }, []);
+
+  const loadSchedule = async () => {
+    try {
+      // Try to load schedule from localStorage first
+      const savedSchedule = localStorage.getItem('teacher-schedule');
+      if (savedSchedule) {
+        console.log('✅ Loading saved schedule from localStorage');
+        setSchedule(JSON.parse(savedSchedule));
+        setSelectedDay('saturday');
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Error loading saved schedule:', error);
+    }
+
+    // Initialize schedule with mock data if no saved data
     const initialSchedule = daysOfWeek.map(day => ({
       day: day.key,
       persianName: day.name,
@@ -98,7 +116,40 @@ export default function TeacherSchedulePage() {
     }));
     setSchedule(initialSchedule);
     setSelectedDay('saturday');
-  }, []);
+  };
+
+  const saveSchedule = async () => {
+    try {
+      setSaving(true);
+      console.log('💾 Saving schedule to localStorage...');
+      
+      // Save to localStorage for now (later can be API call)
+      localStorage.setItem('teacher-schedule', JSON.stringify(schedule));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setIsEditing(false);
+      console.log('✅ Schedule saved successfully');
+      
+      // Show success message (you can add toast notification here)
+      alert('برنامه زمانی با موفقیت ذخیره شد!');
+      
+    } catch (error) {
+      console.error('❌ Error saving schedule:', error);
+      alert('خطا در ذخیره برنامه زمانی');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveToggle = () => {
+    if (isEditing) {
+      saveSchedule();
+    } else {
+      setIsEditing(true);
+    }
+  };
 
   const toggleTimeSlotAvailability = (dayKey: string, slotId: string) => {
     setSchedule(prev => prev.map(day => {
@@ -204,11 +255,18 @@ export default function TeacherSchedulePage() {
             </div>
             <div className="flex items-center gap-4">
               <Button 
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={handleSaveToggle}
+                disabled={saving}
                 className="flex items-center gap-2"
               >
-                {isEditing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-                {isEditing ? 'ذخیره تغییرات' : 'ویرایش برنامه'}
+                {saving ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                ) : isEditing ? (
+                  <Save className="w-4 h-4" />
+                ) : (
+                  <Edit className="w-4 h-4" />
+                )}
+                {saving ? 'در حال ذخیره...' : isEditing ? 'ذخیره تغییرات' : 'ویرایش برنامه'}
               </Button>
             </div>
           </div>
