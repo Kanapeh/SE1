@@ -22,6 +22,12 @@ function AuthCompleteContent() {
   
   const userType = searchParams.get('type');
   const code = searchParams.get('code');
+  
+  // Debug URL parameters
+  console.log('🔍 Auth Complete Debug Info:');
+  console.log('User Type from URL:', userType);
+  console.log('Authorization Code:', code ? 'Present' : 'Missing');
+  console.log('All URL params:', Object.fromEntries(searchParams.entries()));
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -401,15 +407,19 @@ function AuthCompleteContent() {
 
         // User exists in auth but no profile - redirect to complete profile
         console.log("ℹ️ OAuth user has no profile, redirecting to complete profile");
+        console.log("🔍 UserType for redirect:", userType);
+        console.log("🔍 Redirect URL will be:", userType ? `/complete-profile?type=${userType}` : '/complete-profile');
+        
         toast({
           title: "ورود موفقیت‌آمیز",
-          description: "لطفاً پروفایل خود را تکمیل کنید",
+          description: `لطفاً پروفایل ${userType === 'teacher' ? 'معلم' : 'دانش‌آموز'} خود را تکمیل کنید`,
         });
         
         const redirectUrl = userType 
           ? `/complete-profile?type=${userType}`
           : '/complete-profile';
         
+        console.log("🚀 Redirecting to:", redirectUrl);
         router.push(redirectUrl);
       } catch (error: any) {
         console.error('💥 Unexpected error in handleUserSession:', {

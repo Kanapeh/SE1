@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { emergencyTeacherOAuthRedirect, debugEmergencyOAuth } from "@/lib/emergency-oauth-fix";
+import { getTeacherOAuthRedirectUrl, logOAuthConfig } from "@/lib/oauth-utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ function RegisterContent() {
   const [rateLimitInfo, setRateLimitInfo] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const userType = searchParams.get('type') || 'student';
+  const userType = searchParams?.get('type') || 'student';
 
   // Validate email format
   const isValidEmail = (email: string) => {
@@ -47,10 +47,10 @@ function RegisterContent() {
       console.log("🚀 Starting Google OAuth sign in...");
       
       // Log OAuth configuration for debugging
-      debugEmergencyOAuth();
+      logOAuthConfig();
       
-      // Get the proper OAuth redirect URL
-      const redirectUrl = emergencyTeacherOAuthRedirect(userType);
+      // Get the proper OAuth redirect URL for teacher registration
+      const redirectUrl = getTeacherOAuthRedirectUrl(userType);
       
       console.log("Current origin:", window.location.origin);
       console.log("Final redirect URL:", redirectUrl);
