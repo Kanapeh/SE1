@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import VideoCall from '@/app/components/VideoCall';
 import { supabase } from '@/lib/supabase';
+import { getSmartOAuthRedirectUrl } from '@/lib/oauth-utils';
 import { 
   ArrowLeft,
   Video,
@@ -631,7 +632,10 @@ export default function StudentVideoCallPage() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">کلاس یافت نشد</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">کلاس مورد نظر پیدا نشد یا لغو شده است</p>
             <Button 
-              onClick={() => router.push('/dashboard/student')}
+              onClick={async () => {
+                const dashboardUrl = await getSmartOAuthRedirectUrl('dashboard/student');
+                window.location.href = dashboardUrl;
+              }}
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
             >
               بازگشت به داشبورد

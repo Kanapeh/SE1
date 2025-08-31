@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getSmartOAuthRedirectUrl } from "@/lib/oauth-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -181,14 +182,16 @@ function CompleteProfileContent() {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) {
           console.log('No authenticated user found, redirecting to login');
-          router.push('/login');
+          const loginUrl = await getSmartOAuthRedirectUrl('login');
+          window.location.href = loginUrl;
           return;
         }
         
         // Check if email is confirmed
         if (!user.email_confirmed_at) {
           console.log('Email not confirmed, redirecting to verify email');
-          router.push(`/verify-email?email=${encodeURIComponent(user.email || '')}`);
+          const verifyUrl = await getSmartOAuthRedirectUrl(`verify-email?email=${encodeURIComponent(user.email || '')}`);
+          window.location.href = verifyUrl;
           return;
         }
         
@@ -203,7 +206,8 @@ function CompleteProfileContent() {
         }
       } catch (error) {
         console.error('Error getting user:', error);
-        router.push('/login');
+        const loginUrl = await getSmartOAuthRedirectUrl('login');
+        window.location.href = loginUrl;
       }
     };
 

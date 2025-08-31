@@ -36,6 +36,7 @@ import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getSmartOAuthRedirectUrl } from "@/lib/oauth-utils";
 
 interface StudentHeaderProps {
   studentName?: string;
@@ -61,7 +62,8 @@ export default function StudentHeader({ studentName, studentEmail }: StudentHead
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      router.push('/');
+      const homeUrl = await getSmartOAuthRedirectUrl('');
+      window.location.href = homeUrl;
     } catch (error) {
       console.error('Error logging out:', error);
     }

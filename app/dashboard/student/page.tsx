@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { getSmartOAuthRedirectUrl } from '@/lib/oauth-utils';
 import { Button } from '@/components/ui/button';
 import StudentHeader from '@/components/StudentHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -235,7 +236,8 @@ export default function StudentDashboardPage() {
         
         if (userError || !user) {
           console.error('User not authenticated:', userError);
-          router.push('/login');
+          const loginUrl = await getSmartOAuthRedirectUrl('login');
+          window.location.href = loginUrl;
           return;
         }
 
@@ -255,7 +257,8 @@ export default function StudentDashboardPage() {
         if (profileError) {
           console.error('Error fetching student profile:', profileError);
           // Redirect to complete profile if profile doesn't exist
-          router.push('/complete-profile?type=student');
+          const profileUrl = await getSmartOAuthRedirectUrl('complete-profile?type=student');
+          window.location.href = profileUrl;
           return;
         }
 
