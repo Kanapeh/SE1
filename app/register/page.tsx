@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { getTeacherOAuthRedirectUrl, getSmartOAuthRedirectUrl, logOAuthConfig } from "@/lib/oauth-utils";
+import { getTeacherOAuthRedirectUrl, getStudentOAuthRedirectUrl, getSmartOAuthRedirectUrl, logOAuthConfig } from "@/lib/oauth-utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ function RegisterContent() {
       // Get the proper OAuth redirect URL based on user type
       const redirectUrl = userType === 'teacher' 
         ? getTeacherOAuthRedirectUrl(userType)
-        : await getSmartOAuthRedirectUrl(`auth/callback?user_type=${userType}`);
+        : getStudentOAuthRedirectUrl(userType);
       
       console.log("Current origin:", window.location.origin);
       console.log("Final redirect URL:", redirectUrl);

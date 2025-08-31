@@ -127,6 +127,13 @@ export const getTeacherOAuthRedirectUrl = (userType: string, email?: string): st
   return getSmartOAuthRedirectUrl(`${basePath}${emailParam}`);
 };
 
+// Function to get the correct student OAuth redirect URL
+export const getStudentOAuthRedirectUrl = (userType: string, email?: string): string => {
+  const basePath = `/auth/callback?user_type=${userType}`;
+  const emailParam = email ? `&email=${encodeURIComponent(email)}` : '';
+  return getSmartOAuthRedirectUrl(`${basePath}${emailParam}`);
+};
+
 // Function to get the correct password reset redirect URL
 export const getPasswordResetRedirectUrl = (): string => {
   return getSmartOAuthRedirectUrl('/reset-password');
