@@ -32,6 +32,8 @@ export default function BlogPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [search, setSearch] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [editorLoaded, setEditorLoaded] = useState(false);
+  const [fallbackContent, setFallbackContent] = useState("");
   const editorRef = useRef<any>(null);
 
 
@@ -39,6 +41,17 @@ export default function BlogPage() {
     checkAuth();
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    // Set a timeout to show fallback if editor doesn't load
+    const timer = setTimeout(() => {
+      if (!editorLoaded) {
+        setEditorLoaded(false); // This will show the fallback
+      }
+    }, 5000); // 5 seconds timeout
+    
+    return () => clearTimeout(timer);
+  }, [editorLoaded]);
 
   const checkAuth = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -107,7 +120,7 @@ export default function BlogPage() {
       }
 
       const title = formData.get('title')?.toString().trim();
-      const content = editorRef.current?.getContent() || '';
+      const content = editorRef.current?.getContent() || fallbackContent || '';
       const image_url = formData.get('image_url')?.toString().trim();
       const author = formData.get('author')?.toString().trim() || 'مدیر سیستم';
       const status = formData.get('status')?.toString() || 'draft';
@@ -266,16 +279,14 @@ export default function BlogPage() {
 
   const editorConfig = {
     height: 500,
-    menubar: true,
+    menubar: false,
     directionality: 'rtl',
     plugins: [
-      'anchor', 'autolink', 'charmap', 'code', 'emoticons', 'image', 'link', 'lists', 'media', 
-      'searchreplace', 'table', 'visualblocks', 'wordcount', 'fullscreen', 'help', 'insertdatetime',
-      'preview', 'save', 'directionality'
+      'lists', 'link', 'image', 'code', 'table', 'wordcount', 'help'
     ],
-    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | ' +
-      'link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | code fullscreen help | removeformat',
-    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+    toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | ' +
+      'bullist numlist outdent indent | link image | code | help',
+    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; direction: rtl; text-align: right; }',
     images_upload_handler: async (blobInfo: any) => {
       const file = blobInfo.blob();
       const url = await handleImageUpload(file);
@@ -283,8 +294,6 @@ export default function BlogPage() {
     },
     font_family_formats: 'Vazirmatn= Vazirmatn, sans-serif; IRANSans= IRANSans, sans-serif; Tahoma= Tahoma, sans-serif; Arial= Arial, sans-serif;',
     font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt 48pt',
-    language: 'fa_IR',
-    language_url: '/tinymce/langs/fa_IR.js',
     branding: false,
     promotion: false,
     resize: true,
@@ -296,7 +305,25 @@ export default function BlogPage() {
     file_picker_types: 'image',
     images_reuse_filename: true,
     images_upload_base_path: '/blog-images',
-    images_upload_credentials: true
+    images_upload_credentials: true,
+    setup: (editor: any) => {
+      editor.on('init', () => {
+        editor.getBody().style.direction = 'rtl';
+        editor.getBody().style.textAlign = 'right';
+        editor.getBody().style.fontFamily = 'Vazirmatn, IRANSans, Tahoma, Arial, sans-serif';
+        setEditorLoaded(true);
+      });
+    },
+    init_instance_callback: (editor: any) => {
+      editor.getBody().style.direction = 'rtl';
+      editor.getBody().style.textAlign = 'right';
+      setEditorLoaded(true);
+    },
+    // Add error handling
+    onError: (error: any) => {
+      console.error('TinyMCE Error:', error);
+      setEditorLoaded(false);
+    }
   };
 
   if (loading) {
@@ -567,11 +594,41 @@ export default function BlogPage() {
                   </label>
                   <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                     <Editor
-                      apiKey="v8l89007akyh5ic8nt27hm1zsj5iheg8dzn0n41sinazolj3"
+                      apiKey="no-api-key"
                       onInit={(evt: any, editor: any) => editorRef.current = editor}
                       initialValue=""
                       init={editorConfig}
                     />
+                    {!editorLoaded && (
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800">
+                        <div className="flex items-center mb-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 mr-2"></div>
+                          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                            در حال بارگذاری ویرایشگر... اگر مشکل ادامه داشت، از فیلد زیر استفاده کنید:
+                          </p>
+                        </div>
+                        <textarea
+                          name="fallback_content"
+                          value={fallbackContent}
+                          onChange={(e) => setFallbackContent(e.target.value)}
+                          placeholder="محتوای مقاله خود را اینجا بنویسید..."
+                          className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          style={{ direction: 'rtl', textAlign: 'right' }}
+                        />
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                            این فیلد به عنوان جایگزین ویرایشگر اصلی عمل می‌کند
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setEditorLoaded(true)}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            تلاش مجدد برای بارگذاری ویرایشگر
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">از ابزارهای ویرایشگر برای ایجاد محتوای جذاب و ساختاریافته استفاده کنید</p>
                 </div>
@@ -620,7 +677,7 @@ export default function BlogPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">محتوا</label>
                 <Editor
-                  apiKey="v8l89007akyh5ic8nt27hm1zsj5iheg8dzn0n41sinazolj3"
+                  apiKey="no-api-key"
                   onInit={(evt: any, editor: any) => editorRef.current = editor}
                   initialValue={editingPost.content}
                   init={editorConfig}
