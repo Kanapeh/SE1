@@ -693,165 +693,288 @@ export default function BlogPage() {
 
       {/* Edit Post Modal */}
       {editingPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">ویرایش مقاله</h2>
-            <form onSubmit={handleUpdatePost} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">عنوان</label>
-                <input
-                  type="text"
-                  name="title"
-                  defaultValue={editingPost.title}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">محتوا</label>
-                <Editor
-                  apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-                  onInit={(evt: any, editor: any) => editorRef.current = editor}
-                  initialValue={editingPost.content}
-                  init={editorConfig}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">آدرس تصویر شاخص</label>
-                <input
-                  type="url"
-                  name="image_url"
-                  defaultValue={editingPost.image_url}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">نویسنده</label>
-                <input
-                  type="text"
-                  name="author"
-                  defaultValue={editingPost.author}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">وضعیت</label>
-                <select
-                  name="status"
-                  defaultValue={editingPost.status}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="draft">پیش‌نویس</option>
-                  <option value="published">منتشر شده</option>
-                  <option value="archived">بایگانی</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">برچسب‌ها (با کاما جدا کنید)</label>
-                <input
-                  type="text"
-                  name="tags"
-                  defaultValue={editingPost.tags?.join(', ')}
-                  placeholder="مثال: آموزش, زبان انگلیسی, گرامر"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              
-              {/* Video Section */}
-              <div className="border-t pt-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    name="has_video"
-                    id="edit_has_video"
-                    defaultChecked={editingPost.has_video}
-                    className="mr-2"
-                  />
-                  <label htmlFor="edit_has_video" className="text-sm font-medium text-gray-700">
-                    شامل ویدیو
-                  </label>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto shadow-2xl">
+            {/* Header */}
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-8 py-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">ویرایش مقاله</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">تغییرات خود را اعمال کنید و ذخیره کنید</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">آدرس ویدیو (YouTube, Vimeo)</label>
-                  <input
-                    type="url"
-                    name="video_url"
-                    defaultValue={editingPost.video_url || ''}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Chart Section */}
-              <div className="border-t pt-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    name="has_chart"
-                    id="edit_has_chart"
-                    defaultChecked={editingPost.has_chart}
-                    className="mr-2"
-                  />
-                  <label htmlFor="edit_has_chart" className="text-sm font-medium text-gray-700">
-                    شامل نمودار
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">داده‌های نمودار (JSON)</label>
-                  <textarea
-                    name="chart_data"
-                    rows={6}
-                    defaultValue={editingPost.chart_data ? JSON.stringify(editingPost.chart_data, null, 2) : ''}
-                    placeholder='{"type": "bar", "data": {"labels": ["A", "B", "C"], "datasets": [{"label": "مثال", "data": [1, 2, 3]}]}}'
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Table Section */}
-              <div className="border-t pt-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    name="has_table"
-                    id="edit_has_table"
-                    defaultChecked={editingPost.has_table}
-                    className="mr-2"
-                  />
-                  <label htmlFor="edit_has_table" className="text-sm font-medium text-gray-700">
-                    شامل جدول
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">داده‌های جدول (JSON)</label>
-                  <textarea
-                    name="table_data"
-                    rows={6}
-                    defaultValue={editingPost.table_data ? JSON.stringify(editingPost.table_data, null, 2) : ''}
-                    placeholder='{"headers": ["ستون 1", "ستون 2"], "rows": [["داده 1", "داده 2"], ["داده 3", "داده 4"]]}'
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-4">
                 <button
-                  type="button"
                   onClick={() => setEditingPost(null)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
                 >
-                  انصراف
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  ذخیره تغییرات
+                  <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-8">
+              <form onSubmit={handleUpdatePost} className="space-y-8">
+                {/* Basic Information */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    اطلاعات اصلی مقاله
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        عنوان مقاله <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        defaultValue={editingPost.title}
+                        required
+                        placeholder="عنوان جذاب و کوتاه مقاله..."
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        نویسنده <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="author"
+                        defaultValue={editingPost.author}
+                        required
+                        placeholder="نام نویسنده یا مدیر سیستم"
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      برچسب‌ها
+                    </label>
+                    <input
+                      type="text"
+                      name="tags"
+                      defaultValue={editingPost.tags?.join(', ')}
+                      placeholder="آموزش, زبان انگلیسی, گرامر, مکالمه (با کاما جدا کنید)"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">برچسب‌ها به خوانندگان کمک می‌کنند تا مقاله شما را راحت‌تر پیدا کنند</p>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      وضعیت انتشار <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="status"
+                      defaultValue={editingPost.status}
+                      required
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    >
+                      <option value="draft">پیش‌نویس (ذخیره شده اما منتشر نشده)</option>
+                      <option value="published">منتشر شده (قابل مشاهده برای عموم)</option>
+                      <option value="archived">بایگانی شده</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Image Section */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 rounded-xl border border-green-200 dark:border-green-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    تصویر شاخص مقاله
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      آدرس تصویر شاخص <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      name="image_url"
+                      defaultValue={editingPost.image_url}
+                      required
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">تصویر شاخص باید کیفیت بالا و اندازه مناسب (حداقل 800x600 پیکسل) داشته باشد</p>
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-6 rounded-xl border border-orange-200 dark:border-orange-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    محتوای مقاله
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      محتوای مقاله <span className="text-red-500">*</span>
+                    </label>
+                    <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                      <Editor
+                        apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+                        onInit={(evt: any, editor: any) => editorRef.current = editor}
+                        initialValue={editingPost.content}
+                        init={editorConfig}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">از ابزارهای ویرایشگر برای ایجاد محتوای جذاب و ساختاریافته استفاده کنید</p>
+                  </div>
+                </div>
+              
+                {/* Video Section */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-xl border border-purple-200 dark:border-purple-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    ویدیو (اختیاری)
+                  </h3>
+                  
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      name="has_video"
+                      id="edit_has_video"
+                      defaultChecked={editingPost.has_video}
+                      className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                    />
+                    <label htmlFor="edit_has_video" className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      این مقاله شامل ویدیو است
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      آدرس ویدیو
+                    </label>
+                    <input
+                      type="url"
+                      name="video_url"
+                      defaultValue={editingPost.video_url || ''}
+                      placeholder="https://www.youtube.com/watch?v=... یا https://vimeo.com/..."
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">از YouTube، Vimeo یا سایر سرویس‌های ویدیویی پشتیبانی می‌شود</p>
+                  </div>
+                </div>
+
+                {/* Chart Section */}
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-6 rounded-xl border border-yellow-200 dark:border-yellow-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    نمودار (اختیاری)
+                  </h3>
+                  
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      name="has_chart"
+                      id="edit_has_chart"
+                      defaultChecked={editingPost.has_chart}
+                      className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 focus:ring-2"
+                    />
+                    <label htmlFor="edit_has_chart" className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      این مقاله شامل نمودار است
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      داده‌های نمودار (JSON)
+                    </label>
+                    <textarea
+                      name="chart_data"
+                      rows={6}
+                      defaultValue={editingPost.chart_data ? JSON.stringify(editingPost.chart_data, null, 2) : ''}
+                      placeholder='{"type": "bar", "data": {"labels": ["A", "B", "C"], "datasets": [{"label": "مثال", "data": [1, 2, 3]}]}}'
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 dark:focus:ring-yellow-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono text-sm"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">داده‌های نمودار را به فرمت JSON وارد کنید</p>
+                  </div>
+                </div>
+
+                {/* Table Section */}
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 p-6 rounded-xl border border-teal-200 dark:border-teal-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    جدول (اختیاری)
+                  </h3>
+                  
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      name="has_table"
+                      id="edit_has_table"
+                      defaultChecked={editingPost.has_table}
+                      className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500 focus:ring-2"
+                    />
+                    <label htmlFor="edit_has_table" className="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      این مقاله شامل جدول است
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      داده‌های جدول (JSON)
+                    </label>
+                    <textarea
+                      name="table_data"
+                      rows={6}
+                      defaultValue={editingPost.table_data ? JSON.stringify(editingPost.table_data, null, 2) : ''}
+                      placeholder='{"headers": ["ستون 1", "ستون 2"], "rows": [["داده 1", "داده 2"], ["داده 3", "داده 4"]]}'
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-200 dark:focus:ring-teal-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono text-sm"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">داده‌های جدول را به فرمت JSON وارد کنید</p>
+                  </div>
+                </div>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => setEditingPost(null)}
+                    className="px-8 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl font-medium transition-all duration-300 border-2 border-gray-200 dark:border-gray-700"
+                  >
+                    <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    انصراف
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    ذخیره تغییرات
+                  </button>
+                </div>
             </form>
           </div>
         </div>
