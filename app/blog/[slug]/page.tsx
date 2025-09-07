@@ -67,30 +67,41 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
     try {
       console.log('Fetching post with slug:', slug);
       
-      const { data, error } = await supabase
+      // First, let's check if the post exists at all (regardless of status)
+      const { data: allPosts, error: allError } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('slug', slug)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (allError) {
+        console.error('Supabase error (all posts):', allError);
+        throw allError;
       }
 
-      if (!data || data.length === 0) {
+      console.log('All posts with this slug:', allPosts);
+
+      if (!allPosts || allPosts.length === 0) {
         console.log('No post found with slug:', slug);
         throw new Error('مقاله یافت نشد');
       }
 
-      if (data.length > 1) {
-        console.warn('Multiple posts found with same slug:', slug, 'Using the latest one');
+      // Check if any post is published
+      const publishedPosts = allPosts.filter(post => post.status === 'published');
+      console.log('Published posts:', publishedPosts);
+
+      if (publishedPosts.length === 0) {
+        // Check what statuses exist
+        const statuses = [...new Set(allPosts.map(post => post.status))];
+        console.log('Available statuses for this slug:', statuses);
+        throw new Error(`مقاله یافت شد اما منتشر نشده است. وضعیت: ${statuses.join(', ')}`);
       }
 
-      console.log('Post found:', data[0]);
-      setPost(data[0]);
+      // Use the latest published post
+      const latestPost = publishedPosts[0];
+      console.log('Using latest published post:', latestPost);
+      setPost(latestPost);
+
     } catch (error: any) {
       console.error('Error fetching post:', error);
       setError(error.message);
