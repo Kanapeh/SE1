@@ -65,18 +65,34 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
   const fetchPost = async () => {
     try {
+      console.log('Fetching post with slug:', slug);
+      
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('slug', slug)
         .eq('status', 'published')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (error) throw error;
-      if (!data) throw new Error('مقاله یافت نشد');
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setPost(data);
+      if (!data || data.length === 0) {
+        console.log('No post found with slug:', slug);
+        throw new Error('مقاله یافت نشد');
+      }
+
+      if (data.length > 1) {
+        console.warn('Multiple posts found with same slug:', slug, 'Using the latest one');
+      }
+
+      console.log('Post found:', data[0]);
+      setPost(data[0]);
     } catch (error: any) {
+      console.error('Error fetching post:', error);
       setError(error.message);
     } finally {
       setLoading(false);
