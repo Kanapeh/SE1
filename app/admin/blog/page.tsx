@@ -278,14 +278,24 @@ export default function BlogPage() {
   );
 
   const editorConfig = {
+    apiKey: process.env.NEXT_PUBLIC_TINYMCE_API_KEY,
+    domain: process.env.NEXT_PUBLIC_TINYMCE_DOMAIN || (typeof window !== 'undefined' ? window.location.host : 'localhost:3000'),
     height: 500,
-    menubar: false,
+    menubar: true,
     directionality: 'rtl',
     plugins: [
-      'lists', 'link', 'image', 'code', 'table', 'wordcount', 'help'
+      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+      'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons',
+      'template', 'codesample', 'pagebreak', 'nonbreaking',
+      'imagetools', 'autosave', 'save', 'directionality'
     ],
-    toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | ' +
-      'bullist numlist outdent indent | link image | code | help',
+    toolbar: 'undo redo | blocks | ' +
+      'bold italic underline strikethrough | alignleft aligncenter ' +
+      'alignright alignjustify | outdent indent |  numlist bullist | ' +
+      'forecolor backcolor removeformat | pagebreak | charmap emoticons | ' +
+      'fullscreen preview save print | insertfile image media template link anchor codesample | ' +
+      'ltr rtl | code | help',
     content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; direction: rtl; text-align: right; }',
     images_upload_handler: async (blobInfo: any) => {
       const file = blobInfo.blob();
@@ -306,6 +316,19 @@ export default function BlogPage() {
     images_reuse_filename: true,
     images_upload_base_path: '/blog-images',
     images_upload_credentials: true,
+    // Enhanced features
+    quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+    quickbars_insert_toolbar: 'quickimage quicktable',
+    contextmenu: 'link image imagetools table',
+    templates: [
+      { title: 'New Table', description: 'creates a new table', content: '<div class="mceTmpl"><table width="98%%"  border="0" cellspacing="0" cellpadding="0"><tr><th scope="col"> </th><th scope="col"> </th></tr><tr><td> </td><td> </td></tr></table></div>' },
+      { title: 'Starting my story', description: 'A cure for writers block', content: 'Once upon a time...' },
+      { title: 'New list with dates', description: 'New List with dates', content: '<div class="mceTmpl"><span class="cdate">cdate</span><br /><span class="mdate">mdate</span><h2>My List</h2><ul><li></li><li></li></ul></div>' }
+    ],
+    template_cdate_format: '[Date Created (CDATE): %m/%d/%Y : %H:%M:%S]',
+    template_mdate_format: '[Date Modified (MDATE): %m/%d/%Y : %H:%M:%S]',
+    image_caption: true,
+    quickbars_image_toolbar: 'alignleft aligncenter alignright | rotateleft rotateright | imageoptions',
     setup: (editor: any) => {
       editor.on('init', () => {
         editor.getBody().style.direction = 'rtl';
@@ -594,7 +617,7 @@ export default function BlogPage() {
                   </label>
                   <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                     <Editor
-                      apiKey="no-api-key"
+                      apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
                       onInit={(evt: any, editor: any) => editorRef.current = editor}
                       initialValue=""
                       init={editorConfig}
@@ -677,7 +700,7 @@ export default function BlogPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">محتوا</label>
                 <Editor
-                  apiKey="no-api-key"
+                  apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
                   onInit={(evt: any, editor: any) => editorRef.current = editor}
                   initialValue={editingPost.content}
                   init={editorConfig}

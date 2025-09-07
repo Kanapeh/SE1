@@ -1,86 +1,33 @@
 import { NextResponse } from 'next/server';
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
-const CHANNEL_ID = 'UCSe1-academy'; // This will be extracted from the URL
+const ENV_CHANNEL_ID = process.env.YOUTUBE_CHANNEL_ID || '';
+const ENV_CHANNEL_HANDLE = process.env.YOUTUBE_CHANNEL_HANDLE || '';
+const ENV_CHANNEL_USERNAME = process.env.YOUTUBE_CHANNEL_USERNAME || '';
+const ENV_CHANNEL_URL = process.env.YOUTUBE_CHANNEL_URL || '';
 
 export async function GET() {
   try {
     if (!YOUTUBE_API_KEY) {
       console.error('❌ YouTube API key not found');
-      return NextResponse.json({ 
-        error: 'YouTube API key not configured' 
+      return NextResponse.json({
+        success: false,
+        error: 'YouTube API key not configured',
+        code: 'MISSING_API_KEY'
       }, { status: 500 });
     }
 
     console.log('🔍 Fetching videos from YouTube channel...');
 
-    // Try to get channel ID using different methods
-    let channelId = null;
-
-    // Method 1: Try with handle @Se1-academy
-    try {
-      console.log('🔄 Trying with channel handle...');
-      const handleResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@Se1-academy&key=${YOUTUBE_API_KEY}`
-      );
-      
-      if (handleResponse.ok) {
-        const handleData = await handleResponse.json();
-        if (handleData.items && handleData.items.length > 0) {
-          channelId = handleData.items[0].id;
-          console.log('✅ Channel ID found via handle:', channelId);
-        }
-      }
-    } catch (error) {
-      console.log('⚠️ Handle method failed, trying username...');
-    }
-
-    // Method 2: Try with username Se1-academy
-    if (!channelId) {
-      try {
-        console.log('🔄 Trying with username...');
-        const usernameResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=id&forUsername=Se1-academy&key=${YOUTUBE_API_KEY}`
-        );
-        
-        if (usernameResponse.ok) {
-          const usernameData = await usernameResponse.json();
-          if (usernameData.items && usernameData.items.length > 0) {
-            channelId = usernameData.items[0].id;
-            console.log('✅ Channel ID found via username:', channelId);
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Username method failed');
-      }
-    }
-
-    // Method 3: Try with custom channel ID (if we know it)
-    if (!channelId) {
-      try {
-        console.log('🔄 Trying with custom channel ID...');
-        // You can replace this with the actual channel ID if you know it
-        const customChannelId = 'UCSe1-academy'; // This might be wrong
-        const customResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=id&id=${customChannelId}&key=${YOUTUBE_API_KEY}`
-        );
-        
-        if (customResponse.ok) {
-          const customData = await customResponse.json();
-          if (customData.items && customData.items.length > 0) {
-            channelId = customData.items[0].id;
-            console.log('✅ Channel ID found via custom ID:', channelId);
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Custom ID method failed');
-      }
-    }
+    // Resolve channel ID via environment variables (preferred) and fallbacks
+    const channelId = await resolveChannelId();
 
     if (!channelId) {
       console.error('❌ Could not find channel ID using any method');
-      return NextResponse.json({ 
-        error: 'Channel not found. Please check the channel URL or provide the correct channel ID.' 
+      return NextResponse.json({
+        success: false,
+        error: 'Channel not found. Set YOUTUBE_CHANNEL_ID or YOUTUBE_CHANNEL_HANDLE or YOUTUBE_CHANNEL_USERNAME.',
+        code: 'CHANNEL_NOT_FOUND'
       }, { status: 404 });
     }
 
@@ -89,9 +36,113 @@ export async function GET() {
 
   } catch (error) {
     console.error('💥 Unexpected error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error' 
+    return NextResponse.json({
+      success: false,
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR'
     }, { status: 500 });
+  }
+}
+
+async function resolveChannelId(): Promise<string | null> {
+  // 1) Explicit channel ID from env
+  if (ENV_CHANNEL_ID) {
+    const id = sanitizeChannelId(ENV_CHANNEL_ID);
+    if (await validateChannelId(id)) return id;
+  }
+
+  // 2) Channel URL from env (extract handle/ID/username)
+  if (ENV_CHANNEL_URL) {
+    const parsed = parseChannelUrl(ENV_CHANNEL_URL);
+    if (parsed?.type === 'id' && await validateChannelId(parsed.value)) return parsed.value;
+    if (parsed?.type === 'handle') {
+      const id = await getChannelIdByHandle(parsed.value);
+      if (id) return id;
+    }
+    if (parsed?.type === 'username') {
+      const id = await getChannelIdByUsername(parsed.value);
+      if (id) return id;
+    }
+  }
+
+  // 3) Handle from env
+  if (ENV_CHANNEL_HANDLE) {
+    const id = await getChannelIdByHandle(ENV_CHANNEL_HANDLE);
+    if (id) return id;
+  }
+
+  // 4) Username from env
+  if (ENV_CHANNEL_USERNAME) {
+    const id = await getChannelIdByUsername(ENV_CHANNEL_USERNAME);
+    if (id) return id;
+  }
+
+  // 5) No env provided: return null to signal misconfiguration
+  return null;
+}
+
+function sanitizeChannelId(raw: string): string {
+  // Accept forms like UCxxxx, or full URL containing /channel/UCxxxx
+  const trimmed = raw.trim();
+  const match = trimmed.match(/UC[0-9A-Za-z_-]{21,}/);
+  return match ? match[0] : trimmed;
+}
+
+function parseChannelUrl(url: string): { type: 'id' | 'handle' | 'username'; value: string } | null {
+  try {
+    const u = new URL(url);
+    const pathname = u.pathname; // e.g., /@handle, /channel/UC..., /user/username
+    if (pathname.startsWith('/@')) {
+      return { type: 'handle', value: pathname.slice(2) };
+    }
+    if (pathname.startsWith('/channel/')) {
+      const id = pathname.split('/')[2];
+      return { type: 'id', value: id };
+    }
+    if (pathname.startsWith('/user/')) {
+      const username = pathname.split('/')[2];
+      return { type: 'username', value: username };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function validateChannelId(channelId: string): Promise<boolean> {
+  try {
+    const resp = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&id=${channelId}&key=${YOUTUBE_API_KEY}`);
+    if (!resp.ok) return false;
+    const data = await resp.json();
+    return Array.isArray(data.items) && data.items.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function getChannelIdByHandle(handle: string): Promise<string | null> {
+  const normalized = handle.trim().replace(/^@?/, '@');
+  try {
+    console.log('🔄 Resolving channel by handle:', normalized);
+    const resp = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(normalized)}&key=${YOUTUBE_API_KEY}`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.items?.[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getChannelIdByUsername(username: string): Promise<string | null> {
+  const normalized = username.trim().replace(/^@/, '');
+  try {
+    console.log('🔄 Resolving channel by username:', normalized);
+    const resp = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&forUsername=${encodeURIComponent(normalized)}&key=${YOUTUBE_API_KEY}`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.items?.[0]?.id ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -104,8 +155,10 @@ async function fetchVideosForChannel(channelId: string) {
 
     if (!videosResponse.ok) {
       console.error('❌ Error fetching videos:', videosResponse.statusText);
-      return NextResponse.json({ 
-        error: 'Failed to fetch videos' 
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to fetch videos',
+        code: 'VIDEOS_FETCH_FAILED'
       }, { status: 500 });
     }
 
@@ -113,9 +166,9 @@ async function fetchVideosForChannel(channelId: string) {
     
     if (!videosData.items || videosData.items.length === 0) {
       console.log('⚠️ No videos found in channel');
-      return NextResponse.json({ 
+      return NextResponse.json({
         videos: [],
-        success: true 
+        success: true
       });
     }
 
@@ -133,9 +186,9 @@ async function fetchVideosForChannel(channelId: string) {
     
     if (filteredVideos.length === 0) {
       console.log('⚠️ No non-Shorts videos found in channel');
-      return NextResponse.json({ 
+      return NextResponse.json({
         videos: [],
-        success: true 
+        success: true
       });
     }
 
@@ -158,13 +211,13 @@ async function fetchVideosForChannel(channelId: string) {
         channelTitle: item.snippet.channelTitle,
         duration: 'N/A',
         views: 'N/A',
-        category: 'intermediate', // Default category
-        language: 'انگلیسی' // Default language
+        category: 'intermediate',
+        language: 'انگلیسی'
       }));
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         videos,
-        success: true 
+        success: true
       });
     }
 
@@ -207,15 +260,17 @@ async function fetchVideosForChannel(channelId: string) {
     });
 
     console.log('✅ Videos fetched successfully:', videos.length);
-    return NextResponse.json({ 
+    return NextResponse.json({
       videos,
-      success: true 
+      success: true
     });
 
   } catch (error) {
     console.error('💥 Error in fetchVideosForChannel:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch videos for channel' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch videos for channel',
+      code: 'CHANNEL_VIDEOS_FETCH_FAILED'
     }, { status: 500 });
   }
 }
