@@ -529,11 +529,52 @@ export default function Header() {
                   </Link>
                 </motion.div>
 
+                {/* Enhanced Blog Option */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                >
+                  <Link href="/blog" onClick={() => setIsSidebarOpen(false)}>
+                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-rose-900/20 border-2 border-purple-200/50 dark:border-purple-700/50 hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-2xl transition-all duration-500 p-4">
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                            <FileText className="w-6 h-6 text-white" />
+                          </div>
+                          <motion.div
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Star className="w-2.5 h-2.5 text-white" />
+                          </motion.div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                            وبلاگ
+                          </h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">مقالات آموزشی و نکات یادگیری زبان</p>
+                          <div className="flex items-center space-x-2 text-xs text-purple-600 dark:text-purple-400">
+                            <BookOpen className="w-3 h-3" />
+                            <span>آموزش و یادگیری</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+
                 {/* Enhanced Contact Us Option */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.5 }}
                 >
                   <Link href="/contact" onClick={() => setIsSidebarOpen(false)}>
                     <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-900/20 dark:via-blue-900/20 dark:to-cyan-900/20 border-2 border-indigo-200/50 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-2xl transition-all duration-500 p-4">
@@ -576,11 +617,11 @@ export default function Header() {
       </AnimatePresence>
 
       {/* Enhanced Mobile Bottom Navigation Bar - Fixed */}
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:hidden bg-white/95 dark:bg-gray-900/95 border-2 border-gray-200/50 dark:border-gray-700/50 shadow-2xl flex justify-around items-center py-4 px-6 rounded-3xl w-[94vw] max-w-md mx-auto backdrop-blur-xl">
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:hidden bg-white/95 dark:bg-gray-900/95 border-2 border-gray-200/50 dark:border-gray-700/50 shadow-2xl flex justify-around items-center py-3 px-4 rounded-3xl w-[96vw] max-w-lg mx-auto backdrop-blur-xl">
         {/* Top accent line */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"></div>
         
-        {navItems.slice(0, 3).map((item, idx) => (
+        {navItems.slice(0, 4).map((item, idx) => (
           <motion.div
             key={item.name}
             whileHover={{ scale: 1.1, y: -2 }}
@@ -610,12 +651,12 @@ export default function Header() {
         {/* Enhanced Login Button */}
         <motion.div whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.95 }}>
           <Link href="/login">
-            <Button size="sm" variant="outline" className="px-3 py-2.5 flex flex-col items-center rounded-2xl border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-header shadow-lg">
+            <Button size="sm" variant="outline" className="px-2 py-2 flex flex-col items-center rounded-xl border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-header shadow-lg">
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                <User className="w-5 h-5 mb-1.5" />
+                <User className="w-4 h-4 mb-1" />
               </motion.div>
               <span className="text-xs font-medium">ورود</span>
             </Button>
@@ -625,7 +666,7 @@ export default function Header() {
         {/* Enhanced Register Button */}
         <motion.div whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.95 }}>
           <Link href="/register">
-            <Button size="sm" className="px-3 py-2.5 flex flex-col items-center rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl font-header relative overflow-hidden">
+            <Button size="sm" className="px-2 py-2 flex flex-col items-center rounded-xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl font-header relative overflow-hidden">
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
                 animate={{ x: ["-100%", "100%"] }}
@@ -635,7 +676,7 @@ export default function Header() {
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                <Plus className="w-5 h-5 mb-1.5" />
+                <Plus className="w-4 h-4 mb-1" />
               </motion.div>
               <span className="text-xs font-medium">ثبت‌نام</span>
             </Button>
@@ -647,14 +688,14 @@ export default function Header() {
           whileHover={{ scale: 1.1, y: -2, rotate: 180 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          className="flex flex-col items-center text-xs text-foreground px-3 py-2 rounded-2xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 font-persian transition-all duration-300"
+          className="flex flex-col items-center text-xs text-foreground px-2 py-2 rounded-xl hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 font-persian transition-all duration-300"
         >
           <motion.div
             whileHover={{ rotate: 360 }}
             transition={{ duration: 0.5 }}
-            className="mb-1.5"
+            className="mb-1"
           >
-            {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </motion.div>
           <span className="font-medium text-xs leading-tight">{theme === "light" ? "تاریک" : "روشن"}</span>
         </motion.button>
