@@ -65,45 +65,70 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
   const fetchPost = async () => {
     try {
-      console.log('Fetching post with slug:', slug);
+      console.log('🔍 Starting fetchPost with slug:', slug);
+      console.log('🔍 Slug type:', typeof slug);
+      console.log('🔍 Slug length:', slug?.length);
       
+      if (!slug || slug.trim() === '') {
+        console.error('❌ Empty or invalid slug');
+        throw new Error('Slug نامعتبر است');
+      }
+
       // First, let's check if the post exists at all (regardless of status)
+      console.log('🔍 Querying all posts with slug:', slug);
       const { data: allPosts, error: allError } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('slug', slug)
         .order('created_at', { ascending: false });
 
+      console.log('🔍 Supabase response - allPosts:', allPosts);
+      console.log('🔍 Supabase response - allError:', allError);
+
       if (allError) {
-        console.error('Supabase error (all posts):', allError);
+        console.error('❌ Supabase error (all posts):', allError);
         throw allError;
       }
 
-      console.log('All posts with this slug:', allPosts);
+      console.log('✅ All posts with this slug:', allPosts);
+      console.log('✅ Number of posts found:', allPosts?.length || 0);
 
       if (!allPosts || allPosts.length === 0) {
-        console.log('No post found with slug:', slug);
+        console.log('❌ No post found with slug:', slug);
+        
+        // Let's also check if there are any posts at all
+        const { data: anyPosts, error: anyError } = await supabase
+          .from('blog_posts')
+          .select('id, title, slug, status')
+          .limit(5);
+        
+        console.log('🔍 Sample posts in database:', anyPosts);
+        console.log('🔍 Any error:', anyError);
+        
         throw new Error('مقاله یافت نشد');
       }
 
       // Check if any post is published
       const publishedPosts = allPosts.filter(post => post.status === 'published');
-      console.log('Published posts:', publishedPosts);
+      console.log('✅ Published posts:', publishedPosts);
+      console.log('✅ Number of published posts:', publishedPosts.length);
 
       if (publishedPosts.length === 0) {
         // Check what statuses exist
         const statuses = [...new Set(allPosts.map(post => post.status))];
-        console.log('Available statuses for this slug:', statuses);
+        console.log('⚠️ Available statuses for this slug:', statuses);
+        console.log('⚠️ All posts details:', allPosts.map(p => ({ id: p.id, title: p.title, status: p.status })));
         throw new Error(`مقاله یافت شد اما منتشر نشده است. وضعیت: ${statuses.join(', ')}`);
       }
 
       // Use the latest published post
       const latestPost = publishedPosts[0];
-      console.log('Using latest published post:', latestPost);
+      console.log('✅ Using latest published post:', latestPost);
       setPost(latestPost);
 
     } catch (error: any) {
-      console.error('Error fetching post:', error);
+      console.error('❌ Error fetching post:', error);
+      console.error('❌ Error stack:', error.stack);
       setError(error.message);
     } finally {
       setLoading(false);
