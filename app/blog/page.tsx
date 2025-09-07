@@ -89,45 +89,47 @@ export default function BlogPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPosts.map((post) => (
-              <Card
+              <Link
                 key={post.id}
-                className="overflow-hidden transition-transform transform hover:scale-105"
+                href={`/blog/${post.slug}`}
+                className="block group"
               >
-                <img
-                  src={post.image_url}
-                  alt={post.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(post.published_at).toLocaleDateString('fa-IR')}
-                    </span>
-                    <span className="text-sm text-primary">
-                      {post.author}
-                    </span>
-                  </div>
-                  <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                  <div className="text-muted-foreground mb-4" 
-                    dangerouslySetInnerHTML={{ __html: post.excerpt || post.content.substring(0, 150) }} />
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {post.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="text-xs bg-gray-100 text-foreground px-2 py-1 rounded"
-                      >
-                        {tag}
+                <Card className="overflow-hidden transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer">
+                  <img
+                    src={post.image_url}
+                    alt={post.title}
+                    className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity duration-200"
+                  />
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(post.published_at).toLocaleDateString('fa-IR')}
                       </span>
-                    ))}
+                      <span className="text-sm text-primary">
+                        {post.author}
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-semibold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+                      {post.title}
+                    </h2>
+                    <div className="text-muted-foreground mb-4" 
+                      dangerouslySetInnerHTML={{ __html: post.excerpt || post.content.substring(0, 150) }} />
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-gray-100 text-foreground px-2 py-1 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-primary group-hover:text-blue-600 transition-colors duration-200">
+                      ادامه مطلب →
+                    </div>
                   </div>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="text-primary hover:underline"
-                  >
-                    ادامه مطلب →
-                  </Link>
-                </div>
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
