@@ -43,6 +43,16 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [slug, setSlug] = useState<string>('');
 
+  // Helper function to create a proper slug
+  const createSlug = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-z0-9\s\-|+]/g, '') // Keep Persian, Arabic, basic Latin chars, hyphens, pipes, and plus signs
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+  };
+
   useEffect(() => {
     const resolveParams = async () => {
       const resolvedParams = await params;
@@ -74,12 +84,46 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         throw new Error('Slug نامعتبر است');
       }
 
-      // First, let's check if the post exists at all (regardless of status)
-      console.log('🔍 Querying all posts with slug:', slug);
+      // Decode URL-encoded slug
+      const decodedSlug = decodeURIComponent(slug);
+      console.log('🔍 Original slug:', slug);
+      console.log('🔍 Decoded slug:', decodedSlug);
+      
+      // Create proper slug from decoded text
+      const properSlug = createSlug(decodedSlug);
+      console.log('🔍 Proper slug:', properSlug);
+      
+      // Try both decoded slug and proper slug
+      const searchSlug = decodedSlug; // Use decoded slug directly instead of creating new one
+
+      // First, let's check if there are any posts at all
+      console.log('🔍 Checking if any posts exist in database...');
+      const { data: anyPosts, error: anyError } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, status')
+        .limit(5);
+      
+      console.log('🔍 Any posts in database:', anyPosts);
+      console.log('🔍 Any error:', anyError);
+
+      if (anyError) {
+        console.error('❌ Database connection error:', anyError);
+        throw new Error(`خطا در اتصال به دیتابیس: ${anyError.message}`);
+      }
+
+      if (!anyPosts || anyPosts.length === 0) {
+        console.log('❌ No posts found in database at all');
+        throw new Error('هیچ مقاله‌ای در دیتابیس وجود ندارد');
+      }
+
+      console.log('✅ Database has posts, now checking specific slug...');
+
+      // Now check for posts with this specific slug
+      console.log('🔍 Querying posts with slug:', searchSlug);
       const { data: allPosts, error: allError } = await supabase
         .from('blog_posts')
         .select('*')
-        .eq('slug', slug)
+        .eq('slug', searchSlug)
         .order('created_at', { ascending: false });
 
       console.log('🔍 Supabase response - allPosts:', allPosts);
@@ -94,18 +138,33 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       console.log('✅ Number of posts found:', allPosts?.length || 0);
 
       if (!allPosts || allPosts.length === 0) {
-        console.log('❌ No post found with slug:', slug);
+        console.log('❌ No post found with slug:', searchSlug);
+        console.log('🔍 Available slugs in database:', anyPosts.map(p => p.slug));
         
-        // Let's also check if there are any posts at all
-        const { data: anyPosts, error: anyError } = await supabase
-          .from('blog_posts')
-          .select('id, title, slug, status')
-          .limit(5);
+        // Try to find a similar slug
+        const similarSlug = anyPosts.find(post => 
+          post.slug.includes(searchSlug.split('-')[0]) || 
+          searchSlug.includes(post.slug.split('-')[0])
+        );
         
-        console.log('🔍 Sample posts in database:', anyPosts);
-        console.log('🔍 Any error:', anyError);
+        if (similarSlug) {
+          console.log('🔍 Found similar slug:', similarSlug.slug);
+          // Try to fetch the similar post
+          const { data: similarPost, error: similarError } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .eq('slug', similarSlug.slug)
+            .eq('status', 'published')
+            .single();
+            
+          if (!similarError && similarPost) {
+            console.log('✅ Using similar post:', similarPost);
+            setPost(similarPost);
+            return;
+          }
+        }
         
-        throw new Error('مقاله یافت نشد');
+        throw new Error(`مقاله با slug "${searchSlug}" یافت نشد. Slug های موجود: ${anyPosts.map(p => p.slug).join(', ')}`);
       }
 
       // Check if any post is published

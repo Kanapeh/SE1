@@ -153,7 +153,17 @@ export default function BlogPage() {
       if (!content) throw new Error('محتوی مقاله الزامی است');
       if (!image_url) throw new Error('تصویر شاخص الزامی است');
 
-      const slug = title.toLowerCase().replace(/\s+/g, '-');
+      // Create proper slug for Persian text
+      const createSlug = (text: string): string => {
+        return text
+          .toLowerCase()
+          .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-z0-9\s\-|+]/g, '') // Keep Persian, Arabic, basic Latin chars, hyphens, pipes, and plus signs
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+          .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+      };
+      
+      const slug = createSlug(title);
       
       const { data, error } = await supabase
         .from('blog_posts')
