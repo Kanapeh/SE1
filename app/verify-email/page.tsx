@@ -67,9 +67,9 @@ function VerifyEmailContent() {
         // Check user type and redirect accordingly
         const userType = sessionStorage.getItem('userType');
         if (userType === 'teacher') {
-          router.push("/dashboard/teacher");
+          router.push("/complete-profile?type=teacher");
         } else {
-          router.push("/login");
+          router.push("/complete-profile?type=student");
         }
       } else {
         toast.info("ایمیل هنوز تایید نشده است. لطفاً ایمیل خود را بررسی کنید");
@@ -168,15 +168,15 @@ function VerifyEmailContent() {
               onClick={() => {
                 const userType = sessionStorage.getItem('userType');
                 if (userType === 'teacher') {
-                  router.push("/dashboard/teacher");
+                  router.push("/complete-profile?type=teacher");
                 } else {
-                  router.push("/login");
+                  router.push("/complete-profile?type=student");
                 }
               }}
               variant="ghost"
               className="w-full"
             >
-              بازگشت به صفحه ورود
+              بازگشت به تکمیل پروفایل
             </Button>
           </div>
         </Card>

@@ -22,12 +22,14 @@ function AuthCompleteContent() {
     );
   }
   
-  const userType = searchParams.get('type');
+  const userType = searchParams.get('user_type') || searchParams.get('type');
   const code = searchParams.get('code');
   
   // Debug URL parameters
   console.log('🔍 Auth Complete Debug Info:');
-  console.log('User Type from URL:', userType);
+  console.log('User Type from URL (user_type):', searchParams.get('user_type'));
+  console.log('User Type from URL (type):', searchParams.get('type'));
+  console.log('Final User Type:', userType);
   console.log('Authorization Code:', code ? 'Present' : 'Missing');
   console.log('All URL params:', Object.fromEntries(searchParams.entries()));
   const { toast } = useToast();
