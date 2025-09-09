@@ -60,15 +60,61 @@ export default function BlogPage() {
     );
   }
 
+  // Structured data for blog page
+  const blogStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "بلاگ آکادمی زبان سِ وان",
+    "description": "مطالب آموزشی و مقالات مرتبط با یادگیری زبان انگلیسی در آکادمی زبان سِ وان",
+    "url": "https://www.se1a.org/blog",
+    "publisher": {
+      "@type": "Organization",
+      "name": "آکادمی زبان سِ وان",
+      "url": "https://www.se1a.org",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.se1a.org/images/logo.png"
+      }
+    },
+    "inLanguage": "fa-IR",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://www.se1a.org/blog"
+    }
+  };
+
   return (
     <>
       <Head>
-        <title>بلاگ | آکادمی زبان سِ وان</title>
-        <meta
-          name="description"
-          content="مطالب آموزشی و مقالات مرتبط با یادگیری زبان در آکادمی زبان سِ وان"
-        />
+        <title>بلاگ | آکادمی زبان سِ وان - مقالات آموزشی زبان انگلیسی</title>
+        <meta name="description" content="مطالب آموزشی و مقالات مرتبط با یادگیری زبان انگلیسی در آکادمی زبان سِ وان. نکات کاربردی، روش‌های یادگیری و راهنمای کامل آموزش زبان." />
+        <meta name="keywords" content="بلاگ آموزش زبان, مقالات زبان انگلیسی, یادگیری زبان, آموزش زبان, نکات زبان انگلیسی, آکادمی زبان سِ وان" />
+        <meta name="author" content="SE1A Academy" />
+        <link rel="canonical" href="https://www.se1a.org/blog" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="بلاگ | آکادمی زبان سِ وان" />
+        <meta property="og:description" content="مطالب آموزشی و مقالات مرتبط با یادگیری زبان انگلیسی در آکادمی زبان سِ وان" />
+        <meta property="og:url" content="https://www.se1a.org/blog" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://www.se1a.org/images/blog-og.jpg" />
+        <meta property="og:site_name" content="سِ وان - SE1A Academy" />
+        <meta property="og:locale" content="fa_IR" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="بلاگ | آکادمی زبان سِ وان" />
+        <meta name="twitter:description" content="مطالب آموزشی و مقالات مرتبط با یادگیری زبان انگلیسی" />
+        <meta name="twitter:image" content="https://www.se1a.org/images/blog-og.jpg" />
+        
+        {/* Robots */}
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1" />
       </Head>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogStructuredData) }}
+      />
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold mb-8">بلاگ</h1>
 

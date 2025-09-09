@@ -13,6 +13,10 @@ Disallow: /dashboard/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /debug/
+Disallow: /test-*
+Disallow: /payment-*
+Disallow: /process-*
+Disallow: /quick-*
 
 # Allow important pages
 Allow: /
@@ -20,4 +24,11 @@ Allow: /about
 Allow: /courses
 Allow: /teachers
 Allow: /contact
-Allow: /blog 
+Allow: /blog
+Allow: /blog/*
+
+# Allow static assets
+Allow: /images/
+Allow: /favicon.ico
+Allow: /apple-touch-icon.png
+Allow: /site.webmanifest 

@@ -8,6 +8,7 @@ import CommentForm from "@/app/components/CommentForm";
 import VideoPlayer from "@/app/components/VideoPlayer";
 import ChartDisplay from "@/app/components/ChartDisplay";
 import DataTable from "@/app/components/DataTable";
+import { Metadata } from "next";
 
 interface BlogPost {
   id: string;
@@ -235,11 +236,57 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
     );
   }
 
+  // Generate structured data for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": post.content.substring(0, 160),
+    "image": post.image_url,
+    "author": {
+      "@type": "Organization",
+      "name": post.author,
+      "url": "https://www.se1a.org"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "آکادمی زبان سِ وان",
+      "url": "https://www.se1a.org",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.se1a.org/images/logo.png"
+      }
+    },
+    "datePublished": post.published_at,
+    "dateModified": post.published_at,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://www.se1a.org/blog/${post.slug}`
+    },
+    "keywords": post.tags.join(", "),
+    "articleSection": "آموزش زبان انگلیسی",
+    "inLanguage": "fa-IR"
+  };
+
   return (
     <>
       <Head>
         <title>{post.title} | آکادمی زبان سِ وان</title>
         <meta name="description" content={post.content.substring(0, 160)} />
+        <meta property="og:title" content={`${post.title} | آکادمی زبان سِ وان`} />
+        <meta property="og:description" content={post.content.substring(0, 160)} />
+        <meta property="og:image" content={post.image_url} />
+        <meta property="og:url" content={`https://www.se1a.org/blog/${post.slug}`} />
+        <meta property="og:type" content="article" />
+        <meta property="article:author" content={post.author} />
+        <meta property="article:published_time" content={post.published_at} />
+        <meta property="article:section" content="آموزش زبان انگلیسی" />
+        <meta property="article:tag" content={post.tags.join(", ")} />
+        <link rel="canonical" href={`https://www.se1a.org/blog/${post.slug}`} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
       </Head>
       <article className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
