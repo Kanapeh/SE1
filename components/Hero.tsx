@@ -38,7 +38,7 @@ export default function Hero() {
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-md">
             به آکادمی زبان{" "}
-            <span className="text-cyan-600 font-bold"> سِ وان </span> بپیوندید و
+            <span className="text-cyan-600 font-bold"> سِ وان (SE ONE) </span> بپیوندید و
             با مربیان متخصص و روش‌های نوین یادگیری، سفر خود را به سوی تسلط
             زبانی آغاز کنید.
           </p>

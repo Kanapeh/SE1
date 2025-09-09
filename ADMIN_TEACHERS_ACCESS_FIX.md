@@ -1,241 +1,110 @@
-# 🔧 راه‌حل مشکل دسترسی ادمین به معلمان
+# راهنمای حل مشکل عدم نمایش معلم‌ها در داشبورد ادمین
 
-## 🚨 مشکل فعلی
-در داشبورد ادمین، دسترسی به جدول معلمان وجود ندارد و خطای زیر نمایش داده می‌شود:
-```
-app/admin/teachers/page.tsx (66:17) @ fetchTeachers
-Error counting teachers: permission denied
-```
+## 🔍 مشکل
+در صفحه `/admin/teachers` معلم‌های درخواست‌دهنده نمایش داده نمی‌شوند.
 
-## ✅ راه‌حل کامل
+## 🔧 راه‌حل
 
-### مرحله 1: اجرای اسکریپت اصلی
-فایل `database/admin_teachers_access.sql` را در Supabase SQL Editor اجرا کنید:
+### مرحله 1: اجرای اسکریپت‌های دیتابیس
 
-1. به [Supabase Dashboard](https://supabase.com/dashboard) بروید
-2. پروژه خود را انتخاب کنید
-3. روی "SQL Editor" کلیک کنید
-4. محتوای فایل `database/admin_teachers_access.sql` را کپی کنید
-5. روی "Run" کلیک کنید
-
-### مرحله 2: اضافه کردن کاربر به عنوان ادمین
-فایل `database/add_current_user_as_admin.sql` را اجرا کنید:
-
-1. در همان SQL Editor
-2. محتوای فایل `database/add_current_user_as_admin.sql` را کپی کنید
-3. **مهم**: ایمیل خود را در خط زیر جایگزین کنید:
-   ```sql
-   WHERE email = 'your-email@example.com'  -- ایمیل خود را اینجا قرار دهید
-   ```
-4. روی "Run" کلیک کنید
-
-### مرحله 3: بررسی موفقیت
-پس از اجرای هر دو اسکریپت، باید پیام‌های موفقیت ببینید:
-```
-✅ Admin teachers access setup completed successfully!
-✅ User added as admin successfully!
-```
-
-### مرحله 4: تست سیستم
-1. صفحه `/admin/teachers` را refresh کنید
-2. باید لیست معلمان نمایش داده شود
-3. اگر هنوز خطا دارید، console مرورگر را بررسی کنید
-
-## 🔍 عیب‌یابی
-
-### اگر هنوز خطا دارید:
-
-#### 1. بررسی RLS Policies
+#### 1.1. اجرای اسکریپت دسترسی ادمین
 ```sql
-SELECT 
-    policyname,
-    cmd,
-    permissive,
-    roles,
-    qual
-FROM pg_policies 
-WHERE tablename = 'teachers';
+-- در Supabase SQL Editor اجرا کنید:
+-- فایل: database/fix_admin_access_existing_teachers.sql
 ```
 
-#### 2. بررسی جدول admins
+#### 1.2. اضافه کردن خودتان به عنوان ادمین
 ```sql
-SELECT * FROM public.admins;
+-- در Supabase SQL Editor اجرا کنید:
+-- فایل: database/add_current_user_as_admin.sql
 ```
 
-#### 3. بررسی جدول auth-users
+**⚠️ مهم:** قبل از اجرا، ایمیل خود را در خط 47 فایل `add_current_user_as_admin.sql` جایگزین کنید:
 ```sql
-SELECT * FROM "public"."auth-users" WHERE is_admin = true;
+WHERE email = 'YOUR_EMAIL@example.com'  -- ایمیل خود را اینجا وارد کنید
 ```
 
-#### 4. بررسی دسترسی کاربر فعلی
+### مرحله 2: بررسی دسترسی
+
+#### 2.1. بررسی وجود ادمین
 ```sql
-SELECT 
-    current_user as current_user,
-    session_user as session_user;
+SELECT a.*, u.email 
+FROM public.admins a 
+JOIN auth.users u ON a.user_id = u.id;
 ```
 
-### خطاهای رایج:
-
-#### خطای "permission denied" (42501)
-- RLS policies درست تنظیم نشده‌اند
-- کاربر ادمین نیست
-- **راه‌حل**: اسکریپت‌ها را دوباره اجرا کنید
-
-#### خطای "relation does not exist" (42P01)
-- جدول `teachers` وجود ندارد
-- **راه‌حل**: اسکریپت `admin_teachers_access.sql` را اجرا کنید
-
-#### خطای "column does not exist"
-- ساختار جدول تغییر کرده
-- **راه‌حل**: جدول را دوباره ایجاد کنید
-
-## 📋 ساختار جداول ایجاد شده
-
-### جدول `teachers`
+#### 2.2. بررسی تعداد معلمان
 ```sql
-CREATE TABLE public.teachers (
-    id UUID PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    phone TEXT,
-    gender TEXT,
-    birthdate DATE,
-    national_id TEXT UNIQUE,
-    address TEXT,
-    languages TEXT[] NOT NULL,
-    levels TEXT[],
-    class_types TEXT[] NOT NULL,
-    available_days TEXT[],
-    available_hours TEXT[],
-    max_students_per_class INTEGER,
-    bio TEXT,
-    experience_years INTEGER,
-    hourly_rate INTEGER,
-    location TEXT,
-    education TEXT,
-    certificates TEXT[],
-    teaching_methods TEXT[],
-    achievements TEXT[],
-    avatar TEXT,
-    preferred_time TEXT[],
-    status TEXT DEFAULT 'pending',
-    available BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+SELECT COUNT(*) as total_teachers FROM public.teachers;
 ```
 
-### جدول `admins`
+#### 2.3. بررسی معلمان در انتظار
 ```sql
-CREATE TABLE public.admins (
-    user_id UUID PRIMARY KEY REFERENCES auth.users(id),
-    role TEXT DEFAULT 'admin',
-    permissions TEXT[] DEFAULT ARRAY['all'],
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-```
-
-### جدول `auth-users`
-```sql
-CREATE TABLE "public"."auth-users" (
-    id UUID PRIMARY KEY REFERENCES auth.users(id),
-    email TEXT UNIQUE NOT NULL,
-    role TEXT DEFAULT 'user',
-    is_admin BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-```
-
-## 🔒 RLS Policies
-
-### Policy برای ادمین‌ها
-```sql
-CREATE POLICY "Admins can access all teachers" ON public.teachers
-    FOR ALL
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.admins 
-            WHERE user_id = auth.uid() 
-            AND is_active = true
-        )
-        OR
-        EXISTS (
-            SELECT 1 FROM "public"."auth-users" 
-            WHERE id = auth.uid() 
-            AND (role = 'admin' OR is_admin = true)
-        )
-    );
-```
-
-### Policy برای معلمان
-```sql
-CREATE POLICY "Teachers can access own profile" ON public.teachers
-    FOR ALL
-    TO authenticated
-    USING (id = auth.uid());
-```
-
-### Policy برای خواندن عمومی
-```sql
-CREATE POLICY "Public read access to teachers" ON public.teachers
-    FOR SELECT
-    TO public
-    USING (status = 'active' OR status = 'Approved');
-```
-
-## 🧪 تست نهایی
-
-### تست 1: دسترسی ادمین
-```sql
-SELECT COUNT(*) FROM public.teachers;
-```
-این query باید تعداد معلمان را برگرداند.
-
-### تست 2: نمایش معلمان
-```sql
-SELECT 
-    id,
-    first_name,
-    last_name,
-    email,
-    status,
-    created_at
+SELECT first_name, last_name, email, status, created_at 
 FROM public.teachers 
+WHERE status = 'pending' 
 ORDER BY created_at DESC;
 ```
 
-### تست 3: بررسی policies
-```sql
-SELECT * FROM pg_policies WHERE tablename = 'teachers';
-```
+### مرحله 3: تست در داشبورد
 
-## 🎯 نتیجه نهایی
+1. به `/admin/teachers` بروید
+2. صفحه را refresh کنید
+3. معلم‌های درخواست‌دهنده باید نمایش داده شوند
 
-پس از اجرای این مراحل:
-- ✅ جدول `teachers` ایجاد شده
-- ✅ RLS policies فعال شده‌اند
-- ✅ کاربر شما ادمین شده
-- ✅ دسترسی کامل به معلمان دارید
-- ✅ داشبورد ادمین کار می‌کند
+## 🚨 مشکلات احتمالی
 
-## 📞 در صورت مشکل
+### مشکل 1: خطای دسترسی (Permission Denied)
+**علت:** RLS policies درست تنظیم نشده‌اند
+**راه‌حل:** 
+1. فایل `fix_admin_access_existing_teachers.sql` را اجرا کنید
+2. فایل `add_current_user_as_admin.sql` را اجرا کنید
 
-### بررسی console مرورگر:
+### مشکل 2: جدول teachers وجود ندارد
+**علت:** جدول teachers ایجاد نشده است
+**راه‌حل:**
+1. فایل `setup_admin_teacher_access.sql` را اجرا کنید
+2. سپس فایل‌های مرحله 1 را اجرا کنید
+
+### مشکل 3: کاربر ادمین نیست
+**علت:** کاربر در جدول admins ثبت نشده است
+**راه‌حل:**
+1. فایل `add_current_user_as_admin.sql` را اجرا کنید
+2. ایمیل خود را در فایل جایگزین کنید
+
+## 📋 چک‌لیست
+
+- [ ] فایل `fix_admin_access_existing_teachers.sql` اجرا شد
+- [ ] فایل `add_current_user_as_admin.sql` اجرا شد
+- [ ] ایمیل در فایل `add_current_user_as_admin.sql` جایگزین شد
+- [ ] کاربر در جدول admins ثبت شد
+- [ ] RLS policies درست تنظیم شدند
+- [ ] دسترسی به جدول teachers تایید شد
+- [ ] صفحه `/admin/teachers` refresh شد
+
+## 🔍 دیباگ
+
+### بررسی لاگ‌های کنسول
 1. F12 را فشار دهید
 2. به تب Console بروید
-3. خطاها را بررسی کنید
+3. خطاهای مربوط به Supabase را بررسی کنید
 
-### بررسی Supabase logs:
-1. در Supabase Dashboard
-2. به بخش Logs بروید
-3. خطاهای SQL را بررسی کنید
+### بررسی Network
+1. F12 را فشار دهید
+2. به تب Network بروید
+3. درخواست‌های API را بررسی کنید
 
-### تماس با پشتیبانی:
-- خطای دقیق را کپی کنید
-- کد خطا را یادداشت کنید
-- تصویر از صفحه خطا بگیرید
+## 📞 پشتیبانی
+
+اگر مشکل حل نشد:
+1. لاگ‌های کنسول را بررسی کنید
+2. پیام‌های خطا را کپی کنید
+3. با تیم پشتیبانی تماس بگیرید
+
+## ✅ تست نهایی
+
+بعد از اجرای تمام مراحل:
+1. به `/admin/teachers` بروید
+2. باید معلم‌های درخواست‌دهنده را ببینید
+3. باید بتوانید وضعیت آن‌ها را تغییر دهید
+4. باید آمار معلمان در بالای صفحه نمایش داده شود

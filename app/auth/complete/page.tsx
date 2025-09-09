@@ -22,7 +22,7 @@ function AuthCompleteContent() {
     );
   }
   
-  const userType = searchParams.get('user_type') || searchParams.get('type');
+  const userType = searchParams.get('user_type') || searchParams.get('type') || 'student';
   const code = searchParams.get('code');
   
   // Debug URL parameters
@@ -226,7 +226,7 @@ function AuthCompleteContent() {
         
         const redirectUrl = userType 
           ? `complete-profile?type=${userType}`
-          : 'complete-profile';
+          : 'complete-profile?type=student';
         
         const completeProfileUrl = `${window.location.origin}/${redirectUrl}`;
         window.location.replace(completeProfileUrl);

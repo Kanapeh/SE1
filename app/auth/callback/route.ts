@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     // Redirect to a client-side page that will handle the PKCE exchange
     const redirectUrl = userType 
       ? `${requestUrl.origin}/auth/complete?type=${userType}&code=${encodeURIComponent(code)}`
-      : `${requestUrl.origin}/auth/complete?code=${encodeURIComponent(code)}`;
+      : `${requestUrl.origin}/auth/complete?type=student&code=${encodeURIComponent(code)}`;
     
     console.log('🔄 Redirecting to client-side handler:', redirectUrl);
     return NextResponse.redirect(redirectUrl);

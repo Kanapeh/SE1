@@ -39,6 +39,13 @@ export async function GET(request: Request) {
       }, { status: 500 });
     }
 
+    console.log('✅ Notifications fetched:', {
+      teacher_id,
+      user_id,
+      count: notifications?.length || 0,
+      notifications: notifications || []
+    });
+
     return NextResponse.json({ 
       notifications: notifications || [],
       success: true 
@@ -93,7 +100,7 @@ export async function PATCH(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { teacher_id, type, title, message } = body;
+    const { teacher_id, user_id, type, title, message } = body;
 
     if (!teacher_id || !type || !title || !message) {
       return NextResponse.json({ 
@@ -106,6 +113,7 @@ export async function POST(request: Request) {
       .from('notifications')
       .insert({
         teacher_id,
+        user_id: user_id || teacher_id, // Use teacher_id as user_id if not provided
         type,
         title,
         message,

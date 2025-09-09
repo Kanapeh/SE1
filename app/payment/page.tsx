@@ -29,7 +29,8 @@ import {
   Shield,
   CheckCircle,
   AlertCircle,
-  Send
+  Send,
+  Upload
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -68,7 +69,7 @@ export default function PaymentPage() {
     accountNumber: '6037-9919-1234-5678',
     cardNumber: '6037-9919-1234-5678',
     accountHolder: 'آکادمی زبان SE1A',
-    whatsappNumber: '+989123456789'
+    whatsappNumber: '+989387279975'
   });
   
   const [transactionId, setTransactionId] = useState('');
@@ -99,6 +100,41 @@ export default function PaymentPage() {
   };
 
   const loadBookingData = () => {
+    console.log('Loading booking data...');
+    
+    // First try to get data from sessionStorage (more secure)
+    const sessionData = sessionStorage.getItem('bookingData');
+    if (sessionData) {
+      try {
+        const data = JSON.parse(sessionData);
+        console.log('Found booking data in sessionStorage:', data);
+        setBookingData(data);
+        // Clear the stored data after loading
+        sessionStorage.removeItem('bookingData');
+        return;
+      } catch (error) {
+        console.error('Error parsing session booking data:', error);
+        sessionStorage.removeItem('bookingData');
+      }
+    }
+
+    // Try localStorage as fallback
+    const storedData = localStorage.getItem('bookingData');
+    if (storedData) {
+      try {
+        const data = JSON.parse(storedData);
+        console.log('Found booking data in localStorage:', data);
+        setBookingData(data);
+        // Clear the stored data after loading
+        localStorage.removeItem('bookingData');
+        return;
+      } catch (error) {
+        console.error('Error parsing stored booking data:', error);
+        localStorage.removeItem('bookingData');
+      }
+    }
+
+    // Fallback to URL parameters for backward compatibility
     const bookingParam = searchParams?.get('booking');
     if (bookingParam) {
       try {
@@ -109,7 +145,12 @@ export default function PaymentPage() {
         router.push('/');
       }
     } else {
-      router.push('/');
+      // If no booking data found, redirect to teachers page instead of home
+      console.log('No booking data found in sessionStorage or localStorage');
+      console.log('sessionStorage bookingData:', sessionStorage.getItem('bookingData'));
+      console.log('localStorage bookingData:', localStorage.getItem('bookingData'));
+      alert('اطلاعات رزرو یافت نشد. لطفاً دوباره تلاش کنید.');
+      router.push('/teachers');
     }
   };
 
@@ -140,30 +181,32 @@ export default function PaymentPage() {
   const sendToWhatsApp = () => {
     if (!bookingData || !transactionId) return;
 
-    const message = `
-🎓 *رزرو کلاس جدید*
+    const message = `🎓 رزرو کلاس جدید
 
-👨‍🏫 *معلم:* ${bookingData.teacher_name}
-👤 *دانش‌آموز:* ${bookingData.studentName}
-📱 *شماره تماس:* ${bookingData.studentPhone}
-📧 *ایمیل:* ${bookingData.studentEmail}
+👨‍🏫 معلم: ${bookingData.teacher_name}
+👤 دانش‌آموز: ${bookingData.studentName}
+📱 شماره تماس: ${bookingData.studentPhone}
+📧 ایمیل: ${bookingData.studentEmail}
 
-⏰ *جزئیات کلاس:*
+⏰ جزئیات کلاس:
 📅 روزهای انتخابی: ${bookingData.selectedDays.join(', ')}
 🕐 ساعات انتخابی: ${bookingData.selectedHours.join(', ')}
 ⏱️ مدت هر جلسه: ${bookingData.duration} دقیقه
 🎯 نوع کلاس: ${bookingData.sessionType === 'online' ? 'آنلاین' : bookingData.sessionType === 'offline' ? 'حضوری' : 'ترکیبی'}
 🔢 تعداد جلسات: ${bookingData.numberOfSessions}
 
-💰 *مبلغ پرداختی:* ${bookingData.totalPrice.toLocaleString()} تومان
-💳 *شماره تراکنش:* ${transactionId}
+💰 مبلغ پرداختی: ${bookingData.totalPrice.toLocaleString()} تومان
+💳 شماره تراکنش: ${transactionId}
 
-${notes ? `📝 *توضیحات:* ${notes}` : ''}
+${notes ? `📝 توضیحات: ${notes}` : ''}
 
-*لطفاً این رزرو را بررسی و تایید کنید.*
-    `.trim();
+لطفاً این رزرو را بررسی و تایید کنید.`;
 
-    const whatsappUrl = `https://wa.me/${paymentInfo.whatsappNumber.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    // Remove + from phone number for wa.me
+    const phoneNumber = paymentInfo.whatsappNumber.replace('+', '');
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    console.log('WhatsApp URL:', whatsappUrl);
     window.open(whatsappUrl, '_blank');
   };
 

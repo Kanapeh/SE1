@@ -198,11 +198,21 @@ function CompleteProfileContent() {
         console.log('User authenticated and email confirmed:', user);
         setCurrentUser(user);
         
-        // Set email from user data
+        // Set email and name from user data
         if (type === 'teacher') {
-          setTeacherProfile(prev => ({ ...prev, email: user.email || '' }));
+          setTeacherProfile(prev => ({ 
+            ...prev, 
+            email: user.email || '',
+            first_name: user.user_metadata?.first_name || user.user_metadata?.name?.split(' ')[0] || '',
+            last_name: user.user_metadata?.last_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || ''
+          }));
         } else {
-          setStudentProfile(prev => ({ ...prev, email: user.email || '' }));
+          setStudentProfile(prev => ({ 
+            ...prev, 
+            email: user.email || '',
+            first_name: user.user_metadata?.first_name || user.user_metadata?.name?.split(' ')[0] || '',
+            last_name: user.user_metadata?.last_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || ''
+          }));
         }
       } catch (error) {
         console.error('Error getting user:', error);
@@ -271,7 +281,7 @@ function CompleteProfileContent() {
       }
 
       const { error } = await supabase.from('teachers').insert({
-        id: currentUser.id,
+        user_id: currentUser.id,
         email: currentUser.email,
         ...teacherProfile,
         status: 'pending',
@@ -316,7 +326,7 @@ function CompleteProfileContent() {
       }
 
       const { error } = await supabase.from('students').insert({
-        id: currentUser.id,
+        id: currentUser.id, // Use id instead of user_id
         email: currentUser.email,
         ...studentProfile,
         status: 'active',

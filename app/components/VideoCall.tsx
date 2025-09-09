@@ -55,6 +55,8 @@ interface VideoCallProps {
   studentId?: string;
   teacherId?: string;
   classId?: string;
+  teacherName?: string;
+  studentName?: string;
   onCallEnd?: () => void;
   onCallStart?: () => void;
 }
@@ -85,6 +87,8 @@ export default function VideoCall({
   studentId, 
   teacherId, 
   classId,
+  teacherName,
+  studentName,
   onCallEnd,
   onCallStart 
 }: VideoCallProps) {
@@ -105,7 +109,7 @@ export default function VideoCall({
   const [participants, setParticipants] = useState<ParticipantInfo[]>([
     {
       id: isTeacher ? teacherId || 'teacher-1' : studentId || 'student-1',
-      name: isTeacher ? 'معلم احمدی' : 'دانش‌آموز سارا',
+      name: isTeacher ? (teacherName || 'معلم') : (studentName || 'دانش‌آموز'),
       role: isTeacher ? 'teacher' : 'student',
       isVideoEnabled: true,
       isAudioEnabled: true
@@ -1350,7 +1354,7 @@ export default function VideoCall({
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </motion.div>
-              <h3 className="text-3xl font-bold text-white mb-2">استاد احمدی</h3>
+              <h3 className="text-3xl font-bold text-white mb-2">{teacherName || 'معلم'}</h3>
               <p className="text-blue-200 mb-4 text-lg">معلم زبان انگلیسی</p>
               <div className="flex items-center justify-center gap-2 text-green-400 bg-black/30 rounded-full px-4 py-2">
                 <motion.div 

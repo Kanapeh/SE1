@@ -191,7 +191,7 @@ export default function TeacherProfilePage() {
           sms_notifications: false,
           auto_accept_bookings: false,
           max_students_per_class: teacher.max_students_per_class || 1,
-          min_booking_notice: 24
+          min_booking_notice: teacher.min_booking_notice || 24
         }
       };
 
@@ -204,12 +204,61 @@ export default function TeacherProfilePage() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setSaving(false);
-    // Show success message
-    alert('پروفایل با موفقیت ذخیره شد!');
+    if (!profile) return;
+    
+    try {
+      setSaving(true);
+      
+      // Update teacher profile
+      const response = await fetch('/api/teacher-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          phone: profile.phone,
+          bio: profile.bio,
+          hourly_rate: profile.hourly_rate,
+          location: profile.location,
+          experience_years: profile.experience_years,
+          available: profile.available,
+          languages: profile.languages,
+          levels: profile.levels,
+          available_days: profile.available_days,
+          available_hours: profile.available_hours,
+          education: profile.education,
+          certificates: profile.certifications,
+          teaching_methods: profile.specialties,
+          max_students_per_class: profile.preferences.max_students_per_class,
+          min_booking_notice: profile.preferences.min_booking_notice
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Profile updated successfully:', result);
+        alert('پروفایل با موفقیت ذخیره شد!');
+        
+        // Reload the profile to get updated data
+        await loadTeacherProfile();
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error updating profile:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData: errorData
+        });
+        alert(`خطا در ذخیره پروفایل: ${errorData.error || 'خطای نامشخص'}\nجزئیات: ${errorData.details || 'نامشخص'}`);
+      }
+    } catch (error) {
+      console.error('❌ Error updating profile:', error);
+      alert('خطا در ذخیره پروفایل. لطفاً دوباره تلاش کنید.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addLanguage = () => {

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { createSimpleTeacherSlug } from "@/lib/slug-utils";
 
 interface Teacher {
   id: string;
@@ -389,7 +390,10 @@ export default function TeachersPage() {
                     {/* Action Buttons */}
                     <div className="flex gap-2 pt-4">
                       <Button
-                        onClick={() => router.push(`/teachers/${teacher.id}/book`)}
+                        onClick={() => {
+                          // Use teacher ID for booking
+                          router.push(`/teachers/${teacher.id}/book`);
+                        }}
                         className="flex-1 bg-blue-600 hover:bg-blue-700"
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />

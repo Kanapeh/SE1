@@ -91,7 +91,7 @@ export default function AdminDashboard() {
       setStatsLoading(true);
       setStatsError(null);
       
-      const response = await fetch('/api/admin/simple-stats');
+      const response = await fetch('/api/admin/simple-stats-public');
       if (!response.ok) {
         throw new Error('Failed to fetch stats');
       }

@@ -7,11 +7,13 @@ import { supabase } from '@/lib/supabase';
 import { getSmartOAuthRedirectUrl } from '@/lib/oauth-utils';
 import { Button } from '@/components/ui/button';
 import StudentHeader from '@/components/StudentHeader';
+import TeacherSelectionModal from '@/components/TeacherSelectionModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import WalletCard from '@/components/WalletCard';
 import { 
   CalendarIcon, 
   Clock, 
@@ -193,6 +195,39 @@ interface Notification {
   read: boolean;
 }
 
+interface Teacher {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  gender: string | null;
+  birthdate: string | null;
+  national_id: string | null;
+  address: string | null;
+  languages: string[];
+  levels: string[] | null;
+  class_types: string[];
+  available_days: string[] | null;
+  available_hours: string[] | null;
+  max_students_per_class: number | null;
+  bio: string | null;
+  experience_years: number | null;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  certificates: string[] | null;
+  teaching_methods: string[] | null;
+  achievements: string[] | null;
+  avatar: string | null;
+  hourly_rate: number | null;
+  location: string | null;
+  available: boolean;
+  education: string | null;
+  preferred_time: string[] | null;
+}
+
 export default function StudentDashboardPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -204,6 +239,8 @@ export default function StudentDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingDetails, setShowBookingDetails] = useState(false);
+  const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
 
   // Helper function for better navigation handling
   const handleNavigation = (path: string, description: string) => {
@@ -228,9 +265,59 @@ export default function StudentDashboardPage() {
     }
   };
 
+  // Handle teacher selection from modal
+  const handleTeacherSelect = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    console.log('Selected teacher:', teacher);
+    
+    // Store teacher context for better UX
+    sessionStorage.setItem('selectedTeacher', JSON.stringify({
+      id: teacher.id,
+      name: `${teacher.first_name} ${teacher.last_name}`,
+      avatar: teacher.avatar,
+      languages: teacher.languages,
+      levels: teacher.levels,
+      hourly_rate: teacher.hourly_rate,
+      class_types: teacher.class_types,
+      experience_years: teacher.experience_years
+    }));
+    
+    // Show success message and offer to book immediately
+    const shouldBook = confirm(`معلم ${teacher.first_name} ${teacher.last_name} انتخاب شد!\n\nآیا می‌خواهید فوراً کلاس رزرو کنید؟`);
+    
+    if (shouldBook) {
+      // Store booking context
+      sessionStorage.setItem('bookingContext', JSON.stringify({
+        source: 'dashboard',
+        timestamp: new Date().toISOString(),
+        userType: 'student'
+      }));
+      
+      // Navigate to booking page - this will show the booking form
+      router.push(`/teachers/${teacher.id}/book`);
+    }
+  };
+
+  // Handle opening teacher selection modal
+  const handleOpenTeacherModal = () => {
+    setShowTeacherModal(true);
+  };
+
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
+        // Load selected teacher from sessionStorage if available
+        const savedTeacher = sessionStorage.getItem('selectedTeacher');
+        if (savedTeacher) {
+          try {
+            const teacherData = JSON.parse(savedTeacher);
+            setSelectedTeacher(teacherData);
+            console.log('Loaded selected teacher from session:', teacherData);
+          } catch (error) {
+            console.error('Error parsing saved teacher data:', error);
+          }
+        }
+
         // Get current authenticated user
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
@@ -448,55 +535,101 @@ export default function StudentDashboardPage() {
           <p className="text-sm text-green-600 dark:text-green-400 mt-2">
             ✨ امکانات جدید برای شما فعال شده است!
           </p>
+          
+          {/* Selected Teacher Indicator */}
+          {selectedTeacher && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    معلم انتخاب شده: {selectedTeacher.first_name} {selectedTeacher.last_name}
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    {selectedTeacher.languages.join('، ')} • {selectedTeacher.experience_years} سال تجربه
+                  </p>
+                </div>
+                <Button
+                  onClick={() => router.push(`/teachers/${selectedTeacher.id}/book`)}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  رزرو کلاس
+                </Button>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
+
+        {/* Wallet Card */}
+        {currentUser && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <WalletCard 
+              userType="student" 
+              userId={currentUser.id} 
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0"
+            />
+          </motion.div>
+        )}
 
         {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
         >
           <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm">کلاس‌های تکمیل شده</p>
-                  <p className="text-2xl font-bold">{analytics?.completedClasses}</p>
+                  <p className="text-green-100 text-xs">کلاس‌های تکمیل شده</p>
+                  <p className="text-lg font-bold">{analytics?.completedClasses}</p>
                   <p className="text-green-100 text-sm">
                     {analytics?.totalClasses === 0 ? 'هنوز کلاسی ندارید' : `از ${analytics?.totalClasses} کلاس`}
                   </p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <CheckCircle className="w-8 h-8" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <CheckCircle className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm">سطح فعلی</p>
-                  <p className="text-2xl font-bold">{student.level || 'مبتدی'}</p>
+                  <p className="text-blue-100 text-xs">سطح فعلی</p>
+                  <p className="text-lg font-bold">{student.level || 'مبتدی'}</p>
                   <p className="text-blue-100 text-sm">
                     {progress?.progressPercentage === 0 ? 'شروع کنید' : `${progress?.progressPercentage}% تکمیل شده`}
                   </p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <GraduationCap className="w-8 h-8" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <GraduationCap className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm">امتیاز متوسط</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-purple-100 text-xs">امتیاز متوسط</p>
+                  <p className="text-lg font-bold">
                     {analytics?.averageRating === 0 ? '-' : analytics?.averageRating}
                   </p>
                   <div className="flex items-center gap-1 mt-2">
@@ -506,40 +639,40 @@ export default function StudentDashboardPage() {
                     </span>
                   </div>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Star className="w-8 h-8" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Star className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm">امکانات فعال</p>
-                  <p className="text-2xl font-bold">6</p>
+                  <p className="text-orange-100 text-xs">امکانات فعال</p>
+                  <p className="text-lg font-bold">6</p>
                   <p className="text-orange-100 text-sm">ویژگی جدید</p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Sparkles className="w-8 h-8" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Sparkles className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-teal-100 text-sm">روزهای متوالی</p>
-                  <p className="text-2xl font-bold">{progress?.streak}</p>
+                  <p className="text-teal-100 text-xs">روزهای متوالی</p>
+                  <p className="text-lg font-bold">{progress?.streak}</p>
                   <p className="text-teal-100 text-sm">
                     {progress?.streak === 0 ? 'شروع کنید' : 'روز مطالعه'}
                   </p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <Activity className="w-8 h-8" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Activity className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
@@ -586,52 +719,58 @@ export default function StudentDashboardPage() {
                     اقدامات سریع
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-2">
                   <Button 
-                    onClick={() => router.push('/teachers')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                    onClick={handleOpenTeacherModal}
+                    size="sm"
+                    className="w-full h-10 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-sm"
                   >
-                    <BookOpen className="w-6 h-6" />
+                    <BookOpen className="w-4 h-4" />
                     <span>رزرو کلاس جدید</span>
                   </Button>
 
                   <Button 
                     onClick={() => handleNavigation('/students/temp-user-id/video-call', 'پیوستن به کلاس آنلاین')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                    size="sm"
+                    className="w-full h-10 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-sm"
                   >
-                    <Video className="w-6 h-6" />
+                    <Video className="w-4 h-4" />
                     <span>کلاس آنلاین</span>
                   </Button>
                   
                   <Button 
                     onClick={() => handleNavigation('/students/progress', 'مشاهده پیشرفت')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                    size="sm"
+                    className="w-full h-10 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-sm"
                   >
-                    <BarChart3 className="w-6 h-6" />
+                    <BarChart3 className="w-4 h-4" />
                     <span>مشاهده پیشرفت</span>
                   </Button>
                   
                   <Button 
                     onClick={() => handleNavigation('/students/payments', 'مدیریت پرداخت‌ها')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+                    size="sm"
+                    className="w-full h-10 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-sm"
                   >
-                    <CreditCard className="w-6 h-6" />
+                    <CreditCard className="w-4 h-4" />
                     <span>مدیریت پرداخت‌ها</span>
                   </Button>
 
                   <Button 
                     onClick={() => handleNavigation('/students/profile', 'ویرایش پروفایل')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
+                    size="sm"
+                    className="w-full h-10 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-sm"
                   >
-                    <Edit className="w-6 h-6" />
+                    <Edit className="w-4 h-4" />
                     <span>ویرایش پروفایل</span>
                   </Button>
 
                   <Button 
                     onClick={() => handleNavigation('/students/features', 'مشاهده همه امکانات')}
-                    className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                    size="sm"
+                    className="w-full h-10 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-sm"
                   >
-                    <Sparkles className="w-6 h-6" />
+                    <Sparkles className="w-4 h-4" />
                     <span>مشاهده همه امکانات</span>
                   </Button>
                 </CardContent>
@@ -769,7 +908,7 @@ export default function StudentDashboardPage() {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">هنوز کلاسی ندارید</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">برای شروع یادگیری، یک معلم انتخاب کنید</p>
                     <Button 
-                      onClick={() => router.push('/teachers')}
+                      onClick={handleOpenTeacherModal}
                       className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
                     >
                       مشاهده معلمان
@@ -963,7 +1102,7 @@ export default function StudentDashboardPage() {
                     برای شروع ردیابی پیشرفت، اولین کلاس خود را رزرو کنید
                   </p>
                   <Button 
-                    onClick={() => router.push('/teachers')}
+                    onClick={handleOpenTeacherModal}
                     className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
                   >
                     مشاهده معلمان
@@ -1032,18 +1171,18 @@ export default function StudentDashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                         {analytics?.totalClasses || 0}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">کل کلاس‌ها</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">کل کلاس‌ها</div>
                     </div>
-                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    <div className="text-center p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                      <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
                         {analytics?.studyTime || 0}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">ساعت مطالعه</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">ساعت مطالعه</div>
                     </div>
                   </div>
                   
@@ -1092,7 +1231,7 @@ export default function StudentDashboardPage() {
                     برای شروع کسب امتیاز و دستاورد، اولین کلاس خود را رزرو کنید
                   </p>
                   <Button 
-                    onClick={() => router.push('/teachers')}
+                    onClick={handleOpenTeacherModal}
                     className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                   >
                     مشاهده معلمان
@@ -1370,7 +1509,7 @@ export default function StudentDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* AI Coach */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Brain className="w-8 h-8 text-white" />
@@ -1391,7 +1530,7 @@ export default function StudentDashboardPage() {
 
               {/* Gamification */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Trophy className="w-8 h-8 text-white" />
@@ -1412,7 +1551,7 @@ export default function StudentDashboardPage() {
 
               {/* Rewards */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Gift className="w-8 h-8 text-white" />
@@ -1433,7 +1572,7 @@ export default function StudentDashboardPage() {
 
               {/* Social Learning */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Users className="w-8 h-8 text-white" />
@@ -1454,7 +1593,7 @@ export default function StudentDashboardPage() {
 
               {/* Interactive Learning */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Gamepad2 className="w-8 h-8 text-white" />
@@ -1475,7 +1614,7 @@ export default function StudentDashboardPage() {
 
               {/* Personalized Learning */}
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <Target className="w-8 h-8 text-white" />
@@ -1703,6 +1842,13 @@ export default function StudentDashboardPage() {
           </motion.div>
         </div>
       )}
+
+      {/* Teacher Selection Modal */}
+      <TeacherSelectionModal
+        isOpen={showTeacherModal}
+        onClose={() => setShowTeacherModal(false)}
+        onTeacherSelect={handleTeacherSelect}
+      />
     </div>
   );
 } 

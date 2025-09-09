@@ -59,7 +59,7 @@ function RegisterContent() {
       // Get the proper OAuth redirect URL based on user type
       const redirectUrl = userType === 'teacher' 
         ? getTeacherOAuthRedirectUrl(userType)
-        : getStudentOAuthRedirectUrl(userType);
+        : getStudentOAuthRedirectUrl('student');
       
       console.log("Current origin:", window.location.origin);
       console.log("Final redirect URL:", redirectUrl);

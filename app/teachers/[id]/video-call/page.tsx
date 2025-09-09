@@ -176,25 +176,18 @@ export default function TeacherVideoCallPage() {
 
         addDebugInfo('اطلاعات کلاس دریافت شد');
 
-        // Fetch student data
-        const { data: studentData, error: studentError } = await supabase
-          .from('students')
-          .select('*')
-          .eq('id', bookingData.student_id)
-          .single();
+        // Fetch student data using API
+        const studentResponse = await fetch(`/api/students?student_id=${bookingData.student_id}`);
+        const studentResult = await studentResponse.json();
 
-        if (studentError) {
-          console.error('Error fetching student:', studentError);
-          setError(`خطا در دریافت اطلاعات دانشجو: ${studentError.message}`);
+        if (!studentResponse.ok || !studentResult.student) {
+          console.error('Error fetching student:', studentResult.error);
+          setError(`خطا در دریافت اطلاعات دانشجو: ${studentResult.error || 'Student not found'}`);
           setLoading(false);
           return;
         }
 
-        if (!studentData) {
-          setError('اطلاعات دانشجو یافت نشد');
-          setLoading(false);
-          return;
-        }
+        const studentData = studentResult.student;
 
         addDebugInfo('اطلاعات دانشجو دریافت شد');
 
@@ -205,7 +198,7 @@ export default function TeacherVideoCallPage() {
           teacher_id: bookingData.teacher_id,
           scheduled_time: bookingData.created_at,
           duration: bookingData.duration,
-          status: 'scheduled',
+          status: bookingData.status === 'confirmed' ? 'scheduled' : bookingData.status,
           subject: `کلاس ${studentData.first_name} ${studentData.last_name}`,
           notes: bookingData.notes,
           student: {
@@ -238,18 +231,69 @@ export default function TeacherVideoCallPage() {
     }
   }, [teacherId, bookingId]);
 
-  const handleCallStart = () => {
+  const handleCallStart = async () => {
     setIsCallActive(true);
     if (currentClass) {
       setCurrentClass(prev => prev ? { ...prev, status: 'in_progress' } : null);
     }
+
+    // Create notification for video call start
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          teacher_id: teacherId,
+          user_id: teacherId,
+          type: 'success',
+          title: 'تماس تصویری شروع شد',
+          message: `تماس تصویری با ${currentClass?.student.first_name} ${currentClass?.student.last_name} شروع شد`,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Video call notification created');
+      } else {
+        console.error('❌ Failed to create video call notification');
+      }
+    } catch (error) {
+      console.error('❌ Error creating video call notification:', error);
+    }
   };
 
-  const handleCallEnd = () => {
+  const handleCallEnd = async () => {
     setIsCallActive(false);
     if (currentClass) {
       setCurrentClass(prev => prev ? { ...prev, status: 'completed' } : null);
     }
+
+    // Create notification for video call end
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          teacher_id: teacherId,
+          user_id: teacherId,
+          type: 'info',
+          title: 'تماس تصویری پایان یافت',
+          message: `تماس تصویری با ${currentClass?.student.first_name} ${currentClass?.student.last_name} پایان یافت`,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Video call end notification created');
+      } else {
+        console.error('❌ Failed to create video call end notification');
+      }
+    } catch (error) {
+      console.error('❌ Error creating video call end notification:', error);
+    }
+
     // Redirect to teacher dashboard after call ends
     setTimeout(() => {
       router.push('/dashboard/teacher');
@@ -379,6 +423,8 @@ export default function TeacherVideoCallPage() {
         teacherId={teacherId}
         studentId={currentClass.student_id}
         classId={currentClass.id}
+        teacherName={`${teacher?.first_name} ${teacher?.last_name}`}
+        studentName={`${currentClass.student.first_name} ${currentClass.student.last_name}`}
         onCallStart={handleCallStart}
         onCallEnd={handleCallEnd}
       />

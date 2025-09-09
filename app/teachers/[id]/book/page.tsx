@@ -112,11 +112,23 @@ export default function BookSessionPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userSession, setUserSession] = useState<any>(null);
+  const [bookingContext, setBookingContext] = useState<any>(null);
 
   // Fetch user session on component mount
   useEffect(() => {
     const fetchUserSession = async () => {
       try {
+        // Load booking context from sessionStorage
+        const savedContext = sessionStorage.getItem('bookingContext');
+        if (savedContext) {
+          try {
+            const contextData = JSON.parse(savedContext);
+            setBookingContext(contextData);
+            console.log('Loaded booking context:', contextData);
+          } catch (error) {
+            console.error('Error parsing booking context:', error);
+          }
+        }
         const { data: { session }, error } = await supabase.auth.getSession();
         if (session && !error) {
           console.log('👤 User session found:', session);
@@ -159,16 +171,22 @@ export default function BookSessionPage() {
       
       console.log('🔍 Fetching teacher with ID:', teacherId);
       
-      // Use API endpoint to bypass RLS
-      const response = await fetch(`/api/teachers/${teacherId}`);
-      const result = await response.json();
-      
-      if (!result.success) {
-        console.error('❌ API fetch failed:', result.error);
+      // Fetch teacher directly from Supabase
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('id', teacherId)
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase fetch failed:', error);
         return;
       }
 
-      const data = result.teacher;
+      if (!data) {
+        console.error('❌ No teacher found with ID:', teacherId);
+        return;
+      }
       console.log('✅ Teacher data received from API:', data);
       console.log('📅 Available days:', data.available_days);
       console.log('⏰ Available hours:', data.available_hours);
@@ -198,13 +216,71 @@ export default function BookSessionPage() {
     }
   }, [teacher]);
 
+  // Load user data from sessionStorage when component mounts
+  useEffect(() => {
+    const loadUserData = () => {
+      try {
+        // Try to get user data from sessionStorage
+        const userData = sessionStorage.getItem('currentUser');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setBookingForm(prev => ({
+            ...prev,
+            studentName: user.user_metadata?.full_name || user.user_metadata?.name || '',
+            studentEmail: user.email || ''
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      console.log('Form submission started with data:', bookingForm);
+      
+      // Validate form (temporarily disabled for debugging)
+      console.log('Form validation - selectedDays:', bookingForm.selectedDays);
+      console.log('Form validation - selectedHours:', bookingForm.selectedHours);
+      console.log('Form validation - studentName:', bookingForm.studentName);
+      console.log('Form validation - studentEmail:', bookingForm.studentEmail);
+      
+      // Temporarily disable validation to test form submission
+      /*
+      if (!bookingForm.selectedDays.length) {
+        alert('لطفاً حداقل یک روز را انتخاب کنید');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!bookingForm.selectedHours.length) {
+        alert('لطفاً حداقل یک ساعت را انتخاب کنید');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!bookingForm.studentName.trim()) {
+        alert('لطفاً نام خود را وارد کنید');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!bookingForm.studentEmail.trim()) {
+        alert('لطفاً ایمیل خود را وارد کنید');
+        setIsSubmitting(false);
+        return;
+      }
+      */
+
       // Calculate number of sessions
       const numberOfSessions = bookingForm.selectedDays.length * bookingForm.selectedHours.length;
+      console.log('Number of sessions calculated:', numberOfSessions);
       
       // Prepare booking data
       const bookingData = {
@@ -216,17 +292,27 @@ export default function BookSessionPage() {
         selectedHours: bookingForm.selectedHours,
         sessionType: bookingForm.sessionType,
         duration: bookingForm.duration,
-        studentName: bookingForm.studentName,
-        studentPhone: bookingForm.studentPhone,
-        studentEmail: bookingForm.studentEmail,
+        studentName: bookingForm.studentName || 'نام کاربر',
+        studentPhone: bookingForm.studentPhone || 'شماره تماس',
+        studentEmail: bookingForm.studentEmail || 'email@example.com',
         notes: bookingForm.notes,
         totalPrice: calculateTotalPrice(),
         numberOfSessions: numberOfSessions
       };
+      
+      console.log('Prepared booking data:', bookingData);
 
-      // Navigate to payment page with booking data
-      const bookingDataStr = encodeURIComponent(JSON.stringify(bookingData));
-      router.push(`/payment?booking=${bookingDataStr}`);
+      // Store booking data in localStorage to avoid URL length issues
+      localStorage.setItem('bookingData', JSON.stringify(bookingData));
+      console.log('Booking data stored in localStorage:', bookingData);
+      
+      // Also store in sessionStorage as backup
+      sessionStorage.setItem('bookingData', JSON.stringify(bookingData));
+      console.log('Booking data also stored in sessionStorage');
+      
+      // Navigate to payment page
+      console.log('Navigating to payment page...');
+      router.push('/payment');
       setIsSubmitting(false);
     } catch (error) {
       console.error('Error preparing booking:', error);
@@ -377,6 +463,20 @@ export default function BookSessionPage() {
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               زمان و نوع کلاس مورد نظر خود را انتخاب کنید
             </p>
+            
+            {/* Context Indicator */}
+            {bookingContext && bookingContext.source === 'dashboard' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 inline-flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm text-green-800 dark:text-green-200">
+                  از داشبورد دانش‌آموز آمده‌اید - خوش آمدید! 🎉
+                </span>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 

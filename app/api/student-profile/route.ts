@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     let query = supabase.from('students').select('*');
 
     if (userId) {
+      // Use id column (which references auth.users.id)
       query = query.eq('id', userId);
     } else if (email) {
       query = query.eq('email', email);

@@ -66,12 +66,7 @@ function VerifyEmailContent() {
         
         // Check user type and redirect accordingly
         const userType = sessionStorage.getItem('userType');
-        if (userType === 'teacher') {
-          router.push("/complete-profile?type=teacher");
-        } else {
-          router.push("/complete-profile?type=student");
-        }
-      } else {
+ m r
         toast.info("ایمیل هنوز تایید نشده است. لطفاً ایمیل خود را بررسی کنید");
       }
     } catch (error) {

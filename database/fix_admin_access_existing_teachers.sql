@@ -17,6 +17,7 @@ ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 
 -- 3. حذف policies قدیمی (اگر وجود دارند)
 DROP POLICY IF EXISTS "Public can view approved teachers" ON public.teachers;
+DROP POLICY IF EXISTS "Public can view active teachers" ON public.teachers;
 DROP POLICY IF EXISTS "Teachers can update own profile" ON public.teachers;
 DROP POLICY IF EXISTS "Teachers can insert own profile" ON public.teachers;
 DROP POLICY IF EXISTS "Admins can manage all teachers" ON public.teachers;
