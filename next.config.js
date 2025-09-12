@@ -18,12 +18,42 @@ const nextConfig = {
       '172.20.10.10', // Add local network IP
       'images.unsplash.com', 
       'via.placeholder.com',
+      'res.cloudinary.com', // Cloudinary images
+      'api.placeholder.com', // Placeholder API
+      'picsum.photos', // Lorem Picsum
+      'source.unsplash.com', // Unsplash source
       // Add your production domain here
       'www.se1a.org', // Production domain
       'se1a.org', // Production domain without www
       process.env.NEXT_PUBLIC_SITE_URL?.replace('https://', '').replace('http://', '') || 'localhost'
     ].filter(Boolean),
     formats: ['image/webp', 'image/avif'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   
   experimental: {

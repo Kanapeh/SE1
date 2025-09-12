@@ -194,7 +194,7 @@ export default function TopTeachersSection() {
         </motion.div>
 
         {/* Teachers Grid */}
-        <div className={`grid ${teachers.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : teachers.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'} gap-8 mb-16`}>
+        <div className={`grid ${teachers.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : teachers.length === 2 ? 'grid-cols-2 md:grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-2 md:grid-cols-2 lg:grid-cols-3'} gap-4 md:gap-8 mb-16`}>
           {teachers.map((teacher, index) => {
             const gradient = getTeacherGradient(index);
             const emoji = getTeacherEmoji(teacher.teaching_methods || []);
@@ -239,19 +239,19 @@ export default function TopTeachersSection() {
                     </div>
                   </div>
 
-                  <div className="p-6">
+                  <div className="p-4 md:p-6">
                     {/* Name and Specialty */}
-                    <div className="mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <div className="mb-3 md:mb-4">
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {fullName}
                       </h3>
-                      <Badge className={`bg-gradient-to-r ${gradient} text-white border-0`}>
+                      <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs`}>
                         {specialty}
                       </Badge>
                     </div>
 
                     {/* Rating and Students */}
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3 md:mb-4">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
@@ -272,13 +272,13 @@ export default function TopTeachersSection() {
                     </div>
 
                     {/* Experience and Price */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Clock className="w-4 h-4" />
+                    <div className="flex items-center justify-between mb-3 md:mb-4">
+                      <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                        <Clock className="w-3 h-3 md:w-4 md:h-4" />
                         <span>{teacher.experience_years} سال تجربه</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        <div className="text-sm md:text-lg font-bold text-gray-900 dark:text-white">
                           {teacher.hourly_rate?.toLocaleString() || '200,000'}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">تومان/ساعت</div>
@@ -286,7 +286,7 @@ export default function TopTeachersSection() {
                     </div>
 
                     {/* Languages */}
-                    <div className="mb-4">
+                    <div className="mb-3 md:mb-4">
                       <div className="flex flex-wrap gap-1">
                         {(teacher.languages || ['انگلیسی']).map((lang, idx) => (
                           <span 
@@ -301,7 +301,7 @@ export default function TopTeachersSection() {
 
                     {/* Bio/Description */}
                     {teacher.bio && (
-                      <div className="mb-6">
+                      <div className="mb-4 md:mb-6">
                         <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                           {teacher.bio}
                         </p>
@@ -310,7 +310,7 @@ export default function TopTeachersSection() {
 
                     {/* Teaching Methods */}
                     {teacher.teaching_methods && teacher.teaching_methods.length > 0 && (
-                      <div className="mb-6">
+                      <div className="mb-4 md:mb-6">
                         <div className="space-y-1">
                           {teacher.teaching_methods.slice(0, 2).map((method, idx) => (
                             <div key={idx} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
@@ -329,10 +329,10 @@ export default function TopTeachersSection() {
 
                     {/* CTA Button */}
                     <Link href={`/teachers/${teacher.id}`}>
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg">
-                        <span className="mr-2">👨‍🏫</span>
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 md:py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-sm md:text-base">
+                        <span className="mr-1 md:mr-2">👨‍🏫</span>
                         مشاهده پروفایل
-                        <ChevronRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
                   </div>

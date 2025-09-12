@@ -216,7 +216,7 @@ export default function TeacherDashboardPage() {
         .from('teachers')
         .select('*')
         .eq('email', userEmail)
-        .single();
+        .maybeSingle();
 
       if (teacherData) {
         setUserProfile(teacherData);
@@ -292,7 +292,7 @@ export default function TeacherDashboardPage() {
         .from('teachers')
         .select('available_days, available_hours')
         .eq('id', teacherId)
-        .single();
+        .maybeSingle();
 
       if (teacherError) {
         console.error('❌ Error fetching teacher schedule data:', teacherError);

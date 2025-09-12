@@ -93,41 +93,6 @@ export default function Header() {
         {/* Top accent bar */}
         <div className="h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
         
-        {/* Compact Status Bar */}
-        <div className="bg-gradient-to-r from-blue-50/60 via-purple-50/60 to-pink-50/60 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10 border-b border-gray-200/20 dark:border-gray-700/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5">
-            <div className="flex items-center justify-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="flex items-center space-x-1"
-              >
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                <span className="font-medium">آنلاین</span>
-              </motion.div>
-              <span className="text-gray-400">•</span>
-              <span className="font-medium">پشتیبانی 24/7</span>
-              <span className="text-gray-400">•</span>
-              <span className="font-medium">آموزش آنلاین</span>
-              <span className="text-gray-400">•</span>
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                className="flex items-center space-x-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                <Globe className="w-3 h-3" />
-                <span className="font-medium">فارسی</span>
-              </motion.div>
-              <span className="text-gray-400">•</span>
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                className="flex items-center space-x-1 cursor-pointer hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
-              >
-                <Star className="w-3 h-3 text-yellow-500" />
-                <span className="font-medium">4.9/5</span>
-              </motion.div>
-            </div>
-          </div>
-        </div>
         
         {/* Scroll Progress Bar */}
         <motion.div

@@ -147,7 +147,7 @@ export default function StudentVideoCallPage() {
           .from('bookings')
           .select('*')
           .eq('id', bookingParam)
-          .single();
+          .maybeSingle();
 
         // If the booking doesn't belong to the current student, try to find the correct one
         if (bookingData && bookingData.student_id !== studentId) {
@@ -161,7 +161,7 @@ export default function StudentVideoCallPage() {
             .eq('status', 'confirmed')
             .order('created_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
             
           if (correctBooking) {
             addDebugInfo(`کلاس صحیح پیدا شد: ${correctBooking.id}`);
@@ -174,7 +174,7 @@ export default function StudentVideoCallPage() {
               .from('teachers')
               .select('id, first_name, last_name')
               .limit(1)
-              .single();
+              .maybeSingle();
               
             if (availableTeachers) {
               // Create a new booking for the current student
@@ -196,7 +196,7 @@ export default function StudentVideoCallPage() {
                 .from('bookings')
                 .insert(newBooking)
                 .select()
-                .single();
+                .maybeSingle();
                 
               if (createdBooking) {
                 addDebugInfo(`کلاس جدید ایجاد شد: ${createdBooking.id}`);
@@ -260,7 +260,7 @@ export default function StudentVideoCallPage() {
           .from('students')
           .select('*')
           .eq('id', studentId || '')
-          .single();
+          .maybeSingle();
 
         if (studentError) {
           console.error('Error fetching student:', studentError);
@@ -357,7 +357,7 @@ export default function StudentVideoCallPage() {
           .from('teachers')
           .select('*')
           .eq('id', actualTeacherId)
-          .single();
+          .maybeSingle();
           
         addDebugInfo(`درخواست معلم با شناسه: ${actualTeacherId}`);
         if (teacherData) {

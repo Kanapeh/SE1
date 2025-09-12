@@ -120,7 +120,7 @@ export default function TeacherVideoCallPage() {
           .from('teachers')
           .select('*')
           .eq('id', teacherId)
-          .single();
+          .maybeSingle();
 
         if (teacherError) {
           console.error('Error fetching teacher:', teacherError);
@@ -159,7 +159,7 @@ export default function TeacherVideoCallPage() {
           .from('bookings')
           .select('*')
           .eq('id', bookingId)
-          .single();
+          .maybeSingle();
 
         if (bookingError) {
           console.error('Error fetching booking:', bookingError);
