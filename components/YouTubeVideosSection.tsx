@@ -286,106 +286,214 @@ export default function YouTubeVideosSection() {
 
         {/* Videos Grid */}
         {currentVideos.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-12 px-2 md:px-0"
-          >
-            {currentVideos.map((video, index) => {
-              const CategoryIcon = categoryIcons[video.category];
-              return (
-                <motion.div
-                  key={video.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -5 }}
-                  className="group cursor-pointer"
-                  onClick={() => openVideo(video.id)}
-                >
-                  <Card className="overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                    {/* Thumbnail */}
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-                      
-                      {/* Play Button */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Play className="w-8 h-8 text-white ml-1" />
+          <>
+            {/* Mobile: Horizontal scroll */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="block md:hidden mb-12"
+            >
+              <div className="flex gap-4 overflow-x-auto pb-4 px-2 scrollbar-hide">
+                {currentVideos.map((video, index) => {
+                  const CategoryIcon = categoryIcons[video.category];
+                  return (
+                    <motion.div
+                      key={video.id}
+                      initial={{ opacity: 0, x: 30 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      whileHover={{ y: -5 }}
+                      className="flex-shrink-0 w-80 group cursor-pointer"
+                      onClick={() => openVideo(video.id)}
+                    >
+                      <Card className="overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
+                        {/* Thumbnail */}
+                        <div className="relative overflow-hidden">
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                          
+                          {/* Play Button */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Play className="w-6 h-6 text-white ml-1" />
+                            </div>
+                          </div>
+
+                          {/* Duration Badge */}
+                          {video.duration !== 'N/A' && (
+                            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                              {video.duration}
+                            </div>
+                          )}
+
+                          {/* Category Badge */}
+                          <div className="absolute top-2 left-2">
+                            <Badge className={`${categoryColors[video.category]} text-xs px-2 py-1`}>
+                              <CategoryIcon className="w-3 h-3 mr-1" />
+                              {video.category === 'beginner' ? 'مبتدی' :
+                               video.category === 'intermediate' ? 'متوسط' : 'پیشرفته'}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Duration Badge */}
-                      {video.duration !== 'N/A' && (
-                        <div className="absolute bottom-3 right-3 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                          {video.duration}
+                        {/* Content */}
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-white text-base leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                              {video.title}
+                            </h3>
+                          </div>
+                          
+                          <p className="text-gray-600 dark:text-gray-400 text-xs mb-3 leading-relaxed line-clamp-2">
+                            {video.description}
+                          </p>
+
+                          {/* Stats */}
+                          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
+                            {video.views !== 'N/A' && (
+                              <div className="flex items-center gap-1">
+                                <Eye className="w-3 h-3" />
+                                <span>{video.views}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{video.publishedAt}</span>
+                            </div>
+                          </div>
+
+                          {/* Language Badge and Button */}
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="text-xs px-2 py-1">
+                              <Languages className="w-3 h-3 mr-1" />
+                              {video.language}
+                            </Badge>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs px-3 py-1 group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-all duration-300"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              تماشا
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            {/* Desktop: Grid layout */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
+            >
+              {currentVideos.map((video, index) => {
+                const CategoryIcon = categoryIcons[video.category];
+                return (
+                  <motion.div
+                    key={video.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    whileHover={{ y: -5 }}
+                    className="group cursor-pointer"
+                    onClick={() => openVideo(video.id)}
+                  >
+                    <Card className="overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                      {/* Thumbnail */}
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                        
+                        {/* Play Button */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <Play className="w-8 h-8 text-white ml-1" />
+                          </div>
                         </div>
-                      )}
 
-                      {/* Category Badge */}
-                      <div className="absolute top-3 left-3">
-                        <Badge className={categoryColors[video.category]}>
-                          <CategoryIcon className="w-3 h-3 mr-1" />
-                          {video.category === 'beginner' ? 'مبتدی' :
-                           video.category === 'intermediate' ? 'متوسط' : 'پیشرفته'}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {video.title}
-                        </h3>
-                      </div>
-                      
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed line-clamp-3">
-                        {video.description}
-                      </p>
-
-                      {/* Stats */}
-                      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        {video.views !== 'N/A' && (
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-4 h-4" />
-                            <span>{video.views}</span>
+                        {/* Duration Badge */}
+                        {video.duration !== 'N/A' && (
+                          <div className="absolute bottom-3 right-3 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                            {video.duration}
                           </div>
                         )}
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{video.publishedAt}</span>
+
+                        {/* Category Badge */}
+                        <div className="absolute top-3 left-3">
+                          <Badge className={categoryColors[video.category]}>
+                            <CategoryIcon className="w-3 h-3 mr-1" />
+                            {video.category === 'beginner' ? 'مبتدی' :
+                             video.category === 'intermediate' ? 'متوسط' : 'پیشرفته'}
+                          </Badge>
                         </div>
                       </div>
 
-                      {/* Language Badge */}
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs">
-                          <Languages className="w-3 h-3 mr-1" />
-                          {video.language}
-                        </Badge>
+                      {/* Content */}
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {video.title}
+                          </h3>
+                        </div>
                         
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-all duration-300"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          تماشا
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed line-clamp-3">
+                          {video.description}
+                        </p>
+
+                        {/* Stats */}
+                        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                          {video.views !== 'N/A' && (
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-4 h-4" />
+                              <span>{video.views}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            <span>{video.publishedAt}</span>
+                          </div>
+                        </div>
+
+                        {/* Language Badge */}
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">
+                            <Languages className="w-3 h-3 mr-1" />
+                            {video.language}
+                          </Badge>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-500 transition-all duration-300"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            تماشا
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </>
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

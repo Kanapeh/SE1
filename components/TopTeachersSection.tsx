@@ -193,8 +193,161 @@ export default function TopTeachersSection() {
           </p>
         </motion.div>
 
-        {/* Teachers Grid */}
-        <div className={`grid ${teachers.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : teachers.length === 2 ? 'grid-cols-2 md:grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-2 md:grid-cols-2 lg:grid-cols-3'} gap-4 md:gap-8 mb-16`}>
+        {/* Teachers Container - Horizontal scroll on mobile, grid on desktop */}
+        <div className="mb-16">
+          {/* Mobile: Horizontal scroll */}
+          <div className="block md:hidden">
+            <div className="flex gap-4 overflow-x-auto pb-4 px-2 scrollbar-hide">
+              {teachers.map((teacher, index) => {
+                const gradient = getTeacherGradient(index);
+                const emoji = getTeacherEmoji(teacher.teaching_methods || []);
+                const specialty = getSpecialty(teacher.teaching_methods || [], teacher.languages || []);
+                const fullName = `${teacher.first_name} ${teacher.last_name}`;
+                const rating = teacher.average_rating || 4.5;
+                const studentCount = teacher.total_students || Math.floor(Math.random() * 100) + 20;
+                
+                return (
+                  <motion.div
+                    key={teacher.id}
+                    initial={{ opacity: 0, x: 30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="group flex-shrink-0 w-80"
+                  >
+                    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl hover:shadow-3xl hover:-translate-y-2 group-hover:scale-[1.02] h-full">
+                      {/* Header with gradient */}
+                      <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
+                        <div className="absolute inset-0 bg-black/10"></div>
+                        
+                        {/* Animated background pattern */}
+                        <div className="absolute inset-0 opacity-20">
+                          <div className="absolute top-4 left-4 w-6 h-6 border-2 border-white/30 rounded-full"></div>
+                          <div className="absolute bottom-4 right-4 w-4 h-4 border border-white/30 rounded-full"></div>
+                        </div>
+
+                        {/* Emoji */}
+                        <div className="absolute top-4 left-4 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl">
+                          {emoji}
+                        </div>
+
+                        {/* Avatar */}
+                        <div className="absolute bottom-4 right-4">
+                          <Avatar className="w-16 h-16 ring-4 ring-white/20 backdrop-blur-sm">
+                            <AvatarImage src={teacher.avatar || ''} alt={fullName} />
+                            <AvatarFallback className="text-lg bg-white/20 text-white backdrop-blur-sm">
+                              {teacher.first_name[0]}{teacher.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </div>
+
+                      <div className="p-6">
+                        {/* Name and Specialty */}
+                        <div className="mb-4">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {fullName}
+                          </h3>
+                          <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-sm`}>
+                            {specialty}
+                          </Badge>
+                        </div>
+
+                        {/* Rating and Students */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              {rating.toFixed(1)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                            <Users className="w-4 h-4" />
+                            <span>{studentCount} دانش‌آموز</span>
+                          </div>
+                        </div>
+
+                        {/* Experience and Price */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Clock className="w-4 h-4" />
+                            <span>{teacher.experience_years} سال تجربه</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {teacher.hourly_rate?.toLocaleString() || '200,000'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">تومان/ساعت</div>
+                          </div>
+                        </div>
+
+                        {/* Languages */}
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-1">
+                            {(teacher.languages || ['انگلیسی']).map((lang, idx) => (
+                              <span 
+                                key={idx}
+                                className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full"
+                              >
+                                {lang === 'english' ? 'انگلیسی' : lang}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Bio/Description */}
+                        {teacher.bio && (
+                          <div className="mb-6">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                              {teacher.bio}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Teaching Methods */}
+                        {teacher.teaching_methods && teacher.teaching_methods.length > 0 && (
+                          <div className="mb-6">
+                            <div className="space-y-1">
+                              {teacher.teaching_methods.slice(0, 2).map((method, idx) => (
+                                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                  <Award className="w-3 h-3 text-yellow-500" />
+                                  <span>
+                                    {method === 'communicative' ? 'روش تعاملی' :
+                                     method === 'direct_method' ? 'روش مستقیم' :
+                                     method === 'grammar_translation' ? 'گرامر و ترجمه' :
+                                     method}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* CTA Button */}
+                        <Link href={`/teachers/${teacher.id}`}>
+                          <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-base">
+                            <span className="mr-2">👨‍🏫</span>
+                            مشاهده پروفایل
+                            <ChevronRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop: Grid layout */}
+          <div className={`hidden md:grid ${teachers.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : teachers.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-2 lg:grid-cols-3'} gap-8`}>
           {teachers.map((teacher, index) => {
             const gradient = getTeacherGradient(index);
             const emoji = getTeacherEmoji(teacher.teaching_methods || []);
@@ -239,19 +392,19 @@ export default function TopTeachersSection() {
                     </div>
                   </div>
 
-                  <div className="p-4 md:p-6">
+                    <div className="p-6">
                     {/* Name and Specialty */}
-                    <div className="mb-3 md:mb-4">
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {fullName}
                       </h3>
-                      <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs`}>
+                        <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-sm`}>
                         {specialty}
                       </Badge>
                     </div>
 
                     {/* Rating and Students */}
-                    <div className="flex items-center justify-between mb-3 md:mb-4">
+                      <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
@@ -272,13 +425,13 @@ export default function TopTeachersSection() {
                     </div>
 
                     {/* Experience and Price */}
-                    <div className="flex items-center justify-between mb-3 md:mb-4">
-                      <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                        <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Clock className="w-4 h-4" />
                         <span>{teacher.experience_years} سال تجربه</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm md:text-lg font-bold text-gray-900 dark:text-white">
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
                           {teacher.hourly_rate?.toLocaleString() || '200,000'}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">تومان/ساعت</div>
@@ -286,7 +439,7 @@ export default function TopTeachersSection() {
                     </div>
 
                     {/* Languages */}
-                    <div className="mb-3 md:mb-4">
+                      <div className="mb-4">
                       <div className="flex flex-wrap gap-1">
                         {(teacher.languages || ['انگلیسی']).map((lang, idx) => (
                           <span 
@@ -301,8 +454,8 @@ export default function TopTeachersSection() {
 
                     {/* Bio/Description */}
                     {teacher.bio && (
-                      <div className="mb-4 md:mb-6">
-                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        <div className="mb-6">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                           {teacher.bio}
                         </p>
                       </div>
@@ -310,10 +463,10 @@ export default function TopTeachersSection() {
 
                     {/* Teaching Methods */}
                     {teacher.teaching_methods && teacher.teaching_methods.length > 0 && (
-                      <div className="mb-4 md:mb-6">
+                        <div className="mb-6">
                         <div className="space-y-1">
                           {teacher.teaching_methods.slice(0, 2).map((method, idx) => (
-                            <div key={idx} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                              <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                               <Award className="w-3 h-3 text-yellow-500" />
                               <span>
                                 {method === 'communicative' ? 'روش تعاملی' :
@@ -329,10 +482,10 @@ export default function TopTeachersSection() {
 
                     {/* CTA Button */}
                     <Link href={`/teachers/${teacher.id}`}>
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 md:py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-sm md:text-base">
-                        <span className="mr-1 md:mr-2">👨‍🏫</span>
+                        <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-base">
+                          <span className="mr-2">👨‍🏫</span>
                         مشاهده پروفایل
-                        <ChevronRight className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 group-hover:translate-x-1 transition-transform" />
+                          <ChevronRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
                   </div>
@@ -340,6 +493,7 @@ export default function TopTeachersSection() {
               </motion.div>
             );
           })}
+          </div>
         </div>
 
         {/* Bottom CTA */}

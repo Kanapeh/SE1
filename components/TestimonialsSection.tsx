@@ -49,7 +49,42 @@ export default function TestimonialsSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Mobile: Horizontal scroll */}
+        <div className="block md:hidden mb-8">
+          <div className="flex gap-4 overflow-x-auto pb-4 px-2 scrollbar-hide">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={testimonial.id}
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="flex-shrink-0 w-80"
+              >
+                <Card className="p-6 text-center hover:shadow-xl transition-all duration-300 border-0 bg-white dark:bg-gray-800 h-full">
+                  <Quote className="h-8 w-8 mx-auto mb-4 text-primary" />
+                  <p className="text-muted-foreground mb-6 italic text-sm leading-relaxed">&ldquo;{testimonial.content}&rdquo;</p>
+                  <div className="flex items-center justify-center gap-1 mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-yellow-500 fill-current" />
+                    ))}
+                  </div>
+                  <Avatar className="w-12 h-12 mx-auto mb-3">
+                    <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                      {testimonial.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <h4 className="font-semibold">{testimonial.name}</h4>
+                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Grid layout */}
+        <div className="hidden md:grid grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={testimonial.id}

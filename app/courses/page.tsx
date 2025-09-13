@@ -1,181 +1,216 @@
-"use client";
+import { Metadata } from "next";
+import CoursesClient from "./CoursesClient";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { ClipLoader } from "react-spinners";
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, BookOpen, Clock, Users, ArrowRight } from "lucide-react";
-import Link from "next/link";
-
-interface Course {
-  id: string;
-  level: string;
-  title: string;
-  description: string;
-  duration: string;
-  class_size: string;
-  price: string;
-  features: string[];
-  color: string;
-  badge: string;
-  image_url: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
+export const metadata: Metadata = {
+  title: "دوره‌های زبان انگلیسی | کلاس آنلاین و حضوری | آکادمی سِ وان",
+  description: "بهترین دوره‌های زبان انگلیسی برای همه سطوح از مبتدی تا پیشرفته. کلاس‌های آنلاین، حضوری و خصوصی با اساتید مجرب. قیمت مناسب و کیفیت تضمین شده. آیلتس، مکالمه، گرامر و کودکان.",
+  keywords: "دوره زبان انگلیسی, کلاس زبان انگلیسی, آموزش زبان آنلاین, معلم خصوصی زبان, آیلتس, مکالمه انگلیسی, گرامر انگلیسی, کلاس کودکان, SE1A, آکادمی سِ وان, آموزش زبان تهران",
+  authors: [{ name: "SE1A Academy" }],
+  creator: "SE1A Academy",
+  publisher: "SE1A Academy",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://www.se1a.org'),
+  openGraph: {
+    title: "دوره‌های زبان انگلیسی | کلاس آنلاین و حضوری | آکادمی سِ وان",
+    description: "بهترین دوره‌های زبان انگلیسی برای همه سطوح از مبتدی تا پیشرفته. کلاس‌های آنلاین، حضوری و خصوصی با اساتید مجرب.",
+    url: "https://www.se1a.org/courses",
+    siteName: "سِ وان - SE1A Academy",
+    images: [
+      {
+        url: "https://www.se1a.org/images/courses-og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "دوره‌های زبان انگلیسی آکادمی سِ وان - کلاس آنلاین و حضوری",
+      },
+    ],
+    locale: "fa_IR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "دوره‌های زبان انگلیسی | آکادمی سِ وان",
+    description: "بهترین دوره‌های زبان انگلیسی برای همه سطوح. کلاس‌های آنلاین، حضوری و خصوصی با اساتید مجرب.",
+    images: ["https://www.se1a.org/images/courses-og.jpg"],
+    creator: "@se1a_academy",
+    site: "@se1a_academy",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: '/courses',
+    languages: {
+      'fa-IR': '/courses',
+    },
+  },
+  verification: {
+    google: "gHW_n1GYHPWhQoj46nxuPhE5TKG9G0hMgk5X7Kn1xsM",
+  },
+  category: "Education",
+  classification: "Language Learning",
+};
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: fetchError } = await supabase
-        .from("coursesstudents")
-        .select("*")
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
-
-      if (fetchError) {
-        console.error("Error fetching courses:", fetchError);
-        throw fetchError;
-      }
-
-      if (!data) {
-        throw new Error("No data received");
-      }
-      setCourses(data as Course[]);
-    } catch (err: any) {
-      console.error("Error in fetchCourses:", err);
-      setError(err.message || "خطا در دریافت دوره‌ها");
-    } finally {
-      setLoading(false);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "آکادمی زبان سِ وان",
+    "alternateName": "SE1A Academy",
+    "description": "مرکز تخصصی آموزش زبان انگلیسی با بهترین دوره‌ها و اساتید مجرب",
+    "url": "https://www.se1a.org",
+    "logo": "https://www.se1a.org/images/logo.png",
+    "image": "https://www.se1a.org/images/courses-og.jpg",
+    "telephone": "+98-21-1234-5678",
+    "email": "info@se1a.org",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IR",
+      "addressLocality": "تهران",
+      "addressRegion": "تهران"
+    },
+    "sameAs": [
+      "https://www.instagram.com/se1a_academy",
+      "https://www.linkedin.com/company/se1a-academy"
+    ],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "دوره‌های زبان انگلیسی",
+      "itemListElement": [
+        {
+          "@type": "Course",
+          "name": "انگلیسی برای شروع",
+          "description": "دوره کامل برای شروع یادگیری زبان انگلیسی از صفر",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "beginner",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "2800000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "انگلیسی کاربردی",
+          "description": "تقویت مهارت‌های زبانی برای استفاده در محیط کار و تحصیل",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "intermediate",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "4200000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "انگلیسی حرفه‌ای",
+          "description": "آمادگی کامل برای محیط‌های کاری بین‌المللی",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "advanced",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "6800000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "آمادگی آیلتس",
+          "description": "دوره تخصصی آمادگی آزمون آیلتس با استراتژی‌های تست زنی",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "advanced",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "7500000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "انگلیسی کودکان",
+          "description": "آموزش جذاب و بازی محور برای کودکان 6-12 سال",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "beginner",
+          "inLanguage": "fa-IR",
+          "audience": {
+            "@type": "Audience",
+            "audienceType": "children"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "2200000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "کلاس خصوصی VIP",
+          "description": "کلاس خصوصی با استاد مجرب برای یادگیری سریع و شخصی‌سازی شده",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "online",
+          "educationalLevel": "mixed",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "850000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        }
+      ]
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <ClipLoader color="hsl(var(--foreground))" size={50} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen py-20 px-4">
-      <div className="container mx-auto">
-        <motion.div className="text-center mb-16">
-          <h1 className="text-4xl font-bold mb-6">دوره‌های زبان انگلیسی</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            دوره‌ای متناسب با سطح خود انتخاب کنید و مهارت‌های زبان انگلیسی خود
-            را تقویت کنید.
-          </p>
-        </motion.div>
-
-        {courses.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            در حال حاضر دوره‌ای موجود نیست
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
-              <motion.div key={course.id}>
-                <Card className="overflow-hidden h-full rounded-lg shadow-lg bg-card border">
-                  {/* تصویر دوره */}
-                  <div className="relative">
-                    {course.image_url && (
-                      <img
-                        src={course.image_url}
-                        alt={course.title}
-                        className="w-full h-48 object-cover"
-                      />
-                    )}
-                    <Badge className="absolute top-4 right-4 bg-primary text-white">
-                      {course.badge}
-                    </Badge>
-                  </div>
-
-                  {/* محتوای دوره */}
-                  <div className="p-6 flex flex-col space-y-4 text-foreground">
-                    <div className="inline-block px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-                      <h3 className="text-sm font-semibold text-primary">
-                        {course.level}
-                      </h3>
-                    </div>
-                    <h2 className="text-2xl font-bold text-foreground">{course.title}</h2>
-                    <p className="text-muted-foreground leading-relaxed">{course.description}</p>
-
-                    {/* اطلاعات دوره */}
-                    <div className="mt-4 p-4 bg-muted rounded-lg shadow-sm">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-primary" />
-                          <span className="text-foreground">{course.duration}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-primary" />
-                          <span className="text-foreground">{course.class_size}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* ویژگی‌های دوره */}
-                    <div className="mt-4">
-                      <h4 className="text-lg font-semibold mb-2 text-foreground">ویژگی‌های دوره:</h4>
-                      <div className="flex flex-col space-y-2">
-                        {course.features.map((feature, index) => (
-                          <div key={index} className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                            <span className="text-foreground text-sm">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* قیمت و دکمه ثبت‌نام */}
-                    <div className="mt-6 text-center">
-                      <div className="text-3xl font-bold text-foreground">
-                        {course.price}
-                        <span className="text-base font-normal text-muted-foreground">
-                          {" "}
-                          /دوره
-                        </span>
-                      </div>
-                      <Link href="/get-started" className="block mt-4">
-                        <Button className="w-full group">
-                          ثبت نام اکنون
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <CoursesClient />
+    </>
   );
 }
