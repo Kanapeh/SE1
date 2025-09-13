@@ -22,6 +22,7 @@ interface Course {
   icon: string;
   gradient: string;
   features: string[];
+  image: string;
 }
 
 export default function PopularCoursesSection() {
@@ -38,7 +39,7 @@ export default function PopularCoursesSection() {
         {
           id: "1",
           title: "انگلیسی برای شروع",
-          teacher: "سارا احمدی",
+          teacher: "ادینوس",
           teacherId: "teacher-1",
           price: 2800000,
           duration: "12 هفته",
@@ -47,12 +48,13 @@ export default function PopularCoursesSection() {
           level: "مبتدی",
           icon: "🚀",
           gradient: "from-blue-500 to-cyan-500",
-          features: ["آموزش گرامر پایه", "واژگان ضروری", "مکالمه روزمره"]
+          features: ["آموزش گرامر پایه", "واژگان ضروری", "مکالمه روزمره"],
+          image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "2",
           title: "انگلیسی کاربردی",
-          teacher: "علی محمدی",
+          teacher: "ادینوس",
           teacherId: "teacher-2",
           price: 4200000,
           duration: "16 هفته",
@@ -61,12 +63,13 @@ export default function PopularCoursesSection() {
           level: "متوسط",
           icon: "💼",
           gradient: "from-purple-500 to-pink-500",
-          features: ["مهارت‌های کاری", "ارائه حرفه‌ای", "نوشتن رسمی"]
+          features: ["مهارت‌های کاری", "ارائه حرفه‌ای", "نوشتن رسمی"],
+          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "3",
           title: "انگلیسی حرفه‌ای",
-          teacher: "فاطمه کریمی",
+          teacher: "سپنتا علیزاده",
           teacherId: "teacher-3",
           price: 6800000,
           duration: "20 هفته",
@@ -75,12 +78,13 @@ export default function PopularCoursesSection() {
           level: "پیشرفته",
           icon: "🎯",
           gradient: "from-green-500 to-teal-500",
-          features: ["محیط‌های بین‌المللی", "مذاکره پیشرفته", "مدیریت پروژه"]
+          features: ["محیط‌های بین‌المللی", "مذاکره پیشرفته", "مدیریت پروژه"],
+          image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "4",
           title: "آمادگی آیلتس",
-          teacher: "حسین رضایی",
+          teacher: "سپنتا علیزاده",
           teacherId: "teacher-4",
           price: 7500000,
           duration: "18 هفته",
@@ -89,12 +93,13 @@ export default function PopularCoursesSection() {
           level: "پیشرفته",
           icon: "📚",
           gradient: "from-orange-500 to-red-500",
-          features: ["استراتژی‌های تست زنی", "نمره 7+", "شبیه‌سازی آزمون"]
+          features: ["استراتژی‌های تست زنی", "نمره 7+", "شبیه‌سازی آزمون"],
+          image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "5",
           title: "انگلیسی کودکان",
-          teacher: "مریم احمدی",
+          teacher: "ادینوس",
           teacherId: "teacher-5",
           price: 2200000,
           duration: "10 هفته",
@@ -103,12 +108,13 @@ export default function PopularCoursesSection() {
           level: "مبتدی",
           icon: "🌟",
           gradient: "from-pink-500 to-purple-500",
-          features: ["آموزش بازی محور", "کارتون‌های آموزشی", "فعالیت‌های خلاقانه"]
+          features: ["آموزش بازی محور", "کارتون‌های آموزشی", "فعالیت‌های خلاقانه"],
+          image: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "6",
           title: "کلاس خصوصی VIP",
-          teacher: "دکتر احمدی",
+          teacher: "سپنتا علیزاده",
           teacherId: "teacher-6",
           price: 850000,
           duration: "انعطاف‌پذیر",
@@ -117,7 +123,8 @@ export default function PopularCoursesSection() {
           level: "شخصی‌سازی شده",
           icon: "👑",
           gradient: "from-indigo-500 to-purple-500",
-          features: ["برنامه شخصی", "استاد مجرب", "پشتیبانی 24/7"]
+          features: ["برنامه شخصی", "استاد مجرب", "پشتیبانی 24/7"],
+          image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
         }
       ];
 
@@ -231,9 +238,14 @@ export default function PopularCoursesSection() {
                 className="flex-shrink-0 w-80 group"
               >
                 <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl hover:shadow-3xl hover:-translate-y-2 group-hover:scale-[1.02] h-full">
-                  {/* Header with gradient */}
-                  <div className={`h-40 bg-gradient-to-br ${course.gradient} relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-black/10"></div>
+                  {/* Header with image */}
+                  <div className="h-40 relative overflow-hidden">
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40"></div>
                     
                     {/* Animated background pattern */}
                     <div className="absolute inset-0 opacity-20">
@@ -348,9 +360,14 @@ export default function PopularCoursesSection() {
               className="group"
             >
               <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl hover:shadow-3xl hover:-translate-y-2 group-hover:scale-[1.02]">
-                {/* Header with gradient */}
-                <div className={`h-48 bg-gradient-to-br ${course.gradient} relative overflow-hidden`}>
-                  <div className="absolute inset-0 bg-black/10"></div>
+                {/* Header with image */}
+                <div className="h-48 relative overflow-hidden">
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40"></div>
                   
                   {/* Animated background pattern */}
                   <div className="absolute inset-0 opacity-20">
