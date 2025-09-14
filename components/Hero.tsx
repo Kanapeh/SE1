@@ -180,7 +180,7 @@ const Hero = memo(function Hero() {
             <div className="flex flex-wrap justify-center lg:justify-end gap-4 md:gap-6 text-xs md:text-sm text-gray-400 opacity-0 animate-[fadeInUp_0.8s_ease-out_1.2s_forwards]">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>021-1234-5678</span>
+                <span>09387279975</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
