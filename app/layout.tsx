@@ -9,29 +9,33 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import ClientOnly from "@/components/ClientOnly";
 import SchemaOrg from "@/components/SchemaOrg";
+import PerformanceMonitor from "@/components/PerformanceMonitor";
 
-// فونت اصلی - Vazirmatn (بهترین فونت فارسی)
+// فونت اصلی - Vazirmatn (بهترین فونت فارسی) - Reduced weights for better performance
 const vazirmatn = Vazirmatn({
   subsets: ["arabic"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-vazirmatn",
   display: "swap",
+  preload: true,
 });
 
-// فونت جایگزین - Noto Sans Arabic
+// فونت جایگزین - Noto Sans Arabic - Reduced weights
 const notoSansArabic = Noto_Sans_Arabic({
   subsets: ["arabic"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-noto-sans",
   display: "swap",
+  preload: false,
 });
 
-// فونت جایگزین - IBM Plex Sans Arabic
+// فونت جایگزین - IBM Plex Sans Arabic - Reduced weights
 const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic"],
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   variable: "--font-ibm-plex",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -119,7 +123,39 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* Meta tags and other head content will be here */}
+        {/* Font preloading for better performance */}
+        <link
+          rel="preload"
+          href="/fonts/vazirmatn-regular.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/vazirmatn-medium.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/vazirmatn-semibold.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/vazirmatn-bold.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        {/* DNS prefetch for external resources */}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+        <link rel="dns-prefetch" href="//www.google-analytics.com" />
       </head>
       <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`} suppressHydrationWarning>
         <ClientOnly>
@@ -137,6 +173,7 @@ export default function RootLayout({
             <Footer />
             <FloatingWhatsApp />
             <Toaster position="top-center" richColors />
+            <PerformanceMonitor />
             {/* <PKCEDebugger /> */}
           </ThemeProvider>
         </ClientOnly>

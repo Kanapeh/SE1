@@ -58,6 +58,46 @@ export default function YouTubeVideosSection() {
 
   const videosPerPage = 3;
 
+  // Default videos for fallback
+  const getDefaultVideos = (): Video[] => [
+    {
+      id: 'default1',
+      title: 'آموزش زبان انگلیسی - مقدمات و الفبا',
+      description: 'در این ویدیو با الفبای انگلیسی و تلفظ صحیح حروف آشنا می‌شوید.',
+      thumbnail: '/images/default-video1.jpg',
+      duration: '15:30',
+      viewCount: '2.1K',
+      publishedAt: '2024-01-01T00:00:00Z',
+      category: 'beginner',
+      language: 'persian',
+      channelTitle: 'SE1A Academy'
+    },
+    {
+      id: 'default2',
+      title: 'گرامر انگلیسی - زمان حال ساده',
+      description: 'آموزش کامل زمان حال ساده در زبان انگلیسی با مثال‌های کاربردی.',
+      thumbnail: '/images/default-video2.jpg',
+      duration: '22:15',
+      viewCount: '3.5K',
+      publishedAt: '2024-01-02T00:00:00Z',
+      category: 'intermediate',
+      language: 'persian',
+      channelTitle: 'SE1A Academy'
+    },
+    {
+      id: 'default3',
+      title: 'مکالمه انگلیسی - گفتگو در رستوران',
+      description: 'یادگیری عبارات و جملات کاربردی برای سفارش غذا در رستوران.',
+      thumbnail: '/images/default-video3.jpg',
+      duration: '18:45',
+      viewCount: '1.8K',
+      publishedAt: '2024-01-03T00:00:00Z',
+      category: 'advanced',
+      language: 'persian',
+      channelTitle: 'SE1A Academy'
+    }
+  ];
+
   // Fetch videos from YouTube API
   useEffect(() => {
     const fetchVideos = async () => {
@@ -70,14 +110,24 @@ export default function YouTubeVideosSection() {
         const result = await response.json();
         
         if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch videos');
+          console.warn('⚠️ YouTube API failed, using default videos:', result.error);
+          setVideos(getDefaultVideos());
+          setError('ویدیوهای یوتیوب در دسترس نیستند. ویدیوهای پیش‌فرض نمایش داده می‌شوند.');
+          return;
         }
         
-        console.log('✅ Videos fetched successfully:', result.videos.length);
-        setVideos(result.videos);
+        if (result.videos && result.videos.length > 0) {
+          console.log('✅ Videos fetched successfully:', result.videos.length);
+          setVideos(result.videos);
+        } else {
+          console.warn('⚠️ No videos found, using default videos');
+          setVideos(getDefaultVideos());
+          setError('ویدیویی یافت نشد. ویدیوهای پیش‌فرض نمایش داده می‌شوند.');
+        }
       } catch (err) {
         console.error('❌ Error fetching videos:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch videos');
+        setVideos(getDefaultVideos());
+        setError('خطا در بارگذاری ویدیوها. ویدیوهای پیش‌فرض نمایش داده می‌شوند.');
       } finally {
         setLoading(false);
       }

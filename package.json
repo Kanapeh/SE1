@@ -12,7 +12,9 @@
     "start": "next start",
     "start:prod": "NODE_ENV=production next start",
     "lint": "next lint",
-    "setup-ssl": "node scripts/generate-ssl.js"
+    "setup-ssl": "node scripts/generate-ssl.js",
+    "setup-youtube": "node scripts/setup-youtube.js",
+    "test-youtube": "node scripts/test-youtube-api.js"
   },
   "dependencies": {
     "@eslint/config-array": "^0.20.0",
@@ -92,6 +94,9 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
-    "vitest": "^3.1.4"
+    "dotenv": "^17.2.2",
+    "vitest": "^3.1.4",
+    "web-vitals": "^5.1.0",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }
