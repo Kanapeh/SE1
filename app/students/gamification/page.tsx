@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft,
   Trophy,
@@ -44,7 +45,31 @@ import {
   Trees,
   Droplets,
   Earth,
-  Wind
+  Wind,
+  Plus,
+  Minus,
+  ShoppingCart,
+  Bell,
+  Settings,
+  RefreshCw,
+  BarChart3,
+  TrendingDown,
+  UserPlus,
+  MessageCircle,
+  Share2,
+  Download,
+  Upload,
+  Filter,
+  Search,
+  X,
+  Check,
+  AlertCircle,
+  Info,
+  ExternalLink,
+  ChevronRight,
+  ChevronLeft,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 
 interface HeroCharacter {
@@ -140,13 +165,91 @@ interface League {
   };
 }
 
+interface LeaderboardEntry {
+  id: string;
+  name: string;
+  avatar: string;
+  level: number;
+  experience: number;
+  rank: number;
+  tier: string;
+  isCurrentUser: boolean;
+}
+
+interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  type: 'equipment' | 'consumable' | 'cosmetic' | 'skill';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  price: {
+    coins?: number;
+    gems?: number;
+  };
+  image: string;
+  isPurchased: boolean;
+  isAvailable: boolean;
+}
+
+interface Notification {
+  id: string;
+  type: 'achievement' | 'level_up' | 'challenge' | 'reward' | 'social';
+  title: string;
+  message: string;
+  icon: string;
+  isRead: boolean;
+  timestamp: string;
+}
+
+interface SkillTree {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  maxLevel: number;
+  cost: number;
+  prerequisites: string[];
+  isUnlocked: boolean;
+  isMaxed: boolean;
+  effects: string[];
+}
+
+interface Guild {
+  id: string;
+  name: string;
+  description: string;
+  level: number;
+  members: number;
+  maxMembers: number;
+  isJoined: boolean;
+  isInvited: boolean;
+  leader: string;
+  emblem: string;
+}
+
 export default function GamificationPage() {
   const router = useRouter();
   const [hero, setHero] = useState<HeroCharacter | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [league, setLeague] = useState<League | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [shopItems, setShopItems] = useState<ShopItem[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [skillTree, setSkillTree] = useState<SkillTree[]>([]);
+  const [guilds, setGuilds] = useState<Guild[]>([]);
   const [activeTab, setActiveTab] = useState('hero');
   const [loading, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showSkillTree, setShowSkillTree] = useState(false);
+  const [showGuilds, setShowGuilds] = useState(false);
+  const [coins, setCoins] = useState(1250);
+  const [gems, setGems] = useState(85);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(0);
+  const [showAchievement, setShowAchievement] = useState(false);
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
 
   useEffect(() => {
     // Mock hero data
@@ -245,6 +348,151 @@ export default function GamificationPage() {
       ]
     };
 
+    // Mock leaderboard data
+    const mockLeaderboard: LeaderboardEntry[] = [
+      { id: '1', name: 'احمد قهرمان', avatar: '/api/placeholder/40/40', level: 25, experience: 5000, rank: 1, tier: 'master', isCurrentUser: false },
+      { id: '2', name: 'فاطمه جنگجو', avatar: '/api/placeholder/40/40', level: 23, experience: 4800, rank: 2, tier: 'diamond', isCurrentUser: false },
+      { id: '3', name: 'سارا جنگجو', avatar: '/api/placeholder/40/40', level: 15, experience: 1250, rank: 3, tier: 'gold', isCurrentUser: true },
+      { id: '4', name: 'محمد دانشجو', avatar: '/api/placeholder/40/40', level: 14, experience: 1200, rank: 4, tier: 'gold', isCurrentUser: false },
+      { id: '5', name: 'زهرا معلم', avatar: '/api/placeholder/40/40', level: 13, experience: 1100, rank: 5, tier: 'silver', isCurrentUser: false }
+    ];
+
+    // Mock shop items
+    const mockShopItems: ShopItem[] = [
+      {
+        id: 'item-1',
+        name: 'شمشیر الماس',
+        description: 'شمشیری قدرتمند با قدرت بالا',
+        type: 'equipment',
+        rarity: 'legendary',
+        price: { coins: 500, gems: 25 },
+        image: '/api/placeholder/60/60',
+        isPurchased: false,
+        isAvailable: true
+      },
+      {
+        id: 'item-2',
+        name: 'زره طلایی',
+        description: 'زره محافظ با دفاع بالا',
+        type: 'equipment',
+        rarity: 'epic',
+        price: { coins: 300, gems: 15 },
+        image: '/api/placeholder/60/60',
+        isPurchased: true,
+        isAvailable: true
+      },
+      {
+        id: 'item-3',
+        name: 'نوشیدنی انرژی',
+        description: 'بازیابی کامل سلامت و مانا',
+        type: 'consumable',
+        rarity: 'common',
+        price: { coins: 50 },
+        image: '/api/placeholder/60/60',
+        isPurchased: false,
+        isAvailable: true
+      }
+    ];
+
+    // Mock notifications
+    const mockNotifications: Notification[] = [
+      {
+        id: 'notif-1',
+        type: 'achievement',
+        title: 'دستاورد جدید!',
+        message: 'شما دستاورد "یادگیرنده سریع" را کسب کردید',
+        icon: 'award',
+        isRead: false,
+        timestamp: '2024-01-15T10:30:00Z'
+      },
+      {
+        id: 'notif-2',
+        type: 'level_up',
+        title: 'سطح بالا رفت!',
+        message: 'تبریک! شما به سطح 15 رسیدید',
+        icon: 'star',
+        isRead: true,
+        timestamp: '2024-01-14T15:20:00Z'
+      },
+      {
+        id: 'notif-3',
+        type: 'challenge',
+        title: 'چالش جدید',
+        message: 'چالش هفتگی "مکالمه حرفه‌ای" شروع شد',
+        icon: 'target',
+        isRead: false,
+        timestamp: '2024-01-16T08:00:00Z'
+      }
+    ];
+
+    // Mock skill tree
+    const mockSkillTree: SkillTree[] = [
+      {
+        id: 'skill-tree-1',
+        name: 'قدرت',
+        description: 'افزایش قدرت حمله',
+        level: 3,
+        maxLevel: 10,
+        cost: 100,
+        prerequisites: [],
+        isUnlocked: true,
+        isMaxed: false,
+        effects: ['+5% damage', '+10% critical chance']
+      },
+      {
+        id: 'skill-tree-2',
+        name: 'دفاع',
+        description: 'افزایش مقاومت در برابر آسیب',
+        level: 2,
+        maxLevel: 10,
+        cost: 150,
+        prerequisites: ['skill-tree-1'],
+        isUnlocked: true,
+        isMaxed: false,
+        effects: ['+10% damage reduction', '+5% health']
+      },
+      {
+        id: 'skill-tree-3',
+        name: 'هوش',
+        description: 'افزایش مانا و قدرت جادویی',
+        level: 0,
+        maxLevel: 10,
+        cost: 200,
+        prerequisites: ['skill-tree-2'],
+        isUnlocked: false,
+        isMaxed: false,
+        effects: ['+20% mana', '+15% spell power']
+      }
+    ];
+
+    // Mock guilds
+    const mockGuilds: Guild[] = [
+      {
+        id: 'guild-1',
+        name: 'شوالیه‌های دانش',
+        description: 'گروهی از دانشجویان متعهد',
+        level: 5,
+        members: 24,
+        maxMembers: 30,
+        isJoined: false,
+        isInvited: true,
+        leader: 'احمد قهرمان',
+        emblem: '/api/placeholder/50/50'
+      },
+      {
+        id: 'guild-2',
+        name: 'جنگجویان زبان',
+        description: 'متخصصان زبان انگلیسی',
+        level: 8,
+        members: 28,
+        maxMembers: 30,
+        isJoined: true,
+        isInvited: false,
+        leader: 'فاطمه جنگجو',
+        emblem: '/api/placeholder/50/50'
+      }
+    ];
+
     // Mock challenges
     const mockChallenges: Challenge[] = [
       {
@@ -300,8 +548,96 @@ export default function GamificationPage() {
     setHero(mockHero);
     setChallenges(mockChallenges);
     setLeague(mockLeague);
+    setLeaderboard(mockLeaderboard);
+    setShopItems(mockShopItems);
+    setNotifications(mockNotifications);
+    setSkillTree(mockSkillTree);
+    setGuilds(mockGuilds);
     setLoading(false);
   }, []);
+
+  // Challenge completion handler
+  const completeChallenge = (challengeId: string) => {
+    setChallenges(prev => prev.map(challenge => 
+      challenge.id === challengeId 
+        ? { ...challenge, isCompleted: true, progress: challenge.maxProgress }
+        : challenge
+    ));
+    
+    // Add experience and coins
+    const challenge = challenges.find(c => c.id === challengeId);
+    if (challenge) {
+      setCoins(prev => prev + challenge.reward.coins);
+      setGems(prev => prev + challenge.reward.gems);
+      
+      // Check for level up
+      const newExp = hero!.experience + challenge.reward.experience;
+      if (newExp >= hero!.maxExperience) {
+        setNewLevel(hero!.level + 1);
+        setShowLevelUp(true);
+        setHero(prev => prev ? {
+          ...prev,
+          level: prev.level + 1,
+          experience: newExp - prev.maxExperience,
+          maxExperience: prev.maxExperience + 500
+        } : null);
+      } else {
+        setHero(prev => prev ? { ...prev, experience: newExp } : null);
+      }
+    }
+  };
+
+  // Shop purchase handler
+  const purchaseItem = (itemId: string) => {
+    const item = shopItems.find(i => i.id === itemId);
+    if (item && !item.isPurchased) {
+      if (item.price.coins && coins >= item.price.coins) {
+        setCoins(prev => prev - item.price.coins!);
+        setShopItems(prev => prev.map(i => 
+          i.id === itemId ? { ...i, isPurchased: true } : i
+        ));
+      }
+      if (item.price.gems && gems >= item.price.gems) {
+        setGems(prev => prev - item.price.gems!);
+        setShopItems(prev => prev.map(i => 
+          i.id === itemId ? { ...i, isPurchased: true } : i
+        ));
+      }
+    }
+  };
+
+  // Skill upgrade handler
+  const upgradeSkill = (skillId: string) => {
+    const skill = skillTree.find(s => s.id === skillId);
+    if (skill && skill.isUnlocked && !skill.isMaxed && coins >= skill.cost) {
+      setCoins(prev => prev - skill.cost);
+      setSkillTree(prev => prev.map(s => 
+        s.id === skillId 
+          ? { 
+              ...s, 
+              level: s.level + 1,
+              isMaxed: s.level + 1 >= s.maxLevel
+            }
+          : s
+      ));
+    }
+  };
+
+  // Guild join handler
+  const joinGuild = (guildId: string) => {
+    setGuilds(prev => prev.map(guild => 
+      guild.id === guildId 
+        ? { ...guild, isJoined: true, members: guild.members + 1 }
+        : guild
+    ));
+  };
+
+  // Mark notification as read
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(prev => prev.map(notif => 
+      notif.id === notificationId ? { ...notif, isRead: true } : notif
+    ));
+  };
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -401,11 +737,60 @@ export default function GamificationPage() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg px-4 py-2">
                 <Coins className="w-5 h-5 text-yellow-500" />
-                <span className="font-bold text-yellow-600 dark:text-yellow-400">1,250</span>
+                <span className="font-bold text-yellow-600 dark:text-yellow-400">{coins.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg px-4 py-2">
                 <Gem className="w-5 h-5 text-purple-500" />
-                <span className="font-bold text-purple-600 dark:text-purple-400">85</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">{gems}</span>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative"
+                >
+                  <Bell className="w-4 h-4" />
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {notifications.filter(n => !n.isRead).length}
+                    </span>
+                  )}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowShop(!showShop)}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLeaderboard(!showLeaderboard)}
+                >
+                  <Trophy className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSkillTree(!showSkillTree)}
+                >
+                  <Zap className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowGuilds(!showGuilds)}
+                >
+                  <Users className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -673,6 +1058,7 @@ export default function GamificationPage() {
                     <Button 
                       className="w-full"
                       disabled={challenge.isCompleted}
+                      onClick={() => completeChallenge(challenge.id)}
                     >
                       {challenge.isCompleted ? 'تکمیل شده' : 'شروع چالش'}
                     </Button>
@@ -770,6 +1156,352 @@ export default function GamificationPage() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Notifications Modal */}
+        <AnimatePresence>
+          {showNotifications && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowNotifications(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">اعلان‌ها</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowNotifications(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 rounded-lg border ${
+                        notification.isRead 
+                          ? 'bg-gray-50 dark:bg-gray-700' 
+                          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                      }`}
+                      onClick={() => markNotificationAsRead(notification.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <Bell className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{notification.title}</h4>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{notification.message}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(notification.timestamp).toLocaleDateString('fa-IR')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Shop Modal */}
+        <AnimatePresence>
+          {showShop && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowShop(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">فروشگاه</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowShop(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {shopItems.map((item) => (
+                    <div key={item.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                          <Sword className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{item.name}</h4>
+                          <Badge className={getRarityColor(item.rarity)}>
+                            {item.rarity}
+                          </Badge>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{item.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {item.price.coins && (
+                            <div className="flex items-center gap-1">
+                              <Coins className="w-4 h-4 text-yellow-500" />
+                              <span className="text-sm">{item.price.coins}</span>
+                            </div>
+                          )}
+                          {item.price.gems && (
+                            <div className="flex items-center gap-1">
+                              <Gem className="w-4 h-4 text-purple-500" />
+                              <span className="text-sm">{item.price.gems}</span>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={item.isPurchased || (item.price.coins && coins < item.price.coins) || (item.price.gems && gems < item.price.gems)}
+                          onClick={() => purchaseItem(item.id)}
+                        >
+                          {item.isPurchased ? 'خریداری شده' : 'خرید'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Leaderboard Modal */}
+        <AnimatePresence>
+          {showLeaderboard && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowLeaderboard(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">جدول رده‌بندی</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowLeaderboard(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {leaderboard.map((entry, index) => (
+                    <div
+                      key={entry.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg ${
+                        entry.isCurrentUser 
+                          ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+                          : 'bg-gray-50 dark:bg-gray-700'
+                      }`}
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {entry.rank}
+                      </div>
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={entry.avatar} />
+                        <AvatarFallback>{entry.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{entry.name}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          سطح {entry.level} • {entry.experience.toLocaleString()} XP
+                        </p>
+                      </div>
+                      <Badge className={getTierColor(entry.tier)}>
+                        {entry.tier}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Skill Tree Modal */}
+        <AnimatePresence>
+          {showSkillTree && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowSkillTree(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">درخت مهارت</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowSkillTree(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {skillTree.map((skill) => (
+                    <div key={skill.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold">{skill.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">سطح {skill.level}/{skill.maxLevel}</Badge>
+                          {skill.isUnlocked && (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                              باز شده
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{skill.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Coins className="w-4 h-4 text-yellow-500" />
+                          <span className="text-sm">{skill.cost} سکه</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={!skill.isUnlocked || skill.isMaxed || coins < skill.cost}
+                          onClick={() => upgradeSkill(skill.id)}
+                        >
+                          {skill.isMaxed ? 'حداکثر' : 'ارتقا'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Guilds Modal */}
+        <AnimatePresence>
+          {showGuilds && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowGuilds(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">گروه‌ها</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowGuilds(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {guilds.map((guild) => (
+                    <div key={guild.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                          <Users className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{guild.name}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{guild.description}</p>
+                          <p className="text-xs text-gray-500">رهبر: {guild.leader}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold">سطح {guild.level}</p>
+                          <p className="text-xs text-gray-500">{guild.members}/{guild.maxMembers} عضو</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {guild.isInvited && (
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                              دعوت شده
+                            </Badge>
+                          )}
+                          {guild.isJoined && (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                              عضو
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={guild.isJoined || guild.members >= guild.maxMembers}
+                          onClick={() => joinGuild(guild.id)}
+                        >
+                          {guild.isJoined ? 'عضو' : 'عضویت'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Level Up Animation */}
+        <AnimatePresence>
+          {showLevelUp && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={() => setShowLevelUp(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-8 rounded-lg text-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <Crown className="w-10 h-10" />
+                </motion.div>
+                <h2 className="text-3xl font-bold mb-2">تبریک!</h2>
+                <p className="text-xl mb-4">شما به سطح {newLevel} رسیدید!</p>
+                <Button
+                  onClick={() => setShowLevelUp(false)}
+                  className="bg-white text-orange-500 hover:bg-gray-100"
+                >
+                  ادامه
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

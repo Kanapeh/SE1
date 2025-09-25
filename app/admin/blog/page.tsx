@@ -153,17 +153,20 @@ export default function BlogPage() {
       if (!content) throw new Error('محتوی مقاله الزامی است');
       if (!image_url) throw new Error('تصویر شاخص الزامی است');
 
-      // Create proper slug for Persian text
-      const createSlug = (text: string): string => {
+      // Get English slug from form or create from title
+      const englishSlug = formData.get('english_slug')?.toString().trim();
+      
+      // Create proper slug for English text (WordPress style)
+      const createEnglishSlug = (text: string): string => {
         return text
           .toLowerCase()
-          .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-z0-9\s\-|+]/g, '') // Keep Persian, Arabic, basic Latin chars, hyphens, pipes, and plus signs
+          .replace(/[^a-z0-9\s-]/g, '') // Keep only English letters, numbers, spaces, and hyphens
           .replace(/\s+/g, '-') // Replace spaces with hyphens
           .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
           .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
       };
       
-      const slug = createSlug(title);
+      const slug = englishSlug ? createEnglishSlug(englishSlug) : createEnglishSlug(title);
       
       const { data, error } = await supabase
         .from('blog_posts')
@@ -208,7 +211,19 @@ export default function BlogPage() {
 
     const formData = new FormData(e.target as HTMLFormElement);
     const tags = formData.get('tags')?.toString().split(',').map(tag => tag.trim()) || [];
-    const slug = formData.get('title')?.toString().toLowerCase().replace(/\s+/g, '-') || '';
+    const englishSlug = formData.get('english_slug')?.toString().trim();
+    
+    // Create proper slug for English text (WordPress style)
+    const createEnglishSlug = (text: string): string => {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Keep only English letters, numbers, spaces, and hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+        .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    };
+    
+    const slug = englishSlug ? createEnglishSlug(englishSlug) : editingPost.slug;
     const content = editorRef.current?.getContent() || '';
     const video_url = formData.get('video_url')?.toString().trim() || '';
     const has_video = formData.get('has_video') === 'on';
@@ -526,6 +541,24 @@ export default function BlogPage() {
 
                 <div className="mt-6">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    آدرس انگلیسی مقاله (Slug) <span className="text-orange-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="english_slug"
+                    required
+                    placeholder="best-english-learning-methods-2025"
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    آدرس انگلیسی مقاله که در URL نمایش داده می‌شود. فقط حروف انگلیسی، اعداد و خط تیره مجاز است.
+                    <br />
+                    مثال: <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">best-english-learning-methods-2025</code>
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     برچسب‌ها
                   </label>
                   <input
@@ -760,6 +793,25 @@ export default function BlogPage() {
                         className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
                     </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      آدرس انگلیسی مقاله (Slug) <span className="text-orange-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="english_slug"
+                      defaultValue={editingPost.slug}
+                      required
+                      placeholder="best-english-learning-methods-2025"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                      آدرس انگلیسی مقاله که در URL نمایش داده می‌شود. فقط حروف انگلیسی، اعداد و خط تیره مجاز است.
+                      <br />
+                      مثال: <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">best-english-learning-methods-2025</code>
+                    </p>
                   </div>
 
                   <div className="mt-6">

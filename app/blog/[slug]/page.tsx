@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Head from "next/head";
+import Image from "next/image";
 import CommentForm from "@/app/components/CommentForm";
 import VideoPlayer from "@/app/components/VideoPlayer";
 import ChartDisplay from "@/app/components/ChartDisplay";
@@ -54,27 +55,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
   };
 
-  useEffect(() => {
-    const resolveParams = async () => {
-      const resolvedParams = await params;
-      setSlug(resolvedParams.slug);
-    };
-    resolveParams();
-  }, [params]);
-
-  useEffect(() => {
-    if (slug) {
-      fetchPost();
-    }
-  }, [slug]);
-
-  useEffect(() => {
-    if (post) {
-      fetchComments(post.id);
-    }
-  }, [post]);
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
       console.log('🔍 Starting fetchPost with slug:', slug);
       console.log('🔍 Slug type:', typeof slug);
@@ -90,12 +71,11 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       console.log('🔍 Original slug:', slug);
       console.log('🔍 Decoded slug:', decodedSlug);
       
-      // Create proper slug from decoded text
-      const properSlug = createSlug(decodedSlug);
-      console.log('🔍 Proper slug:', properSlug);
-      
-      // Try both decoded slug and proper slug
-      const searchSlug = decodedSlug; // Use decoded slug directly instead of creating new one
+      // For English slugs, use as-is. For Persian slugs, create proper slug
+      const isEnglishSlug = /^[a-z0-9-]+$/.test(decodedSlug);
+      const searchSlug = isEnglishSlug ? decodedSlug : createSlug(decodedSlug);
+      console.log('🔍 Is English slug:', isEnglishSlug);
+      console.log('🔍 Search slug:', searchSlug);
 
       // First, let's check if there are any posts at all
       console.log('🔍 Checking if any posts exist in database...');
@@ -175,7 +155,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
       if (publishedPosts.length === 0) {
         // Check what statuses exist
-        const statuses = [...new Set(allPosts.map(post => post.status))];
+        const statuses = Array.from(new Set(allPosts.map(post => post.status)));
         console.log('⚠️ Available statuses for this slug:', statuses);
         console.log('⚠️ All posts details:', allPosts.map(p => ({ id: p.id, title: p.title, status: p.status })));
         throw new Error(`مقاله یافت شد اما منتشر نشده است. وضعیت: ${statuses.join(', ')}`);
@@ -193,7 +173,27 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setSlug(resolvedParams.slug);
+    };
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (slug) {
+      fetchPost();
+    }
+  }, [slug, fetchPost]);
+
+  useEffect(() => {
+    if (post) {
+      fetchComments(post.id);
+    }
+  }, [post]);
 
   const fetchComments = async (postId: string) => {
     setCommentsLoading(true);
@@ -301,9 +301,11 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
               <span>{new Date(post.published_at).toLocaleDateString('fa-IR')}</span>
             </div>
             {post.image_url && (
-              <img
+              <Image
                 src={post.image_url}
                 alt={post.title}
+                width={800}
+                height={400}
                 className="w-full h-96 object-cover rounded-lg mb-8"
               />
             )}
