@@ -55,6 +55,11 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
   };
 
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
   const fetchPost = useCallback(async () => {
     try {
       console.log('🔍 Starting fetchPost with slug:', slug);
@@ -240,8 +245,8 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": post.title,
-    "description": post.content.substring(0, 160),
+    "headline": stripHtmlTags(post.title),
+    "description": stripHtmlTags(post.content).substring(0, 160),
     "image": post.image_url,
     "author": {
       "@type": "Organization",
@@ -271,10 +276,10 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
   return (
     <>
       <Head>
-        <title>{post.title} | آکادمی زبان سِ وان</title>
-        <meta name="description" content={post.content.substring(0, 160)} />
-        <meta property="og:title" content={`${post.title} | آکادمی زبان سِ وان`} />
-        <meta property="og:description" content={post.content.substring(0, 160)} />
+        <title>{stripHtmlTags(post.title)} | آکادمی زبان سِ وان</title>
+        <meta name="description" content={stripHtmlTags(post.content).substring(0, 160)} />
+        <meta property="og:title" content={`${stripHtmlTags(post.title)} | آکادمی زبان سِ وان`} />
+        <meta property="og:description" content={stripHtmlTags(post.content).substring(0, 160)} />
         <meta property="og:image" content={post.image_url} />
         <meta property="og:url" content={`https://www.se1a.org/blog/${post.slug}`} />
         <meta property="og:type" content="article" />
@@ -295,7 +300,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
           </Link>
 
           <header className="mb-8">
-            <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
+            <h1 className="text-4xl font-bold mb-4">{stripHtmlTags(post.title)}</h1>
             <div className="flex items-center justify-between text-gray-600 mb-4">
               <span>نویسنده: {post.author}</span>
               <span>{new Date(post.published_at).toLocaleDateString('fa-IR')}</span>
@@ -303,7 +308,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             {post.image_url && (
               <Image
                 src={post.image_url}
-                alt={post.title}
+                alt={stripHtmlTags(post.title)}
                 width={800}
                 height={400}
                 className="w-full h-96 object-cover rounded-lg mb-8"

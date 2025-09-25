@@ -61,6 +61,11 @@ export default function BlogClient({ posts }: BlogClientProps) {
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'trending'>('newest');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
   useEffect(() => {
     filterPosts();
   }, [searchQuery, selectedCategory, sortBy, posts]);
@@ -71,8 +76,8 @@ export default function BlogClient({ posts }: BlogClientProps) {
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        stripHtmlTags(post.title).toLowerCase().includes(searchQuery.toLowerCase()) ||
+        stripHtmlTags(post.content).toLowerCase().includes(searchQuery.toLowerCase()) ||
         (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
       );
     }
@@ -288,7 +293,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
                       <div className="relative">
                         <Image
                           src={post.image_url || '/api/placeholder/400/256'}
-                          alt={post.title}
+                          alt={stripHtmlTags(post.title)}
                           width={400}
                           height={256}
                           className="w-full h-48 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -313,10 +318,10 @@ export default function BlogClient({ posts }: BlogClientProps) {
                           <span>{post.read_time} دقیقه</span>
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {post.title}
+                          {stripHtmlTags(post.title)}
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                          {post.excerpt || post.content.substring(0, 150) + '...'}
+                          {post.excerpt || stripHtmlTags(post.content).substring(0, 150) + '...'}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -371,7 +376,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
                       <div className={`relative ${viewMode === "list" ? "md:w-80 md:flex-shrink-0" : ""}`}>
                         <Image
                           src={post.image_url || '/api/placeholder/400/256'}
-                          alt={post.title}
+                          alt={stripHtmlTags(post.title)}
                           width={400}
                           height={256}
                           className={`w-full object-cover group-hover:scale-105 transition-transform duration-300 ${
@@ -397,10 +402,10 @@ export default function BlogClient({ posts }: BlogClientProps) {
                           <span>{post.read_time} دقیقه</span>
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {post.title}
+                          {stripHtmlTags(post.title)}
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                          {post.excerpt || post.content.substring(0, 150) + '...'}
+                          {post.excerpt || stripHtmlTags(post.content).substring(0, 150) + '...'}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
