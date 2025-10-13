@@ -1,6 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import BlogClient from "./BlogClient";
 import { Metadata } from "next";
+
+// Revalidate every 60 seconds to show new blog posts
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "بلاگ آموزشی سِ وان | مقالات آموزش زبان انگلیسی",
@@ -64,13 +67,20 @@ interface BlogPost {
 
 async function getBlogPosts(): Promise<BlogPost[]> {
   try {
+    const supabase = await createClient();
+    
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
       .eq('status', 'published')
       .order('published_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching blog posts:", error);
+      throw error;
+    }
+    
+    console.log(`✅ Fetched ${data?.length || 0} blog posts from database`);
     
     // Add mock data for better UI
     const postsWithMockData = (data || []).map(post => ({
@@ -84,7 +94,7 @@ async function getBlogPosts(): Promise<BlogPost[]> {
     
     return postsWithMockData;
   } catch (error) {
-    console.error("Error fetching blog posts:", error);
+    console.error("❌ Error fetching blog posts:", error);
     return [];
   }
 }

@@ -1,7 +1,9 @@
 import { MetadataRoute } from 'next'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const supabase = await createClient()
+  
   const baseUrl = 'https://www.se1a.org'
   
   // Static pages

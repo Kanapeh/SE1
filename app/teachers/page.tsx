@@ -1,6 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import TeachersClient from "./TeachersClient";
 import { Metadata } from "next";
+
+// Revalidate every 120 seconds to show new teachers
+export const revalidate = 120;
 
 export const metadata: Metadata = {
   title: "معلمان مجرب سِ وان | بهترین اساتید زبان انگلیسی",
@@ -79,16 +82,23 @@ interface Teacher {
 
 async function getTeachers(): Promise<Teacher[]> {
   try {
+    const supabase = await createClient();
+    
     const { data, error } = await supabase
       .from('teachers')
       .select('*')
       .eq('status', 'Approved')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching teachers:", error);
+      throw error;
+    }
+    
+    console.log(`✅ Fetched ${data?.length || 0} approved teachers from database`);
     return data || [];
   } catch (error) {
-    console.error("Error fetching teachers:", error);
+    console.error("❌ Error fetching teachers:", error);
     return [];
   }
 }
