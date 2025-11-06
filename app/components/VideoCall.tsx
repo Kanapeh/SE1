@@ -49,6 +49,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getMediaDeviceError, type MediaDeviceError } from '@/app/utils/videoHelpers';
 import CameraPermissionGuide from './CameraPermissionGuide';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/lib/supabase';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface VideoCallProps {
   isTeacher?: boolean;
@@ -94,6 +96,9 @@ export default function VideoCall({
 }: VideoCallProps) {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const [callState, setCallState] = useState<CallState>({
     isConnected: false,
     isConnecting: false,
@@ -485,55 +490,247 @@ export default function VideoCall({
     }
   };
 
-  const startCall = async () => {
-    setCallState(prev => ({ ...prev, isConnecting: true }));
-    
+  // Initialize WebRTC connection
+  const initializeWebRTC = async () => {
+    if (!classId) {
+      console.error('Class ID is required for WebRTC');
+      return;
+    }
+
     try {
-      // Re-initialize media stream for the call if needed
-      if (!localVideoRef.current?.srcObject) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: callState.isVideoEnabled,
-          audio: callState.isAudioEnabled
-        });
-        
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-          await localVideoRef.current.play();
-        }
-      }
+      // Get local media stream
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: callState.isVideoEnabled,
+        audio: callState.isAudioEnabled
+      });
       
-      // Simulate connection delay
-      setTimeout(async () => {
+      localStreamRef.current = stream;
+      
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+        await localVideoRef.current.play();
+      }
+
+      // Create RTCPeerConnection with STUN servers
+      const configuration: RTCConfiguration = {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+        ]
+      };
+
+      const peerConnection = new RTCPeerConnection(configuration);
+      peerConnectionRef.current = peerConnection;
+
+      // Add local stream tracks to peer connection
+      stream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, stream);
+      });
+
+      // Handle remote stream
+      peerConnection.ontrack = (event) => {
+        console.log('Received remote track:', event);
+        if (remoteVideoRef.current && event.streams[0]) {
+          remoteVideoRef.current.srcObject = event.streams[0];
+          remoteVideoRef.current.play().catch(err => {
+            console.error('Error playing remote video:', err);
+          });
+        }
+      };
+
+      // Handle ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate && channelRef.current) {
+          const candidateData = {
+            type: 'ice-candidate',
+            candidate: event.candidate,
+            from: isTeacher ? teacherId : studentId,
+            to: isTeacher ? studentId : teacherId,
+            classId: classId
+          };
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'webrtc-signal',
+            payload: candidateData
+          });
+        }
+      };
+
+      // Handle connection state changes
+      peerConnection.onconnectionstatechange = () => {
+        console.log('Connection state:', peerConnection.connectionState);
+        if (peerConnection.connectionState === 'connected') {
+          setCallState(prev => ({ 
+            ...prev, 
+            isConnecting: false, 
+            isConnected: true,
+            connectionQuality: 'excellent'
+          }));
+          onCallStart?.();
+        } else if (peerConnection.connectionState === 'disconnected' || 
+                   peerConnection.connectionState === 'failed') {
+          setCallState(prev => ({ 
+            ...prev, 
+            connectionQuality: 'disconnected'
+          }));
+        }
+      };
+
+      // Create Supabase Realtime channel for signaling
+      const channelName = `video-call-${classId}`;
+      const channel = supabase.channel(channelName, {
+        config: {
+          broadcast: { self: true }
+        }
+      });
+
+      // Listen for signaling messages
+      channel.on('broadcast', { event: 'webrtc-signal' }, (payload) => {
+        const data = payload.payload;
+        
+        // Ignore messages from self
+        if (data.from === (isTeacher ? teacherId : studentId)) {
+          return;
+        }
+
+        if (data.type === 'offer') {
+          handleOffer(data.offer);
+        } else if (data.type === 'answer') {
+          handleAnswer(data.answer);
+        } else if (data.type === 'ice-candidate') {
+          handleIceCandidate(data.candidate);
+        }
+      });
+
+      await channel.subscribe();
+      channelRef.current = channel;
+
+      // Create offer if teacher, wait for offer if student
+      if (isTeacher) {
+        // Teacher creates and sends offer
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        
+        const offerData = {
+          type: 'offer',
+          offer: offer,
+          from: teacherId,
+          to: studentId,
+          classId: classId
+        };
+        
+        channel.send({
+          type: 'broadcast',
+          event: 'webrtc-signal',
+          payload: offerData
+        });
+        console.log('✅ Teacher sent offer');
+      } else {
+        // Student waits for offer from teacher
+        console.log('⏳ Student waiting for offer from teacher...');
         setCallState(prev => ({ 
           ...prev, 
-          isConnecting: false, 
-          isConnected: true 
+          isConnecting: true 
         }));
-        
-        // Force stream to be applied after state change
-        setTimeout(async () => {
-          if (localVideoRef.current && localVideoRef.current.srcObject) {
-            try {
-              await localVideoRef.current.play();
-              console.log('Local video started in call mode');
-            } catch (playError) {
-              console.warn('Video play failed after call start:', playError);
-            }
-          }
-        }, 100);
-        
-        onCallStart?.();
-      }, 2000);
+      }
+
     } catch (error) {
-      console.error('Error starting call:', error);
+      console.error('Error initializing WebRTC:', error);
       setCallState(prev => ({ ...prev, isConnecting: false }));
       const mediaError = getMediaDeviceError(error);
       setMediaError(mediaError);
     }
   };
 
+  const handleOffer = async (offer: RTCSessionDescriptionInit) => {
+    if (!peerConnectionRef.current) {
+      console.error('Peer connection not initialized when receiving offer');
+      return;
+    }
+    
+    try {
+      console.log('📥 Received offer, creating answer...');
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peerConnectionRef.current.createAnswer();
+      await peerConnectionRef.current.setLocalDescription(answer);
+      
+      if (channelRef.current) {
+        const answerData = {
+          type: 'answer',
+          answer: answer,
+          from: isTeacher ? teacherId : studentId,
+          to: isTeacher ? studentId : teacherId,
+          classId: classId
+        };
+        
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'webrtc-signal',
+          payload: answerData
+        });
+        console.log('✅ Answer sent');
+      }
+    } catch (error) {
+      console.error('❌ Error handling offer:', error);
+      setCallState(prev => ({ ...prev, isConnecting: false }));
+    }
+  };
+
+  const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
+    if (!peerConnectionRef.current) {
+      console.error('Peer connection not initialized when receiving answer');
+      return;
+    }
+    
+    try {
+      console.log('📥 Received answer');
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+      console.log('✅ Remote description set');
+    } catch (error) {
+      console.error('❌ Error handling answer:', error);
+    }
+  };
+
+  const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
+    if (!peerConnectionRef.current) {
+      console.warn('Peer connection not initialized when receiving ICE candidate');
+      return;
+    }
+    
+    try {
+      await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      console.log('✅ ICE candidate added');
+    } catch (error) {
+      console.error('❌ Error handling ICE candidate:', error);
+    }
+  };
+
+  const startCall = async () => {
+    setCallState(prev => ({ ...prev, isConnecting: true }));
+    await initializeWebRTC();
+  };
+
   const endCall = () => {
+    // Close peer connection
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+
+    // Unsubscribe from channel
+    if (channelRef.current) {
+      channelRef.current.unsubscribe();
+      channelRef.current = null;
+    }
+
     // Stop all media streams
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      localStreamRef.current = null;
+    }
+
     if (localVideoRef.current && localVideoRef.current.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => {
@@ -560,6 +757,31 @@ export default function VideoCall({
     }));
     onCallEnd?.();
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Close peer connection
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+
+      // Unsubscribe from channel
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        channelRef.current = null;
+      }
+
+      // Stop all media streams
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+        });
+        localStreamRef.current = null;
+      }
+    };
+  }, []);
 
   const sendMessage = () => {
     if (newMessage.trim()) {
@@ -1301,11 +1523,13 @@ export default function VideoCall({
       {/* Main Video Area */}
       <div className="relative w-full h-screen">
         {/* Remote Video (Main) */}
-        {(remoteVideoRef.current?.srcObject && !showFakeTeacher) ? (
+        {(remoteVideoRef.current?.srcObject && !showFakeTeacher && callState.isConnected) ? (
           <video
             ref={remoteVideoRef}
             autoPlay
+            playsInline
             className="w-full h-full object-cover"
+            onLoadedMetadata={() => console.log('Remote video loaded')}
           />
         ) : (
           /* Fake Teacher Video - Demo */
