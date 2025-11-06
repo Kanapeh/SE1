@@ -6,6 +6,12 @@ import Link from "next/link";
 import { Editor } from '@tinymce/tinymce-react';
 import { useRouter } from 'next/navigation';
 
+interface PDFFile {
+  name: string;
+  url: string;
+  size?: number;
+}
+
 interface BlogPost {
   id: string;
   title: string;
@@ -22,6 +28,7 @@ interface BlogPost {
   has_chart?: boolean;
   has_video?: boolean;
   has_table?: boolean;
+  pdf_files?: PDFFile[];
 }
 
 export default function BlogPage() {
@@ -32,6 +39,8 @@ export default function BlogPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [search, setSearch] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfFiles, setPdfFiles] = useState<PDFFile[]>([]);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [fallbackContent, setFallbackContent] = useState("");
   const editorRef = useRef<any>(null);
@@ -41,6 +50,25 @@ export default function BlogPage() {
     checkAuth();
     fetchPosts();
   }, []);
+
+  // Load PDF files when editing a post
+  useEffect(() => {
+    if (editingPost && editingPost.pdf_files) {
+      // Parse pdf_files if it's a string
+      let parsedPdfFiles = editingPost.pdf_files;
+      if (typeof editingPost.pdf_files === 'string') {
+        try {
+          parsedPdfFiles = JSON.parse(editingPost.pdf_files);
+        } catch (e) {
+          console.error('Error parsing PDF files:', e);
+          parsedPdfFiles = [];
+        }
+      }
+      setPdfFiles(Array.isArray(parsedPdfFiles) ? parsedPdfFiles : []);
+    } else {
+      setPdfFiles([]);
+    }
+  }, [editingPost]);
 
   useEffect(() => {
     // Set a timeout to show fallback if editor doesn't load
@@ -108,6 +136,59 @@ export default function BlogPage() {
     }
   };
 
+  const handlePdfUpload = async (file: File) => {
+    try {
+      setUploadingPdf(true);
+      
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        throw new Error('فقط فایل‌های PDF مجاز هستند');
+      }
+      
+      // Validate file size (max 50MB)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        throw new Error('حجم فایل نباید بیشتر از 50 مگابایت باشد');
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `blog-pdfs/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog-pdfs')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('blog-pdfs')
+        .getPublicUrl(filePath);
+
+      const pdfFile: PDFFile = {
+        name: file.name,
+        url: publicUrl,
+        size: file.size
+      };
+
+      setPdfFiles([...pdfFiles, pdfFile]);
+      setUploadingPdf(false);
+      return pdfFile;
+    } catch (error: any) {
+      console.error('Error uploading PDF:', error);
+      setUploadingPdf(false);
+      alert(error.message || 'خطا در آپلود فایل PDF');
+      return null;
+    }
+  };
+
+  const removePdfFile = (index: number) => {
+    setPdfFiles(pdfFiles.filter((_, i) => i !== index));
+  };
+
   const handleAddPost = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -168,6 +249,10 @@ export default function BlogPage() {
       
       const slug = englishSlug ? createEnglishSlug(englishSlug) : createEnglishSlug(title);
       
+      // Prepare pdf_files - ensure it's properly formatted
+      const pdfFilesData = pdfFiles.length > 0 ? pdfFiles : null;
+      console.log('💾 Saving PDF files:', pdfFilesData);
+      
       const { data, error } = await supabase
         .from('blog_posts')
         .insert([{
@@ -184,7 +269,8 @@ export default function BlogPage() {
           table_data: has_table ? table_data : null,
           has_video,
           has_chart,
-          has_table
+          has_table,
+          pdf_files: pdfFilesData
         }])
         .select();
 
@@ -199,6 +285,7 @@ export default function BlogPage() {
 
       setPosts([...(data || []), ...posts]);
       setShowAddModal(false);
+      setPdfFiles([]); // Reset PDF files
     } catch (error: any) {
       console.error("Error adding blog post:", error);
       alert(error.message || 'خطا در ایجاد مقاله');
@@ -249,6 +336,10 @@ export default function BlogPage() {
     }
     
     try {
+      // Prepare pdf_files - ensure it's properly formatted
+      const pdfFilesData = pdfFiles.length > 0 ? pdfFiles : null;
+      console.log('💾 Updating PDF files:', pdfFilesData);
+      
       const { data, error } = await supabase
         .from('blog_posts')
         .update({
@@ -264,7 +355,8 @@ export default function BlogPage() {
           table_data: has_table ? table_data : null,
           has_video,
           has_chart,
-          has_table
+          has_table,
+          pdf_files: pdfFilesData
         })
         .eq('id', editingPost.id)
         .select();
@@ -275,6 +367,7 @@ export default function BlogPage() {
         post.id === editingPost.id ? (data?.[0] || post) : post
       ));
       setEditingPost(null);
+      setPdfFiles([]); // Reset PDF files
     } catch (error) {
       console.error("Error updating blog post:", error);
     }
@@ -645,6 +738,88 @@ export default function BlogPage() {
                 </div>
               </div>
 
+              {/* PDF Files Section */}
+              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-6 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  فایل‌های PDF (جزوات و منابع)
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    آپلود فایل PDF
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handlePdfUpload(file);
+                        }
+                        e.target.value = ''; // Reset input
+                      }}
+                      disabled={uploadingPdf}
+                      className="block w-full text-sm text-gray-500 dark:text-gray-400
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-xl file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-indigo-50 file:text-indigo-700
+                        dark:file:bg-indigo-900/30 dark:file:text-indigo-300
+                        hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50
+                        cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {uploadingPdf && (
+                      <div className="flex items-center text-indigo-600">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600 mr-2"></div>
+                        <span className="text-sm">در حال آپلود...</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    می‌توانید فایل‌های PDF مانند جزوات، کتاب‌ها و منابع را برای دانلود کاربران آپلود کنید (حداکثر 50 مگابایت)
+                  </p>
+                  
+                  {/* Display uploaded PDFs */}
+                  {pdfFiles.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {pdfFiles.map((pdf, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                        >
+                          <div className="flex items-center gap-3">
+                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">{pdf.name}</p>
+                              {pdf.size && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {(pdf.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePdfFile(index)}
+                            className="text-red-600 hover:text-red-800 p-1"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Content Section */}
               <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-6 rounded-xl border border-orange-200 dark:border-orange-800">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -1003,6 +1178,88 @@ export default function BlogPage() {
                       className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-200 dark:focus:ring-teal-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono text-sm"
                     />
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">داده‌های جدول را به فرمت JSON وارد کنید</p>
+                  </div>
+                </div>
+
+                {/* PDF Files Section */}
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-6 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    فایل‌های PDF (جزوات و منابع)
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      آپلود فایل PDF
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handlePdfUpload(file);
+                          }
+                          e.target.value = ''; // Reset input
+                        }}
+                        disabled={uploadingPdf}
+                        className="block w-full text-sm text-gray-500 dark:text-gray-400
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-xl file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-indigo-50 file:text-indigo-700
+                          dark:file:bg-indigo-900/30 dark:file:text-indigo-300
+                          hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50
+                          cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {uploadingPdf && (
+                        <div className="flex items-center text-indigo-600">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600 mr-2"></div>
+                          <span className="text-sm">در حال آپلود...</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                      می‌توانید فایل‌های PDF مانند جزوات، کتاب‌ها و منابع را برای دانلود کاربران آپلود کنید (حداکثر 50 مگابایت)
+                    </p>
+                    
+                    {/* Display uploaded PDFs */}
+                    {pdfFiles.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        {pdfFiles.map((pdf, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                          >
+                            <div className="flex items-center gap-3">
+                              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{pdf.name}</p>
+                                {pdf.size && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {(pdf.size / 1024 / 1024).toFixed(2)} MB
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removePdfFile(index)}
+                              className="text-red-600 hover:text-red-800 p-1"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* Action Buttons */}

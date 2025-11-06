@@ -11,6 +11,12 @@ import ChartDisplay from "@/app/components/ChartDisplay";
 import DataTable from "@/app/components/DataTable";
 import { Metadata } from "next";
 
+interface PDFFile {
+  name: string;
+  url: string;
+  size?: number;
+}
+
 interface BlogPost {
   id: string;
   title: string;
@@ -27,6 +33,7 @@ interface BlogPost {
   has_chart?: boolean;
   has_video?: boolean;
   has_table?: boolean;
+  pdf_files?: PDFFile[];
 }
 
 export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -168,7 +175,26 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
 
       // Use the latest published post
       const latestPost = publishedPosts[0];
-      console.log('✅ Using latest published post:', latestPost);
+      // Parse pdf_files if it's a string or ensure it's an array
+      if (latestPost.pdf_files) {
+        if (typeof latestPost.pdf_files === 'string') {
+          try {
+            latestPost.pdf_files = JSON.parse(latestPost.pdf_files);
+          } catch (e) {
+            console.error('Error parsing PDF files:', e);
+            latestPost.pdf_files = [];
+          }
+        } else if (typeof latestPost.pdf_files === 'object' && !Array.isArray(latestPost.pdf_files)) {
+          // If it's an object but not an array, convert to array
+          latestPost.pdf_files = [latestPost.pdf_files];
+        }
+      }
+      
+      // Final check - ensure it's an array
+      if (!Array.isArray(latestPost.pdf_files)) {
+        latestPost.pdf_files = [];
+      }
+      
       setPost(latestPost);
 
     } catch (error: any) {
@@ -352,6 +378,56 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
                 pagination={true}
                 itemsPerPage={5}
               />
+            </div>
+          )}
+
+          {/* PDF Files Section */}
+          {post.pdf_files && Array.isArray(post.pdf_files) && post.pdf_files.length > 0 && (
+            <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                فایل‌های قابل دانلود
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                می‌توانید جزوات، کتاب‌ها و منابع مرتبط با این مقاله را دانلود کنید
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {post.pdf_files.map((pdf, index) => (
+                  <a
+                    key={index}
+                    href={pdf.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={pdf.name}
+                    className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-lg transition-all duration-300 group"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {pdf.name}
+                        </h3>
+                        {pdf.size && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {(pdf.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 mr-4">
+                      <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
 

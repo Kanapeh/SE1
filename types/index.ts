@@ -45,6 +45,12 @@ export interface Enrollment {
   created_at: string;
 }
 
+export interface PDFFile {
+  name: string;
+  url: string;
+  size?: number;
+}
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -55,6 +61,7 @@ export interface BlogPost {
   status: string;
   published_at: string;
   created_at: string;
+  pdf_files?: PDFFile[];
 }
 
 export interface Comment {
