@@ -1,7 +1,7 @@
 // BACKUP: اگر مشکل ادامه داشت این را rename کنید به page.tsx
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase, clearPKCEState } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +33,33 @@ function AuthCompleteContent() {
   console.log('Authorization Code:', code ? 'Present' : 'Missing');
   console.log('All URL params:', Object.fromEntries(searchParams.entries()));
   const { toast } = useToast();
+
+  const notifyOwner = useCallback(async (details: {
+    email: string;
+    fullName?: string;
+    userType: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/owner-registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(details),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        console.warn('Owner notification failed:', error);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Owner notification error:', error);
+      return false;
+    }
+  }, []);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,6 +186,14 @@ function AuthCompleteContent() {
         console.log('✅ OAuth user authenticated:', session.user.id);
         console.log('User email:', session.user.email);
 
+        const notificationKey = session.user?.id
+          ? `owner-notified-${session.user.id}`
+          : null;
+        const hasNotificationFlag =
+          notificationKey && typeof window !== 'undefined'
+            ? window.localStorage.getItem(notificationKey) === 'true'
+            : false;
+
         // Clear PKCE state after successful authentication
         clearPKCEState();
 
@@ -218,6 +253,23 @@ function AuthCompleteContent() {
 
         // No profile found - redirect to complete profile
         console.log("ℹ️ No active profile found, redirecting to complete profile");
+
+        if (!hasNotificationFlag && session.user.email) {
+          const ownerNotified = await notifyOwner({
+            email: session.user.email,
+            fullName: session.user.user_metadata?.full_name,
+            userType,
+            metadata: {
+              provider: session.user.app_metadata?.provider || 'unknown',
+              reason: 'missing-profile',
+              source: 'auth-complete',
+            },
+          });
+
+          if (ownerNotified && notificationKey && typeof window !== 'undefined') {
+            window.localStorage.setItem(notificationKey, 'true');
+          }
+        }
         
         toast({
           title: "تکمیل پروفایل",
@@ -237,7 +289,7 @@ function AuthCompleteContent() {
     };
 
     completeAuth();
-  }, [router, userType, retryCount, toast]);
+  }, [router, userType, retryCount, toast, notifyOwner]);
 
   if (isLoading) {
     return (

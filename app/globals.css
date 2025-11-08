@@ -316,11 +316,11 @@
 
 /* RTL Text Alignment */
 [dir="rtl"] .text-left {
-  text-align: right;
+  text-align: left;
 }
 
 [dir="rtl"] .text-right {
-  text-align: left;
+  text-align: right;
 }
 
 /* Sidebar Styles */

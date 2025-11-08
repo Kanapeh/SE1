@@ -163,6 +163,33 @@ function TeacherRegistrationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const notifyOwner = async (details: {
+    email: string;
+    fullName?: string;
+    userType: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/owner-registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(details),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        console.warn('Owner notification failed:', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('Owner notification error:', err);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const email = searchParams.get('email');
     if (email) {
@@ -285,6 +312,22 @@ function TeacherRegistrationForm() {
         
         sessionStorage.setItem('userType', 'teacher');
         sessionStorage.setItem('userEmail', formData.email);
+
+        const ownerNotificationSent = await notifyOwner({
+          email: formData.email,
+          fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+          userType: 'teacher',
+          metadata: {
+            supabaseUserId: authData.user.id,
+            phone: formData.phone,
+            location: formData.location,
+            languages: formData.languages,
+            experienceYears: formData.experienceYears,
+          },
+        });
+        if (ownerNotificationSent && typeof window !== 'undefined') {
+          window.localStorage.setItem(`owner-notified-${authData.user.id}`, 'true');
+        }
         
         // Check if email confirmation is required
         if (authData.user.email_confirmed_at) {
