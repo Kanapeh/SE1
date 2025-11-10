@@ -10,6 +10,8 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import ClientOnly from "@/components/ClientOnly";
 import SchemaOrg from "@/components/SchemaOrg";
 import PerformanceMonitor from "@/components/PerformanceMonitor";
+import PWARegister from "@/components/PWARegister";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 // فونت اصلی - Vazirmatn (بهترین فونت فارسی) - Reduced weights for better performance
 const vazirmatn = Vazirmatn({
@@ -72,8 +74,8 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   other: {
     'msapplication-config': '/browserconfig.xml',
-    'msapplication-TileColor': '#ffffff',
-    'theme-color': '#ffffff',
+    'msapplication-TileColor': '#2b3a67',
+    'theme-color': '#2b3a67',
   },
   openGraph: {
     title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
@@ -156,10 +158,18 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
         <link rel="dns-prefetch" href="//www.google-analytics.com" />
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/site.webmanifest" />
+        {/* PWA Meta Tags */}
+        <meta name="theme-color" content="#2b3a67" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="سِ وان" />
       </head>
       <body className={`${vazirmatn.variable} ${notoSansArabic.variable} ${ibmPlexSansArabic.variable} font-sans`} suppressHydrationWarning>
         <ClientOnly>
           <SchemaOrg />
+          <PWARegister />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -172,6 +182,7 @@ export default function RootLayout({
             </main>
             <Footer />
             <FloatingWhatsApp />
+            <PWAInstallPrompt />
             <Toaster position="top-center" richColors />
             <PerformanceMonitor />
             {/* <PKCEDebugger /> */}

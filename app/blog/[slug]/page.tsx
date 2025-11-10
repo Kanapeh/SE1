@@ -63,7 +63,7 @@ function stripHtmlTags(html: string): string {
 
 function normalizeSlug(value: string): string {
   return value
-    .toLowerCase()
+      .toLowerCase()
     .replace(/[^\u0600-\u06FFa-z0-9\s\-|+]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
@@ -102,7 +102,7 @@ function toStringArray(value: unknown): string[] {
       .split(",")
       .map((part) => part.trim())
       .filter(Boolean);
-  }
+      }
 
   return [];
 }
@@ -161,7 +161,7 @@ function parsePdfFiles(value: unknown): PdfFile[] {
 
   const normalized = normalize(value);
   return normalized ? [normalized] : [];
-}
+      }
 
 function sanitizePost(raw: RawPost): BlogPost {
   return {
@@ -183,7 +183,7 @@ function sanitizePost(raw: RawPost): BlogPost {
     has_table: Boolean(raw.has_table),
     pdf_files: parsePdfFiles(raw.pdf_files),
   };
-}
+      }
 
 const getPost = cache(async (slug: string): Promise<BlogPost | null> => {
   const supabase = await createClient();
@@ -196,8 +196,8 @@ const getPost = cache(async (slug: string): Promise<BlogPost | null> => {
         .map((item) => item.trim())
         .filter(Boolean)
     )
-  );
-
+        );
+        
   for (const candidate of candidateSlugs) {
     const { data, error } = await supabase
       .from("blog_posts")
@@ -205,7 +205,7 @@ const getPost = cache(async (slug: string): Promise<BlogPost | null> => {
       .eq("slug", candidate)
       .eq("status", "published")
       .maybeSingle();
-
+            
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching blog post", { candidate, error });
       continue;
@@ -285,10 +285,10 @@ export async function generateMetadata({
 
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
-
+      
   if (!post) {
     notFound();
-  }
+      }
 
   const plainTitle = stripHtmlTags(post.title);
   const description = stripHtmlTags(post.content).replace(/\s+/g, " ").trim().slice(0, 160);
@@ -324,121 +324,121 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   };
 
   return (
-    <article className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
-        <Link href="/blog" className="text-blue-600 hover:underline mb-8 inline-block">
-          ← بازگشت به لیست مقالات
-        </Link>
+      <article className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <Link href="/blog" className="text-blue-600 hover:underline mb-8 inline-block">
+            ← بازگشت به لیست مقالات
+          </Link>
 
-        <header className="mb-8">
+          <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{plainTitle}</h1>
-          <div className="flex items-center justify-between text-gray-600 mb-4">
-            <span>نویسنده: {post.author}</span>
+            <div className="flex items-center justify-between text-gray-600 mb-4">
+              <span>نویسنده: {post.author}</span>
             <span>{new Date(post.published_at).toLocaleDateString("fa-IR")}</span>
-          </div>
-          {post.image_url && (
-            <Image
-              src={post.image_url}
+            </div>
+            {post.image_url && (
+              <Image
+                src={post.image_url}
               alt={plainTitle}
-              width={800}
-              height={400}
-              className="w-full h-96 object-cover rounded-lg mb-8"
-            />
-          )}
-        </header>
+                width={800}
+                height={400}
+                className="w-full h-96 object-cover rounded-lg mb-8"
+              />
+            )}
+          </header>
 
-        <div className="prose prose-lg max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: post.content }} />
-        </div>
+          <div className="prose prose-lg max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+          </div>
 
-        {(post.has_video || post.video_url) && post.video_url && (
-          <div className="mt-8">
+          {(post.has_video || post.video_url) && post.video_url && (
+            <div className="mt-8">
             <VideoPlayer videoUrl={post.video_url} title="ویدیو مرتبط" />
-          </div>
-        )}
-
-        {(post.has_chart || post.chart_data) && post.chart_data && (
-          <div className="mt-8">
+            </div>
+          )}
+          
+          {(post.has_chart || post.chart_data) && post.chart_data && (
+            <div className="mt-8">
             <ChartDisplay chartData={post.chart_data} title="نمودار داده‌ها" />
-          </div>
-        )}
+            </div>
+          )}
 
-        {(post.has_table || post.table_data) && post.table_data && (
-          <div className="mt-8">
+          {(post.has_table || post.table_data) && post.table_data && (
+            <div className="mt-8">
             <DataTable tableData={post.table_data} sortable searchable pagination itemsPerPage={5} />
-          </div>
-        )}
+            </div>
+          )}
 
         {post.pdf_files.length > 0 && (
-          <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              فایل‌های قابل دانلود
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              می‌توانید جزوات، کتاب‌ها و منابع مرتبط با این مقاله را دانلود کنید
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {post.pdf_files.map((pdf, index) => (
-                <a
+            <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                فایل‌های قابل دانلود
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                می‌توانید جزوات، کتاب‌ها و منابع مرتبط با این مقاله را دانلود کنید
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {post.pdf_files.map((pdf, index) => (
+                  <a
                   key={`${pdf.url}-${index}`}
-                  href={pdf.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download={pdf.name}
-                  className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-lg transition-all duration-300 group"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    href={pdf.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={pdf.name}
+                    className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-lg transition-all duration-300 group"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {pdf.name}
+                        </h3>
+                      {typeof pdf.size === "number" && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {(pdf.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 mr-4">
+                      <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {pdf.name}
-                      </h3>
-                      {typeof pdf.size === "number" && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {(pdf.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 mr-4">
-                    <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {post.tags.length > 0 && (
-          <div className="mt-8 pt-8 border-t">
-            <h2 className="text-xl font-semibold mb-4">برچسب‌ها:</h2>
-            <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag, index) => (
+            <div className="mt-8 pt-8 border-t">
+              <h2 className="text-xl font-semibold mb-4">برچسب‌ها:</h2>
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag, index) => (
                 <span key={`${tag}-${index}`} className="bg-gray-100 text-foreground px-3 py-1 rounded-full text-sm">
-                  {tag}
-                </span>
-              ))}
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         <CommentsSection postId={post.id} />
-      </div>
+            </div>
 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-    </article>
+      </article>
   );
-}
+} 
 

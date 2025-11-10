@@ -10,18 +10,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
+import { 
   Activity,
   ArrowRight,
   Bell,
   BookOpen,
   Calendar,
   CheckCircle,
-  Clock,
+  Clock, 
   DollarSign,
   MessageCircle,
   Sparkles,
-  Star,
+  Star, 
   Target,
   TrendingUp,
   Users,
@@ -132,16 +132,16 @@ export default function TeacherDashboardPage() {
 
         const profileResponse = await fetch(`/api/teacher-profile?user_id=${user.id}&email=${user.email}`);
         if (!profileResponse.ok) {
-          router.push('/register');
-          return;
+              router.push('/register');
+              return;
         }
 
         const { teacher } = await profileResponse.json();
         if (!teacher || (teacher.status !== 'active' && teacher.status !== 'Approved')) {
-          router.push('/register?error=not_approved');
-          return;
-        }
-
+            router.push('/register?error=not_approved');
+            return;
+          }
+          
         setTeacherProfile(teacher);
 
         const bookingsResponse = await fetch(`/api/bookings?teacher_id=${teacher.id}`);
@@ -291,7 +291,7 @@ export default function TeacherDashboardPage() {
           <span className="flex items-baseline gap-1">
             <span className="text-lg font-bold text-emerald-600 dark:text-emerald-300">
               {earnings.currentBalance.toLocaleString()}
-            </span>
+                    </span>
             <span className="text-xs text-slate-500 dark:text-slate-400">تومان</span>
           </span>
         ),
@@ -313,33 +313,33 @@ export default function TeacherDashboardPage() {
   }, [analytics, earnings]);
 
   const primaryAction = (
-    <Button
+              <Button 
       size="lg"
       className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:shadow-indigo-300"
-      onClick={() => router.push('/teachers/schedule')}
-    >
+                onClick={() => router.push('/teachers/schedule')} 
+              >
       <Calendar className="h-5 w-5" />
       برنامه‌ریزی کلاس‌ها
       <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-    </Button>
+              </Button>
   );
 
   const secondaryAction = (
-    <Button
+                    <Button 
       variant='outline'
       size='lg'
       className='rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 text-base font-semibold text-slate-700 hover:border-indigo-300 hover:text-indigo-600'
       onClick={() => router.push('/teachers/earnings')}
     >
       مشاهده گزارش مالی
-    </Button>
+                    </Button>
   );
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-500" />
-      </div>
+              </div>
     );
   }
 
@@ -350,17 +350,17 @@ export default function TeacherDashboardPage() {
           <CardContent className="space-y-4 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-500 dark:bg-rose-900/40">
               <Bell className="h-8 w-8" />
-            </div>
+                    </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">پروفایل معلم تکمیل نیست</h2>
             <p className="text-sm text-slate-600 dark:text-slate-300">
               برای دسترسی به داشبورد، ابتدا ثبت‌نام خود را تکمیل و تایید منتظر بمانید.
             </p>
             <Button className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white" onClick={() => router.push('/register')}>
               تکمیل اطلاعات
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+                        </Button>
+            </CardContent>
+          </Card>
+                  </div>
     );
   }
 
@@ -376,7 +376,7 @@ export default function TeacherDashboardPage() {
               <Users className="h-4 w-4 text-sky-300" />
               {analytics.activeStudents} زبان‌آموز فعال
               <span className="hidden sm:inline text-white/70">• {teacherProfile.languages.join('، ')}</span>
-            </div>
+                  </div>
           }
           primaryAction={primaryAction}
           secondaryAction={secondaryAction}
@@ -394,16 +394,16 @@ export default function TeacherDashboardPage() {
               accent={card.accent}
             />
           ))}
-        </div>
+                  </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
           <Card className="border-none bg-white/90 shadow-xl dark:bg-slate-900/80">
-            <CardHeader>
+                <CardHeader>
               <CardTitle className="flex items-center justify-between text-lg font-semibold text-slate-900 dark:text-white">
                 <span>اقدامات فوری</span>
                 <span className="text-xs text-slate-400">برای حرفه‌ای ماندن، این موارد را بررسی کنید</span>
-              </CardTitle>
-            </CardHeader>
+                  </CardTitle>
+                </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               {quickActions.map((action) => (
                 <button
@@ -419,25 +419,25 @@ export default function TeacherDashboardPage() {
                   </span>
                 </button>
               ))}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
           <Card className="border-none bg-white/90 shadow-xl dark:bg-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between">
-              <div>
+                  <div>
                 <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">اعلان‌های اخیر</CardTitle>
                 <p className="text-xs text-slate-500 dark:text-slate-300">آخرین پیام‌ها، پرداخت‌ها و رزروها</p>
-              </div>
+                    </div>
               <Badge variant="outline" className="rounded-full border-indigo-200 bg-indigo-50 text-xs text-indigo-600 dark:border-indigo-500/40 dark:bg-indigo-900/30 dark:text-indigo-200">
                 {notifications.filter((n) => !n.read).length} جدید
               </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4">
+                </CardHeader>
+                <CardContent className="space-y-4">
               {latestNotifications.length === 0 ? (
                 <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm text-slate-500 dark:bg-slate-800/70 dark:text-slate-300">
                   هنوز پیامی دریافت نکرده‌اید.
-                </div>
-              ) : (
+                  </div>
+                ) : (
                 latestNotifications.map((notification) => (
                   <div
                     key={notification.id}
@@ -459,7 +459,7 @@ export default function TeacherDashboardPage() {
                       ) : (
                         <Activity className="h-5 w-5 text-sky-500" />
                       )}
-                    </div>
+                </div>
                     <div className="flex-1 space-y-1">
                       <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{notification.title}</h3>
                       <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-300">{notification.message}</p>
@@ -469,16 +469,16 @@ export default function TeacherDashboardPage() {
                     </div>
                   </div>
                 ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                )}
+              </CardContent>
+            </Card>
+                          </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.85fr,1.15fr]">
           <Card className="border-none bg-white/90 shadow-xl dark:bg-slate-900/80">
-            <CardHeader>
+                <CardHeader>
               <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">کیف پول و گزارش مالی</CardTitle>
-            </CardHeader>
+                </CardHeader>
             <CardContent className="space-y-4">
               <WalletCard
                 userType="teacher"
@@ -491,45 +491,45 @@ export default function TeacherDashboardPage() {
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                     {earnings.totalEarnings.toLocaleString()} تومان
                   </span>
-                </div>
+                        </div>
                 <div className="rounded-xl bg-white/90 p-3 text-slate-500 shadow-sm dark:bg-slate-800/70 dark:text-slate-300">
                   <span className="block text-[11px] font-medium text-slate-400">در انتظار واریز</span>
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                     {(earnings.pendingPayouts || 0).toLocaleString()} تومان
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                          </span>
+                        </div>
+                  </div>
+                </CardContent>
+              </Card>
 
           <Card className="border-none bg-white/90 shadow-xl dark:bg-slate-900/80">
-            <CardHeader>
+              <CardHeader>
               <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">بینش‌های آموزشی</CardTitle>
-            </CardHeader>
+              </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
                 <div className="mb-2 flex items-center gap-2 text-slate-900 dark:text-white">
                   <TrendingUp className="h-4 w-4 text-emerald-500" />
                   رشد ماهانه
-                </div>
+                      </div>
                 <p>رشد {analytics.monthlyGrowth}% نسبت به ماه گذشته ثبت شده است. برنامه‌ریزی منظم کلاس‌ها این روند را تقویت می‌کند.</p>
-              </div>
+                        </div>
               <div className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
                 <div className="mb-2 flex items-center gap-2 text-slate-900 dark:text-white">
                   <Activity className="h-4 w-4 text-sky-500" />
                   وضعیت پاسخ‌گویی
-                </div>
+                      </div>
                 <p>
                   {analytics.pendingRequests === 0
                     ? 'همه درخواست‌های زبان‌آموزان پاسخ داده شده است. همین روند را حفظ کنید!'
                     : `شما ${analytics.pendingRequests} درخواست در انتظار تایید دارید. پاسخ سریع‌تر اعتماد بیشتری ایجاد می‌کند.`}
                 </p>
-              </div>
+                    </div>
               <div className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
                 <div className="mb-2 flex items-center gap-2 text-slate-900 dark:text-white">
                   <BookOpen className="h-4 w-4 text-violet-500" />
                   زمان‌های محبوب
-                </div>
+                    </div>
                 <p>
                   زبان‌آموزان بیشترین رزرو را برای{' '}
                   {teacherProfile.available_hours?.length ? teacherProfile.available_hours[0] : 'بازه زمانی عصر'} ثبت کرده‌اند. این بازه را باز نگه
@@ -542,12 +542,12 @@ export default function TeacherDashboardPage() {
                   فرصت ویژه
                 </div>
                 <p>زبان‌آموزان جدید به دنبال کلاس آزمایشی هستند. پیشنهاد ویژه جلسه اول را فعال کنید تا سریع‌تر رزرو شوید.</p>
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
         </div>
       </div>
     </div>
   );
-}
+} 
 
