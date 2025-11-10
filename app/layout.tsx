@@ -12,6 +12,7 @@ import SchemaOrg from "@/components/SchemaOrg";
 import PerformanceMonitor from "@/components/PerformanceMonitor";
 import PWARegister from "@/components/PWARegister";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 
 // فونت اصلی - Vazirmatn (بهترین فونت فارسی) - Reduced weights for better performance
 const vazirmatn = Vazirmatn({
@@ -183,6 +184,7 @@ export default function RootLayout({
             <Footer />
             <FloatingWhatsApp />
             <PWAInstallPrompt />
+            <IOSInstallPrompt />
             <Toaster position="top-center" richColors />
             <PerformanceMonitor />
             {/* <PKCEDebugger /> */}

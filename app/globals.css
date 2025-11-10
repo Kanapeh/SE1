@@ -161,6 +161,30 @@
     color: hsl(var(--foreground));
   }
 
+  /* Mobile alignment fixes for RTL */
+  @media (max-width: 768px) {
+    [dir="rtl"] .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    /* Ensure proper centering for mobile */
+    [dir="rtl"] .container.mx-auto {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    /* Fix overflow issues on mobile */
+    body {
+      overflow-x: hidden;
+    }
+    
+    /* Ensure sections don't overflow */
+    section {
+      overflow-x: hidden;
+    }
+  }
+
   /* Logo styling with rotation animation */
   .logo-image {
     transition: transform 0.3s ease;
