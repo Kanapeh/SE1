@@ -142,6 +142,8 @@ export default function Hero() {
                     className="object-cover"
                     priority
                     placeholder="blur"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    quality={85}
                   />
                 </div>
                 <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl bg-white/85 p-4 text-center text-slate-700 shadow">

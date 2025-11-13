@@ -18,7 +18,8 @@ import {
   BookOpen,
   Users,
   CheckCircle,
-  Video
+  Video,
+  MessageSquare
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -55,11 +56,26 @@ interface Teacher {
   preferred_time: string[] | null;
 }
 
+interface Review {
+  id: string;
+  teacher_id: string;
+  student_id: string | null;
+  student_name: string;
+  student_email: string | null;
+  rating: number;
+  comment: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function TeacherDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   // Fetch teacher from Supabase
   const fetchTeacher = async () => {
@@ -72,21 +88,56 @@ export default function TeacherDetailPage() {
         .single();
 
       if (error) {
-        console.error('Error fetching teacher:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching teacher:', error);
+        }
         return;
       }
 
       setTeacher(data);
     } catch (error) {
-      console.error('Error in fetchTeacher:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error in fetchTeacher:', error);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch reviews from Supabase
+  const fetchReviews = async () => {
+    if (!params.id) return;
+    
+    try {
+      setReviewsLoading(true);
+      const { data, error } = await supabase
+        .from('teacher_reviews')
+        .select('*')
+        .eq('teacher_id', params.id)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching reviews:', error);
+        }
+        return;
+      }
+
+      setReviews(data || []);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error in fetchReviews:', error);
+      }
+    } finally {
+      setReviewsLoading(false);
     }
   };
 
   useEffect(() => {
     if (params.id) {
       fetchTeacher();
+      fetchReviews();
     }
   }, [params.id]);
 
@@ -414,6 +465,82 @@ export default function TeacherDetailPage() {
             </motion.div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="mt-12"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 text-blue-500" />
+                نظرات دانش‌آموزان
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reviewsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600 dark:text-gray-400">در حال بارگذاری نظرات...</p>
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400">هنوز نظری ثبت نشده است</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-b-0 last:pb-0"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+                              {review.student_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                              {review.student_name}
+                            </h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {new Date(review.created_at).toLocaleDateString('fa-IR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-5 h-5 ${
+                                i < review.rating
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-300 dark:text-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed pr-14">
+                        {review.comment}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MessageCircle, Phone, Mail, Headphones, Clock, Users, Zap, Shield } from "lucide-react";
+import { Smartphone } from "lucide-react";
 import { motion } from "framer-motion";
 
 const supportMethods = [
@@ -210,11 +211,10 @@ export default function SupportSection() {
             </p>
             <Button 
               onClick={() => window.open('https://wa.me/989387279975', '_blank')}
-              className="bg-white text-blue-600 px-8 py-3 rounded-2xl font-semibold hover:bg-gray-100 transition-colors transform hover:scale-105"
+              className="bg-green-500 hover:bg-green-600 text-white rounded-full w-20 h-20 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+              title="ارتباط از طریق WhatsApp"
             >
-              <span className="mr-2">💬</span>
-              شروع گفتگو
-              <span className="ml-2">🎯</span>
+              <Smartphone className="w-10 h-10" />
             </Button>
           </div>
         </motion.div>

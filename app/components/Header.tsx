@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { 
   Menu, 
@@ -22,16 +23,24 @@ import {
 
 
 export default function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [navigating, setNavigating] = useState<string | null>(null);
 
 
 
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Reset navigating state when pathname changes
+  useEffect(() => {
+    setNavigating(null);
+  }, [pathname]);
 
   const checkUser = async () => {
     try {
@@ -121,17 +130,70 @@ export default function Header() {
                 آکادمی زبان سِ وان
               </Link>
               <div className="hidden lg:flex space-x-6">
-                <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
+                <Link 
+                  href="/about" 
+                  prefetch={true}
+                  className={`text-gray-600 hover:text-primary transition-colors relative ${
+                    navigating === '/about' ? 'opacity-50' : ''
+                  }`}
+                  onClick={() => setNavigating('/about')}
+                >
                   درباره ما
+                  {navigating === '/about' && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
                 </Link>
-                <Link href="/courses" className="text-gray-600 hover:text-primary transition-colors">
+                <Link 
+                  href="/courses" 
+                  prefetch={true}
+                  className={`text-gray-600 hover:text-primary transition-colors relative ${
+                    navigating === '/courses' ? 'opacity-50' : ''
+                  }`}
+                  onClick={() => setNavigating('/courses')}
+                >
                   دوره‌ها
+                  {navigating === '/courses' && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
                 </Link>
-                <Link href="/teachers" className="text-gray-600 hover:text-primary transition-colors">
+                <Link 
+                  href="/teachers" 
+                  prefetch={true}
+                  className={`text-gray-600 hover:text-primary transition-colors relative ${
+                    navigating === '/teachers' ? 'opacity-50' : ''
+                  }`}
+                  onClick={() => setNavigating('/teachers')}
+                >
                   معلمان
+                  {navigating === '/teachers' && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
                 </Link>
-                <Link href="/contact" className="text-gray-600 hover:text-primary transition-colors">
+                <Link 
+                  href="/blog" 
+                  prefetch={true}
+                  className={`text-gray-600 hover:text-primary transition-colors relative ${
+                    navigating === '/blog' ? 'opacity-50' : ''
+                  }`}
+                  onClick={() => setNavigating('/blog')}
+                >
+                  وبلاگ
+                  {navigating === '/blog' && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
+                </Link>
+                <Link 
+                  href="/contact" 
+                  prefetch={true}
+                  className={`text-gray-600 hover:text-primary transition-colors relative ${
+                    navigating === '/contact' ? 'opacity-50' : ''
+                  }`}
+                  onClick={() => setNavigating('/contact')}
+                >
                   تماس با ما
+                  {navigating === '/contact' && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
                 </Link>
               </div>
             </div>
@@ -244,8 +306,18 @@ export default function Header() {
                     <Link
                       key={index}
                       href={option.href}
-                      onClick={() => setIsSidebarOpen(false)}
-                      style={{ display: 'block', textDecoration: 'none', marginBottom: '16px' }}
+                      prefetch={true}
+                      onClick={() => {
+                        setNavigating(option.href);
+                        setIsSidebarOpen(false);
+                      }}
+                      style={{ 
+                        display: 'block', 
+                        textDecoration: 'none', 
+                        marginBottom: '16px',
+                        opacity: navigating === option.href ? 0.7 : 1,
+                        transition: 'opacity 0.2s'
+                      }}
                     >
                       <div style={{
                         position: 'relative',
@@ -322,13 +394,18 @@ export default function Header() {
                     {[
                       { href: '/teachers', icon: Users, text: 'معلمان' },
                       { href: '/courses', icon: BookOpen, text: 'دوره‌ها' },
+                      { href: '/blog', icon: BookOpen, text: 'وبلاگ' },
                       { href: '/contact', icon: MessageCircle, text: 'تماس' },
                       { href: '/about', icon: Award, text: 'درباره ما' }
                     ].map((item, idx) => (
                       <Link
                         key={idx}
                         href={item.href}
-                        onClick={() => setIsSidebarOpen(false)}
+                        prefetch={true}
+                        onClick={() => {
+                          setNavigating(item.href);
+                          setIsSidebarOpen(false);
+                        }}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -336,11 +413,23 @@ export default function Header() {
                           borderRadius: '8px',
                           border: '1px solid #e5e7eb',
                           textDecoration: 'none',
-                          color: 'inherit'
+                          color: 'inherit',
+                          opacity: navigating === item.href ? 0.6 : 1,
+                          transition: 'opacity 0.2s'
                         }}
                       >
                         <item.icon style={{ width: '16px', height: '16px', color: '#3b82f6', marginLeft: '8px' }} />
                         <span style={{ fontSize: '14px' }}>{item.text}</span>
+                        {navigating === item.href && (
+                          <span style={{
+                            width: '8px',
+                            height: '8px',
+                            backgroundColor: '#3b82f6',
+                            borderRadius: '50%',
+                            marginRight: '8px',
+                            animation: 'pulse 1.5s ease-in-out infinite'
+                          }}></span>
+                        )}
                       </Link>
                     ))}
                   </div>

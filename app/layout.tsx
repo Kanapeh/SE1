@@ -13,6 +13,7 @@ import PerformanceMonitor from "@/components/PerformanceMonitor";
 import PWARegister from "@/components/PWARegister";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import IOSInstallPrompt from "@/components/IOSInstallPrompt";
+import NavigationLoader from "@/app/components/NavigationLoader";
 
 // فونت اصلی - Vazirmatn (بهترین فونت فارسی) - Reduced weights for better performance
 const vazirmatn = Vazirmatn({
@@ -159,7 +160,10 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
         <link rel="dns-prefetch" href="//www.google-analytics.com" />
-        {/* PWA Manifest */}
+        {/* Preconnect for critical resources */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* PWA Manifest - defer loading */}
         <link rel="manifest" href="/site.webmanifest" />
         {/* PWA Meta Tags */}
         <meta name="theme-color" content="#2b3a67" />
@@ -178,6 +182,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Header />
+            <NavigationLoader />
             <main className="min-h-screen">
               {children}
             </main>

@@ -124,14 +124,12 @@ export default function BookSessionPage() {
           try {
             const contextData = JSON.parse(savedContext);
             setBookingContext(contextData);
-            console.log('Loaded booking context:', contextData);
           } catch (error) {
-            console.error('Error parsing booking context:', error);
+            // Silent error handling
           }
         }
         const { data: { session }, error } = await supabase.auth.getSession();
         if (session && !error) {
-          console.log('👤 User session found:', session);
           setUserSession(session);
           
           // Auto-fill student information if user is logged in
@@ -148,11 +146,9 @@ export default function BookSessionPage() {
               studentEmail: userEmail || ''
             }));
           }
-        } else {
-          console.log('❌ No user session found');
         }
       } catch (error) {
-        console.error('💥 Error fetching user session:', error);
+        // Silent error handling
       }
     };
 
@@ -165,11 +161,8 @@ export default function BookSessionPage() {
       setLoading(true);
       const teacherId = params?.id;
       if (!teacherId) {
-        console.error('❌ No teacher ID provided');
         return;
       }
-      
-      console.log('🔍 Fetching teacher with ID:', teacherId);
       
       // Fetch teacher directly from Supabase
       const { data, error } = await supabase
@@ -178,23 +171,13 @@ export default function BookSessionPage() {
         .eq('id', teacherId)
         .single();
 
-      if (error) {
-        console.error('❌ Supabase fetch failed:', error);
+      if (error || !data) {
         return;
       }
-
-      if (!data) {
-        console.error('❌ No teacher found with ID:', teacherId);
-        return;
-      }
-      console.log('✅ Teacher data received from API:', data);
-      console.log('📅 Available days:', data.available_days);
-      console.log('⏰ Available hours:', data.available_hours);
-      console.log('🏫 Class types:', data.class_types);
       
       setTeacher(data);
     } catch (error) {
-      console.error('💥 Error in fetchTeacher:', error);
+      // Silent error handling
     } finally {
       setLoading(false);
     }
@@ -231,7 +214,7 @@ export default function BookSessionPage() {
           }));
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        // Silent error handling
       }
     };
 
@@ -243,13 +226,7 @@ export default function BookSessionPage() {
     setIsSubmitting(true);
 
     try {
-      console.log('Form submission started with data:', bookingForm);
-      
-      // Validate form (temporarily disabled for debugging)
-      console.log('Form validation - selectedDays:', bookingForm.selectedDays);
-      console.log('Form validation - selectedHours:', bookingForm.selectedHours);
-      console.log('Form validation - studentName:', bookingForm.studentName);
-      console.log('Form validation - studentEmail:', bookingForm.studentEmail);
+      // Validate form
       
       // Temporarily disable validation to test form submission
       /*
@@ -280,7 +257,6 @@ export default function BookSessionPage() {
 
       // Calculate number of sessions
       const numberOfSessions = bookingForm.selectedDays.length * bookingForm.selectedHours.length;
-      console.log('Number of sessions calculated:', numberOfSessions);
       
       // Prepare booking data
       const bookingData = {
@@ -299,23 +275,18 @@ export default function BookSessionPage() {
         totalPrice: calculateTotalPrice(),
         numberOfSessions: numberOfSessions
       };
-      
-      console.log('Prepared booking data:', bookingData);
 
       // Store booking data in localStorage to avoid URL length issues
       localStorage.setItem('bookingData', JSON.stringify(bookingData));
-      console.log('Booking data stored in localStorage:', bookingData);
       
       // Also store in sessionStorage as backup
       sessionStorage.setItem('bookingData', JSON.stringify(bookingData));
-      console.log('Booking data also stored in sessionStorage');
       
       // Navigate to payment page
-      console.log('Navigating to payment page...');
       router.push('/payment');
       setIsSubmitting(false);
     } catch (error) {
-      console.error('Error preparing booking:', error);
+      // Silent error handling
       setIsSubmitting(false);
     }
   };
@@ -358,26 +329,7 @@ export default function BookSessionPage() {
     const hasStudentPhone = bookingForm.studentPhone && bookingForm.studentPhone.trim() !== '';
     const hasStudentEmail = bookingForm.studentEmail && bookingForm.studentEmail.trim() !== '';
     
-    const isValid = hasSelectedDays && hasSelectedHours && hasSessionType && hasStudentName && hasStudentPhone && hasStudentEmail;
-    
-    // Debug: Log form validation details
-    console.log('Form validation:', {
-      selectedDays: bookingForm.selectedDays.length,
-      selectedHours: bookingForm.selectedHours.length,
-      sessionType: bookingForm.sessionType,
-      studentName: bookingForm.studentName,
-      studentPhone: bookingForm.studentPhone,
-      studentEmail: bookingForm.studentEmail,
-      hasSelectedDays,
-      hasSelectedHours,
-      hasSessionType,
-      hasStudentName,
-      hasStudentPhone,
-      hasStudentEmail,
-      isValid
-    });
-    
-    return isValid;
+    return hasSelectedDays && hasSelectedHours && hasSessionType && hasStudentName && hasStudentPhone && hasStudentEmail;
   };
 
   // Helper function to check if a time slot is available

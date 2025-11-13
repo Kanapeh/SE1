@@ -18,6 +18,9 @@ const nextConfig = {
   
   images: { 
     unoptimized: false,
+    // Improve image loading performance
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     domains: [
       'localhost', 
       '172.20.10.10', // Add local network IP
@@ -68,6 +71,8 @@ const nextConfig = {
     optimizeCss: true,
     optimizePackageImports: ['@/components/ui', 'lucide-react', 'framer-motion'],
     webVitalsAttribution: ['CLS', 'LCP', 'FCP', 'FID', 'TTFB'],
+    // Reduce JavaScript bundle size
+    serverMinification: true,
   },
   
   // Bundle analyzer
@@ -142,6 +147,36 @@ const nextConfig = {
             key: 'Content-Type',
             value: 'application/manifest+json',
           },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Static assets with long cache
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Images with cache
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Fonts with cache
+      {
+        source: '/fonts/(.*)',
+        headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',

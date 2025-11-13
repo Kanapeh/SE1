@@ -83,8 +83,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm leading-relaxed text-white mb-6">
-              آکادمی زبان <span className="text-blue-400 font-bold">سِ وان</span> در تاریخ ۲۱ آوریل ۲۰۲۵ 
-              توسط <span className="text-blue-400 font-bold">علی علیزاده</span> ملقب به <span className="text-blue-400 font-bold">سپنتا</span> تأسیس شده است. هدف اصلی تأسیس این موسسه کمک به معلمان و دانش‌آموزانی است که مشکل دسترسی به آموزش دارند، مانند دختران و پسران افغانستان و دیگر دانش‌آموزانی که از تدریس محروم هستند.
+              در سِ وان یادگیری با یک برنامهٔ شخصی، مربی همراه و تکنولوژی روز پیش می‌رود؛ تا هر زبان‌آموز در کمتر از چند ماه بتواند با اعتمادبه‌نفس در گفت‌وگوهای جهانی حضور داشته باشد.
             </p>
             <div className="flex items-center space-x-2 text-sm text-white">
               <Heart className="w-4 h-4 text-red-500" />
