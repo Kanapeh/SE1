@@ -97,8 +97,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogPages = blogPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(post.updated_at || post.published_at),
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
+    changeFrequency: 'weekly' as const,
+    priority: 0.9,
   }))
 
   const teacherPages = teachers.map((teacher) => ({

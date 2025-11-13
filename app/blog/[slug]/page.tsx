@@ -219,6 +219,54 @@ const getPost = cache(async (slug: string): Promise<BlogPost | null> => {
   return null;
 });
 
+const getRelatedPosts = cache(async (currentPost: BlogPost, limit: number = 3): Promise<BlogPost[]> => {
+  const supabase = await createClient();
+  
+  // Get all published posts except current
+  const { data: allPosts, error } = await supabase
+    .from("blog_posts")
+    .select(SELECT_COLUMNS)
+    .eq("status", "published")
+    .neq("id", currentPost.id)
+    .order("published_at", { ascending: false })
+    .limit(20); // Get more to filter by tags
+
+  if (error || !allPosts || allPosts.length === 0) {
+    return [];
+  }
+
+  const sanitized = allPosts.map((post) => sanitizePost(post as RawPost));
+
+  // If no tags, return latest posts
+  if (!currentPost.tags || currentPost.tags.length === 0) {
+    return sanitized.slice(0, limit);
+  }
+
+  // Filter posts with matching tags
+  const related = sanitized.filter((post) => {
+    if (!post.tags || post.tags.length === 0) return false;
+    // Check if at least one tag matches
+    return post.tags.some((tag) => currentPost.tags.includes(tag));
+  });
+
+  // If we have enough related posts, return them
+  if (related.length >= limit) {
+    return related.slice(0, limit);
+  }
+
+  // Otherwise, combine related with latest and remove duplicates
+  const relatedIds = new Set(related.map((p) => p.id));
+  const additional = sanitized.filter((post) => !relatedIds.has(post.id));
+  const combined = [...related, ...additional];
+
+  // Remove duplicates
+  const unique = combined.filter((post, index, self) => 
+    index === self.findIndex((p) => p.id === post.id)
+  );
+  
+  return unique.slice(0, limit);
+});
+
 export async function generateMetadata({
   params,
 }: {
@@ -243,6 +291,7 @@ export async function generateMetadata({
   return {
     title: `${plainTitle} | آکادمی زبان سِ وان`,
     description,
+    keywords: post.tags.length > 0 ? post.tags.join(", ") : "آموزش زبان انگلیسی, مقالات آموزشی",
     alternates: {
       canonical: url,
     },
@@ -253,15 +302,20 @@ export async function generateMetadata({
       type: "article",
       siteName: "آکادمی زبان سِ وان",
       publishedTime: post.published_at,
+      modifiedTime: post.published_at,
       authors: [post.author],
+      tags: post.tags,
       images: post.image_url
         ? [
             {
               url: post.image_url,
               alt: plainTitle,
+              width: 1200,
+              height: 630,
             },
           ]
         : undefined,
+      locale: "fa_IR",
     },
     twitter: {
       card: "summary_large_image",
@@ -288,18 +342,27 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       
   if (!post) {
     notFound();
-      }
+  }
+
+  const relatedPosts = await getRelatedPosts(post, 3);
 
   const plainTitle = stripHtmlTags(post.title);
-  const description = stripHtmlTags(post.content).replace(/\s+/g, " ").trim().slice(0, 160);
+  const plainContent = stripHtmlTags(post.content);
+  const description = plainContent.replace(/\s+/g, " ").trim().slice(0, 160);
+  const wordCount = plainContent.split(/\s+/).filter(Boolean).length;
+  const url = `https://www.se1a.org/blog/${post.slug}`;
+  
+  // Article Structured Data
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: plainTitle,
     description,
-    image: post.image_url,
+    articleBody: plainContent,
+    wordCount,
+    image: post.image_url ? [post.image_url] : undefined,
     author: {
-      "@type": "Organization",
+      "@type": "Person",
       name: post.author,
       url: "https://www.se1a.org",
     },
@@ -310,25 +373,73 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       logo: {
         "@type": "ImageObject",
         url: "https://www.se1a.org/images/logo.png",
+        width: 512,
+        height: 512,
       },
     },
     datePublished: post.published_at,
     dateModified: post.published_at,
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://www.se1a.org/blog/${post.slug}`,
+      "@id": url,
     },
     keywords: post.tags.join(", "),
     articleSection: "آموزش زبان انگلیسی",
     inLanguage: "fa-IR",
+    url,
+    isAccessibleForFree: true,
+    genre: ["آموزش", "زبان انگلیسی", "مقالات آموزشی"],
+  };
+
+  // Breadcrumbs Structured Data
+  const breadcrumbsData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "خانه",
+        item: "https://www.se1a.org",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "بلاگ",
+        item: "https://www.se1a.org/blog",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: plainTitle,
+        item: url,
+      },
+    ],
   };
 
   return (
       <article className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <Link href="/blog" className="text-blue-600 hover:underline mb-8 inline-block">
-            ← بازگشت به لیست مقالات
-          </Link>
+          {/* Breadcrumbs Navigation */}
+          <nav className="mb-8" aria-label="breadcrumb">
+            <ol className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <li>
+                <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  خانه
+                </Link>
+              </li>
+              <li>/</li>
+              <li>
+                <Link href="/blog" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  بلاگ
+                </Link>
+              </li>
+              <li>/</li>
+              <li className="text-gray-900 dark:text-gray-100 font-medium truncate max-w-md">
+                {plainTitle}
+              </li>
+            </ol>
+          </nav>
 
           <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{plainTitle}</h1>
@@ -432,11 +543,65 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           )}
 
         <CommentsSection postId={post.id} />
+
+          {/* Related Articles Section */}
+          {relatedPosts.length > 0 && (
+            <div className="mt-12 pt-8 border-t">
+              <h2 className="text-2xl font-bold mb-6">مقالات مرتبط</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {relatedPosts.map((relatedPost) => {
+                  const relatedTitle = stripHtmlTags(relatedPost.title);
+                  const relatedDescription = stripHtmlTags(relatedPost.content)
+                    .replace(/\s+/g, " ")
+                    .trim()
+                    .slice(0, 120);
+                  
+                  return (
+                    <Link
+                      key={relatedPost.id}
+                      href={`/blog/${relatedPost.slug}`}
+                      className="group block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                    >
+                      {relatedPost.image_url && (
+                        <div className="relative w-full h-48 overflow-hidden">
+                          <Image
+                            src={relatedPost.image_url}
+                            alt={relatedTitle}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {relatedTitle}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">
+                          {relatedDescription}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>{new Date(relatedPost.published_at).toLocaleDateString("fa-IR")}</span>
+                          <span className="text-blue-600 dark:text-blue-400 group-hover:underline">
+                            ادامه مطلب →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
             </div>
 
+      {/* Structured Data Scripts */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsData) }}
       />
       </article>
   );
