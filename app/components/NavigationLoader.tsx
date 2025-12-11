@@ -57,13 +57,23 @@ export default function NavigationLoader() {
   if (!loading && progress === 0) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-gray-200 dark:bg-gray-800">
+    <div className="fixed top-0 left-0 right-0 z-[9999] h-2 bg-gray-200/50 dark:bg-gray-800/50 backdrop-blur-sm">
       <div 
-        className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+        className="h-full bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-400 transition-all duration-300 ease-out relative overflow-hidden shadow-[0_0_10px_rgba(99,102,241,0.5)]"
         style={{
           width: `${progress}%`,
         }}
-      />
+      >
+        {/* Shimmer effect for better visibility */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+          style={{
+            animation: 'shimmer 1.5s infinite',
+          }}
+        />
+        {/* Glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/50 via-blue-400/50 to-cyan-300/50 blur-sm" />
+      </div>
     </div>
   );
 }

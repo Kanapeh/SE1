@@ -442,7 +442,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           </nav>
 
           <header className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">{plainTitle}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">{plainTitle}</h1>
             <div className="flex items-center justify-between text-gray-600 mb-4">
               <span>نویسنده: {post.author}</span>
             <span>{new Date(post.published_at).toLocaleDateString("fa-IR")}</span>
@@ -531,7 +531,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {post.tags.length > 0 && (
             <div className="mt-8 pt-8 border-t">
-              <h2 className="text-xl font-semibold mb-4">برچسب‌ها:</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-4">برچسب‌ها:</h2>
               <div className="flex flex-wrap gap-2">
                 {post.tags.map((tag, index) => (
                 <span key={`${tag}-${index}`} className="bg-gray-100 text-foreground px-3 py-1 rounded-full text-sm">
@@ -547,7 +547,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           {/* Related Articles Section */}
           {relatedPosts.length > 0 && (
             <div className="mt-12 pt-8 border-t">
-              <h2 className="text-2xl font-bold mb-6">مقالات مرتبط</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-6">مقالات مرتبط</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {relatedPosts.map((relatedPost) => {
                   const relatedTitle = stripHtmlTags(relatedPost.title);
@@ -573,7 +573,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                         </div>
                       )}
                       <div className="p-4">
-                        <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {relatedTitle}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">

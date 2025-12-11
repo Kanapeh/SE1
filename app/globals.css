@@ -457,6 +457,15 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Optimize animations for better performance */
 .animate-fadeInUp {
   animation: fadeInUp 0.8s ease-out forwards;

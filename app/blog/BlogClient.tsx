@@ -144,7 +144,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6"
             >
               بلاگ آموزشی
             </motion.h1>
@@ -153,7 +153,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8 leading-relaxed"
+              className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8 leading-relaxed"
             >
               مجموعه مقالات آموزشی و نکات یادگیری زبان انگلیسی از آکادمی سِ وان. 
               راهنمای کامل برای یادگیری زبان با بهترین روش‌ها.
@@ -277,7 +277,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mb-16"
           >
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
               مقالات ویژه
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -317,7 +317,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
                           <Clock className="w-4 h-4" />
                           <span>{post.read_time} دقیقه</span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {stripHtmlTags(post.title)}
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
@@ -354,7 +354,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
               همه مقالات
             </h2>
             <div className={`grid gap-6 ${
@@ -401,7 +401,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
                           <Clock className="w-4 h-4" />
                           <span>{post.read_time} دقیقه</span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {stripHtmlTags(post.title)}
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
@@ -450,7 +450,7 @@ export default function BlogClient({ posts }: BlogClientProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-3xl font-bold text-gray-900 dark:text-white mb-4"
+              className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4"
             >
               مقاله‌ای یافت نشد
             </motion.h3>

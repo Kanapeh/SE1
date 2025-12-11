@@ -100,34 +100,6 @@ export default function Header() {
           style={{ width: `${scrollProgress}%` }}
           transition={{ duration: 0.1 }}
         />
-        
-        {/* Compact Notification Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.5 }}
-          className="bg-gradient-to-r from-yellow-50/80 via-orange-50/80 to-red-50/80 dark:from-yellow-900/15 dark:via-orange-900/15 dark:to-red-900/15 border-b border-yellow-200/30 dark:border-yellow-700/30"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <div className="flex items-center justify-center space-x-3 text-sm text-yellow-800 dark:text-yellow-200">
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Star className="w-4 h-4 text-yellow-500" />
-              </motion.div>
-              <span className="font-medium text-sm">🎉 تخفیف ویژه 20% برای ثبت‌نام ماهانه!</span>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-xs font-medium hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-                استفاده کنید
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-        
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           {/* Hamburger Menu Button - Left Side */}
