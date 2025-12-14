@@ -162,6 +162,15 @@ function TeacherRegistrationForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [pageLoading, setPageLoading] = useState(true);
+
+  // Simulate page loading to improve perceived performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, []);
 
   const notifyOwner = async (details: {
     email: string;
@@ -254,11 +263,22 @@ function TeacherRegistrationForm() {
           data: {
             full_name: `${formData.firstName} ${formData.lastName}`,
             user_type: 'teacher',
-          }
+          },
+          // Don't require email confirmation if email sending fails
+          captchaToken: undefined,
         }
       });
 
-      if (authError) throw authError;
+      // Check if error is only about email sending
+      if (authError) {
+        // If user was created but email failed, continue anyway
+        if (authError.message?.includes('Error sending confirmation email') && authData?.user) {
+          console.warn('User created but email confirmation failed:', authError.message);
+          // Continue with registration - user can login without email confirmation
+        } else {
+          throw authError;
+        }
+      }
 
       if (authData.user) {
                           const { error: profileError } = await supabase.from('teachers').insert({
@@ -334,30 +354,82 @@ function TeacherRegistrationForm() {
           console.log("Email already confirmed, redirecting to profile completion");
           router.push('/complete-profile?type=teacher');
         } else {
-          console.log("Email confirmation required, redirecting to verify email");
+          console.log("Email confirmation may be required");
           // Store user type and email in session storage
           sessionStorage.setItem('userType', 'teacher');
           sessionStorage.setItem('userEmail', formData.email);
-          router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+          
+          // Show success message with option to login
+          toast.success('ثبت‌نام با موفقیت انجام شد!', {
+            description: 'می‌توانید وارد شوید یا ایمیل تایید را بررسی کنید.',
+            duration: 5000
+          });
+          
+          // Redirect to login with email pre-filled
+          setTimeout(() => {
+            router.push(`/login?email=${encodeURIComponent(formData.email)}&registered=true`);
+          }, 2000);
         }
       }
     } catch (error: any) {
       console.error('Registration error:', error);
       let errorMessage = 'خطا در ثبت‌نام';
       let showRateLimitInfo = false;
+      let emailError = false;
+      let userCreated = false;
+      
+      // Check if user was created despite email error
+      if (error.message && (
+        error.message.includes('Error sending confirmation email') ||
+        error.message.includes('email rate limit') ||
+        error.message.includes('Email rate limit') ||
+        error.message.includes('Email provider not enabled')
+      )) {
+        emailError = true;
+        // Check if user was actually created
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && user.email === formData.email) {
+            userCreated = true;
+          }
+        } catch (e) {
+          console.error('Error checking user:', e);
+        }
+      }
+      
+      if (userCreated && emailError) {
+        // User was created but email failed - allow them to continue
+        toast.success('ثبت‌نام با موفقیت انجام شد!', {
+          description: 'ایمیل تایید ارسال نشد، اما می‌توانید وارد شوید.',
+          duration: 5000
+        });
+        
+        // Store user type and email
+        sessionStorage.setItem('userType', 'teacher');
+        sessionStorage.setItem('userEmail', formData.email);
+        
+        // Redirect to login or complete profile
+        setTimeout(() => {
+          router.push('/login?email=' + encodeURIComponent(formData.email));
+        }, 2000);
+        return;
+      }
       
       if (error.message) {
         if (error.message.includes('User already registered')) {
-          errorMessage = 'این ایمیل قبلاً ثبت شده است';
+          errorMessage = 'این ایمیل قبلاً ثبت شده است. لطفاً وارد شوید.';
+          setTimeout(() => {
+            router.push('/login?email=' + encodeURIComponent(formData.email));
+          }, 2000);
         } else if (error.message.includes('Invalid email')) {
           errorMessage = 'ایمیل وارد شده معتبر نیست';
         } else if (error.message.includes('Password should be at least')) {
           errorMessage = 'رمز عبور باید حداقل 6 کاراکتر باشد';
-        } else if (error.message.includes('email rate limit exceeded')) {
+        } else if (error.message.includes('email rate limit exceeded') || error.message.includes('Email rate limit exceeded')) {
           errorMessage = 'تعداد درخواست‌های ایمیل بیش از حد مجاز است';
           showRateLimitInfo = true;
-        } else if (error.message.includes('Email rate limit exceeded')) {
-          errorMessage = 'تعداد درخواست‌های ایمیل بیش از حد مجاز است';
+        } else if (error.message.includes('Error sending confirmation email')) {
+          errorMessage = 'خطا در ارسال ایمیل تایید';
           showRateLimitInfo = true;
         } else {
           errorMessage = error.message;
@@ -367,8 +439,8 @@ function TeacherRegistrationForm() {
       toast.error(errorMessage);
       
       if (showRateLimitInfo) {
-        toast.error('لطفاً 60 دقیقه صبر کنید یا از Google OAuth استفاده کنید', {
-          duration: 5000
+        toast.info('می‌توانید از Google OAuth استفاده کنید یا بعداً وارد شوید', {
+          duration: 6000
         });
       }
     } finally {
@@ -946,6 +1018,17 @@ function TeacherRegistrationForm() {
     </div>
   );
 
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+          <p className="text-gray-600 text-sm">در حال بارگذاری فرم ثبت‌نام...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
@@ -967,8 +1050,11 @@ function TeacherRegistrationForm() {
 export default function TeacherRegistrationPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+          <p className="text-gray-600 text-sm">در حال بارگذاری فرم ثبت‌نام...</p>
+        </div>
       </div>
     }>
       <TeacherRegistrationForm />

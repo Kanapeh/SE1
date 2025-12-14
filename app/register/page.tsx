@@ -230,23 +230,69 @@ function RegisterContent() {
       
       let errorMessage = "خطا در ثبت‌نام";
       let rateLimitMessage = null;
+      let emailError = false;
+      let userCreated = false;
+      
+      // Check if user was created despite email error
+      if (error.message && (
+        error.message.includes('Error sending confirmation email') ||
+        error.message.includes('email rate limit') ||
+        error.message.includes('Email rate limit') ||
+        error.message.includes('Email provider not enabled')
+      )) {
+        emailError = true;
+        // Check if user was actually created
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && user.email === email) {
+            userCreated = true;
+          }
+        } catch (e) {
+          console.error('Error checking user:', e);
+        }
+      }
+      
+      if (userCreated && emailError) {
+        // User was created but email failed - allow them to continue
+        toast.success('ثبت‌نام با موفقیت انجام شد!', {
+          description: 'ایمیل تایید ارسال نشد، اما می‌توانید وارد شوید.',
+          duration: 5000
+        });
+        
+        // Store user type and email
+        sessionStorage.setItem('userType', userType);
+        sessionStorage.setItem('userEmail', email);
+        
+        // Redirect to login
+        setTimeout(() => {
+          router.push('/login?email=' + encodeURIComponent(email));
+        }, 2000);
+        return;
+      }
       
       if (error.message) {
         // Handle specific Supabase auth errors
         if (error.message.includes("User already registered")) {
-          errorMessage = "این ایمیل قبلاً ثبت شده است";
+          errorMessage = "این ایمیل قبلاً ثبت شده است. لطفاً وارد شوید.";
+          setTimeout(() => {
+            router.push('/login?email=' + encodeURIComponent(email));
+          }, 2000);
         } else if (error.message.includes("Invalid email")) {
           errorMessage = "ایمیل وارد شده معتبر نیست";
         } else if (error.message.includes("Password should be at least")) {
           errorMessage = "رمز عبور باید حداقل 6 کاراکتر باشد";
         } else if (error.message.includes("Email rate limit exceeded")) {
           errorMessage = "تعداد درخواست‌های شما بیش از حد مجاز است";
-          rateLimitMessage = "لطفاً 60 دقیقه صبر کنید یا از ایمیل دیگری استفاده کنید.";
+          rateLimitMessage = "لطفاً 60 دقیقه صبر کنید یا از Google OAuth استفاده کنید.";
         } else if (error.message.includes("Email provider not enabled")) {
-          errorMessage = "ارسال ایمیل در حال حاضر غیرفعال است. لطفاً با پشتیبانی تماس بگیرید";
+          errorMessage = "ارسال ایمیل در حال حاضر غیرفعال است";
+          rateLimitMessage = "لطفاً از Google OAuth استفاده کنید یا با پشتیبانی تماس بگیرید.";
         } else if (error.message.includes("Too many requests")) {
           errorMessage = "تعداد درخواست‌های شما بیش از حد مجاز است";
           rateLimitMessage = "لطفاً چند دقیقه صبر کنید و دوباره امتحان کنید.";
+        } else if (error.message.includes("Error sending confirmation email")) {
+          errorMessage = "خطا در ارسال ایمیل تایید";
+          rateLimitMessage = "می‌توانید از Google OAuth استفاده کنید یا بعداً وارد شوید.";
         } else {
           errorMessage = error.message;
         }

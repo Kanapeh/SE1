@@ -21,6 +21,18 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // Get email from URL params if available
+  useEffect(() => {
+    if (searchParams?.get('email')) {
+      setEmail(searchParams.get('email') || '');
+    }
+    if (searchParams?.get('registered') === 'true') {
+      toast.info('ثبت‌نام شما با موفقیت انجام شد. می‌توانید وارد شوید.', {
+        duration: 5000
+      });
+    }
+  }, [searchParams]);
+
   // Helper function to handle redirects
   const handleRedirect = (defaultPath: string, message: string) => {
     toast.success(message);
@@ -281,7 +293,12 @@ function LoginPageContent() {
         if (error.message.includes("Invalid login credentials")) {
           setError("ایمیل یا رمز عبور اشتباه است");
         } else if (error.message.includes("Email not confirmed")) {
-          setError("لطفاً ابتدا ایمیل خود را تایید کنید");
+          // For email confirmation errors, suggest using Google OAuth
+          setError("ایمیل شما تایید نشده است");
+          toast.error("لطفاً ایمیل خود را تایید کنید یا از Google OAuth استفاده کنید", {
+            description: "اگر ایمیل تایید را دریافت نکرده‌اید، می‌توانید از دکمه 'ورود با گوگل' استفاده کنید.",
+            duration: 8000
+          });
         } else if (error.message.includes("fetch") || error.message.includes("network")) {
           setError("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
         } else {
