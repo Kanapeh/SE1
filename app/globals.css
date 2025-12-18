@@ -97,6 +97,77 @@
     opacity: 1;
   }
   
+  /* Toast notifications styling for better contrast */
+  [data-sonner-toast] {
+    background-color: white !important;
+    color: #111827 !important;
+    border-color: #e5e7eb !important;
+  }
+  
+  .dark [data-sonner-toast] {
+    background-color: #111827 !important;
+    color: #f9fafb !important;
+    border-color: #374151 !important;
+  }
+  
+  /* Success toast */
+  [data-sonner-toast][data-type="success"] {
+    background-color: #f0fdf4 !important;
+    color: #14532d !important;
+    border-color: #bbf7d0 !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="success"] {
+    background-color: rgba(20, 83, 45, 0.2) !important;
+    color: #d1fae5 !important;
+    border-color: #065f46 !important;
+  }
+  
+  /* Error toast */
+  [data-sonner-toast][data-type="error"] {
+    background-color: #fef2f2 !important;
+    color: #991b1b !important;
+    border-color: #fecaca !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="error"] {
+    background-color: rgba(153, 27, 27, 0.2) !important;
+    color: #fee2e2 !important;
+    border-color: #7f1d1d !important;
+  }
+  
+  /* Warning toast */
+  [data-sonner-toast][data-type="warning"] {
+    background-color: #fffbeb !important;
+    color: #92400e !important;
+    border-color: #fde68a !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="warning"] {
+    background-color: rgba(146, 64, 14, 0.2) !important;
+    color: #fef3c7 !important;
+    border-color: #78350f !important;
+  }
+  
+  /* Info toast */
+  [data-sonner-toast][data-type="info"] {
+    background-color: #eff6ff !important;
+    color: #1e40af !important;
+    border-color: #bfdbfe !important;
+  }
+  
+  .dark [data-sonner-toast][data-type="info"] {
+    background-color: rgba(30, 64, 175, 0.2) !important;
+    color: #dbeafe !important;
+    border-color: #1e3a8a !important;
+  }
+  
+  /* Toast description text */
+  [data-sonner-toast] [data-description] {
+    color: inherit !important;
+    opacity: 0.9;
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     color: hsl(var(--foreground));
     font-weight: bold;

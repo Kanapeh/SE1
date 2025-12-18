@@ -1,16 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { Toaster as Sonner } from 'sonner';
 
-type ToasterProps = React.ComponentProps<typeof Sonner>;
+export default function ToasterWrapper() {
+  const [mounted, setMounted] = useState(false);
+  const themeContext = useTheme();
+  const theme = themeContext?.theme || 'system';
 
-const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = 'system' } = useTheme();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <Sonner
-      theme={theme as ToasterProps['theme']}
+      theme={theme as 'light' | 'dark' | 'system'}
+      position="top-center"
+      richColors
+      expand={true}
       className="toaster group"
       toastOptions={{
         classNames: {
@@ -27,9 +39,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground hover:group-[.toast]:bg-muted/80',
         },
       }}
-      {...props}
     />
   );
-};
+}
 
-export { Toaster };

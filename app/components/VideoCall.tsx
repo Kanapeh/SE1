@@ -496,20 +496,20 @@ export default function VideoCall({
       console.error('Class ID is required for WebRTC');
       return;
     }
-
+    
     try {
       // Get local media stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: callState.isVideoEnabled,
-        audio: callState.isAudioEnabled
-      });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: callState.isVideoEnabled,
+          audio: callState.isAudioEnabled
+        });
       
       localStreamRef.current = stream;
-      
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-        await localVideoRef.current.play();
-      }
+        
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+          await localVideoRef.current.play();
+        }
 
       // Create RTCPeerConnection with STUN servers
       const configuration: RTCConfiguration = {
@@ -560,9 +560,9 @@ export default function VideoCall({
       peerConnection.onconnectionstatechange = () => {
         console.log('Connection state:', peerConnection.connectionState);
         if (peerConnection.connectionState === 'connected') {
-          setCallState(prev => ({ 
-            ...prev, 
-            isConnecting: false, 
+        setCallState(prev => ({ 
+          ...prev, 
+          isConnecting: false, 
             isConnected: true,
             connectionQuality: 'excellent'
           }));

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Vazirmatn, Noto_Sans_Arabic, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
 import Footer from "@/app/components/Footer";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -190,7 +189,6 @@ export default function RootLayout({
             <FloatingWhatsApp />
             <PWAInstallPrompt />
             <IOSInstallPrompt />
-            <Toaster position="top-center" richColors />
             <PerformanceMonitor />
             {/* <PKCEDebugger /> */}
           </ThemeProvider>

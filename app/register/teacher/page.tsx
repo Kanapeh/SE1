@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getSmartOAuthRedirectUrl } from "@/lib/oauth-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -33,7 +34,9 @@ import {
   FileText,
   Video,
   Users,
-  Info
+  Info,
+  Chrome,
+  AlertCircle
 } from "lucide-react";
 
 interface TeacherRegistrationData {
@@ -130,6 +133,8 @@ const TEACHING_METHODS = [
 function TeacherRegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState(false);
   const [formData, setFormData] = useState<TeacherRegistrationData>({
     email: '',
     password: '',
@@ -241,6 +246,39 @@ function TeacherRegistrationForm() {
 
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const redirectUrl = getSmartOAuthRedirectUrl('teacher');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) {
+        console.error("Google OAuth error:", error);
+        toast.error("خطا در ورود با گوگل. لطفاً دوباره امتحان کنید.");
+        return;
+      }
+
+      console.log("Google OAuth initiated successfully");
+      toast.success("در حال انتقال به گوگل...");
+      
+    } catch (error: any) {
+      console.error("Google sign in error:", error);
+      toast.error("خطا در ورود با گوگل");
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -428,6 +466,7 @@ function TeacherRegistrationForm() {
         } else if (error.message.includes('email rate limit exceeded') || error.message.includes('Email rate limit exceeded')) {
           errorMessage = 'تعداد درخواست‌های ایمیل بیش از حد مجاز است';
           showRateLimitInfo = true;
+          setRateLimitError(true);
         } else if (error.message.includes('Error sending confirmation email')) {
           errorMessage = 'خطا در ارسال ایمیل تایید';
           showRateLimitInfo = true;
@@ -439,8 +478,9 @@ function TeacherRegistrationForm() {
       toast.error(errorMessage);
       
       if (showRateLimitInfo) {
-        toast.info('می‌توانید از Google OAuth استفاده کنید یا بعداً وارد شوید', {
-          duration: 6000
+        toast.error('محدودیت ارسال ایمیل!', {
+          description: 'لطفاً از Google OAuth استفاده کنید یا 60 دقیقه صبر کنید.',
+          duration: 8000
         });
       }
     } finally {
@@ -501,10 +541,62 @@ function TeacherRegistrationForm() {
           <Info className="w-5 h-5" />
           <span className="font-medium">نکته مهم:</span>
         </div>
-        <p className="text-sm text-blue-700 text-right">
+        <p className="text-sm text-blue-700 text-right mb-3">
           برای جلوگیری از مشکلات ارسال ایمیل، توصیه می‌شود از دکمه "ادامه با گوگل" استفاده کنید.
           این روش نیازی به تایید ایمیل ندارد و سریع‌تر است.
         </p>
+        <Button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading}
+          variant="outline"
+          className="w-full bg-white hover:bg-gray-50 border-2 border-blue-300 text-blue-700 font-medium"
+        >
+          <Chrome className="w-5 h-5 ml-2" />
+          {googleLoading ? "در حال انتقال..." : "ادامه با گوگل (توصیه می‌شود)"}
+        </Button>
+      </div>
+
+      {/* نمایش خطای Rate Limit */}
+      {rateLimitError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-red-50 border-2 border-red-300 rounded-lg"
+        >
+          <div className="flex items-start space-x-3 space-x-reverse">
+            <AlertCircle className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-800 mb-2">محدودیت ارسال ایمیل!</h3>
+              <p className="text-sm text-red-700 mb-3">
+                تعداد درخواست‌های ایمیل شما بیش از حد مجاز است. لطفاً یکی از گزینه‌های زیر را انتخاب کنید:
+              </p>
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Chrome className="w-4 h-4 ml-2" />
+                  {googleLoading ? "در حال انتقال..." : "استفاده از Google OAuth (توصیه می‌شود)"}
+                </Button>
+                <p className="text-xs text-red-600 text-center">
+                  یا 60 دقیقه صبر کنید و دوباره امتحان کنید
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">یا</span>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -1042,6 +1134,31 @@ function TeacherRegistrationForm() {
           
           {renderStepButtons()}
         </Card>
+        
+        {/* راهنمای Rate Limit در پایین صفحه */}
+        {rateLimitError && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg"
+          >
+            <div className="flex items-start space-x-3 space-x-reverse">
+              <Info className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-yellow-800 mb-1">چرا این خطا رخ می‌دهد؟</h4>
+                <p className="text-sm text-yellow-700 mb-2">
+                  Supabase محدودیت 10 ایمیل در ساعت برای هر IP دارد. این محدودیت برای جلوگیری از سوء استفاده است.
+                </p>
+                <h4 className="font-semibold text-yellow-800 mb-1 mt-3">راه‌حل‌ها:</h4>
+                <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
+                  <li>استفاده از Google OAuth (بهترین راه - بدون محدودیت)</li>
+                  <li>صبر کردن 60 دقیقه و دوباره امتحان کردن</li>
+                  <li>استفاده از شبکه یا IP دیگر</li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

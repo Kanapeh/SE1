@@ -159,33 +159,118 @@ function RegisterContent() {
 
       console.log("Input validation passed, attempting to sign up...");
 
-      // Register user in auth.users only
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`,
-          data: {
-            full_name: fullName,
-            user_type: userType,
+      // Try normal signup first
+      let authData: any = null;
+      let authError: any = null;
+      
+      try {
+        const signUpResult = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`,
+            data: {
+              full_name: fullName,
+              user_type: userType,
+            },
+            captchaToken: undefined,
+          }
+        });
+        
+        authData = signUpResult.data;
+        authError = signUpResult.error;
+        
+        console.log("Sign up response:", { authData, authError });
+
+        // Handle email sending error separately - user might still be created
+        if (authError) {
+          // Check if error is only about email sending and user was created
+          if (authError.message?.includes('Error sending confirmation email')) {
+            if (authData?.user) {
+              console.warn('User created but email confirmation failed:', authError.message);
+              // Continue with registration - user can login without email confirmation
+              // Don't throw error, proceed with user creation
+            } else {
+              // User might not be created, try to use Admin API as fallback
+              console.warn('Email sending failed and user not created, trying Admin API fallback...');
+              try {
+                const adminResponse = await fetch('/api/auth/register-without-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, password, fullName, userType })
+                });
+                
+                const adminResult = await adminResponse.json();
+                if (adminResult.success && adminResult.data.user) {
+                  console.log('User created via Admin API:', adminResult.data.user.id);
+                  authData = { user: adminResult.data.user };
+                  authError = null;
+                } else {
+                  // Fallback to suggesting Google OAuth
+                  throw new Error('خطا در ارسال ایمیل تایید. لطفاً از Google OAuth استفاده کنید.');
+                }
+              } catch (adminError: any) {
+                console.error('Admin API fallback failed:', adminError);
+                // Fallback to suggesting Google OAuth
+                throw new Error('خطا در ارسال ایمیل تایید. لطفاً از Google OAuth استفاده کنید.');
+              }
+            }
+          } else {
+            console.error("Auth error details:", {
+              message: authError.message,
+              status: authError.status,
+              name: authError.name,
+              details: authError
+            });
+            throw authError;
           }
         }
-      });
-
-      console.log("Sign up response:", { authData, authError });
-
-      if (authError) {
-        console.error("Auth error details:", {
-          message: authError.message,
-          status: authError.status,
-          name: authError.name,
-          details: authError
-        });
-        throw authError;
+      } catch (signUpError: any) {
+        // If signup completely fails, try Admin API as last resort
+        if (signUpError.message?.includes('Error sending confirmation email') || 
+            signUpError.message?.includes('email')) {
+          console.warn('Signup failed, trying Admin API fallback...');
+          try {
+            const adminResponse = await fetch('/api/auth/register-without-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password, fullName, userType })
+            });
+            
+            const adminResult = await adminResponse.json();
+            if (adminResult.success && adminResult.data.user) {
+              console.log('User created via Admin API:', adminResult.data.user.id);
+              authData = { user: adminResult.data.user };
+              authError = null;
+            } else {
+              throw signUpError; // Use original error
+            }
+          } catch (adminError) {
+            throw signUpError; // Use original error
+          }
+        } else {
+          throw signUpError;
+        }
       }
 
-      if (authData.user) {
-        console.log("User created successfully:", authData.user.id);
+      // Check if user was created (either in authData or we need to check)
+      let createdUser = authData?.user;
+      
+      // If user not in response but email error occurred, try to get user from session
+      if (!createdUser && authError?.message?.includes('Error sending confirmation email')) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && user.email === email) {
+            createdUser = user;
+            console.log("User found in session after email error:", user.id);
+          }
+        } catch (e) {
+          console.error("Error getting user from session:", e);
+        }
+      }
+
+      if (createdUser) {
+        console.log("User created successfully:", createdUser.id);
         
         // Store user type and email in session storage for later use
         sessionStorage.setItem('userType', userType);
@@ -197,15 +282,17 @@ function RegisterContent() {
           userType,
           metadata: {
             registrationSource: 'email-form',
-            supabaseUserId: authData.user.id,
+            supabaseUserId: createdUser.id,
           },
         });
         if (ownerNotificationSent && typeof window !== 'undefined') {
-          window.localStorage.setItem(`owner-notified-${authData.user.id}`, 'true');
+          window.localStorage.setItem(`owner-notified-${createdUser.id}`, 'true');
         }
         
         // Check if email confirmation is required
-        if (authData.user.email_confirmed_at) {
+        const emailSendingFailed = authError?.message?.includes('Error sending confirmation email');
+        
+        if (createdUser.email_confirmed_at) {
           console.log("Email already confirmed, redirecting to profile completion");
           // Email already confirmed, redirect to profile completion
           if (userType === 'teacher') {
@@ -215,6 +302,23 @@ function RegisterContent() {
             toast.success("ثبت‌نام با موفقیت انجام شد. لطفا پروفایل دانش‌آموز خود را تکمیل کنید.");
             router.push("/complete-profile?type=student");
           }
+        } else if (emailSendingFailed) {
+          // Email sending failed but user was created - allow login without confirmation
+          console.log("Email sending failed but user created, allowing login without confirmation");
+          toast.success("ثبت‌نام با موفقیت انجام شد!", {
+            description: "ایمیل تایید ارسال نشد، اما می‌توانید وارد شوید.",
+            duration: 5000
+          });
+          
+          // Store user type and email
+          sessionStorage.setItem('userType', userType);
+          sessionStorage.setItem('userEmail', email);
+          
+          // Redirect to login page - user can login without email confirmation
+          setTimeout(() => {
+            router.push(`/login?email=${encodeURIComponent(email)}&message=registration_success`);
+          }, 2000);
+          return; // Exit early to prevent further processing
         } else {
           console.log("Email confirmation required, redirecting to verify email");
           // Email confirmation required
@@ -222,8 +326,15 @@ function RegisterContent() {
           router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
       } else {
+        // No user created - this is a real error
         console.log("No user data returned from sign up");
-        throw new Error("خطا در ایجاد حساب کاربری");
+        
+        // If it's just an email error, provide helpful message
+        if (authError?.message?.includes('Error sending confirmation email')) {
+          throw new Error('خطا در ارسال ایمیل تایید. لطفاً از Google OAuth استفاده کنید یا تنظیمات SMTP را بررسی کنید.');
+        } else {
+          throw new Error("خطا در ایجاد حساب کاربری");
+        }
       }
     } catch (error: any) {
       console.error("Register error:", error);

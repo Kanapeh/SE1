@@ -25,13 +25,6 @@ const highlightCards = [
     accent: "from-cyan-500/10 via-cyan-500/5 to-blue-500/10",
   },
   {
-    title: "۵۰٪ تخفیف دوره زمستانی",
-    description: "برای ثبت‌نام‌های قبل از ۱۵ دی",
-    badge: "پیشنهاد ویژه",
-    link: "/courses",
-    accent: "from-orange-500/15 via-amber-400/10 to-rose-500/10",
-  },
-  {
     title: "کلاس خصوصی VIP",
     description: "برنامه شخصی‌سازی شده برای هر هدف زبانی",
     badge: "جدید",

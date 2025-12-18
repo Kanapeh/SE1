@@ -293,12 +293,28 @@ function LoginPageContent() {
         if (error.message.includes("Invalid login credentials")) {
           setError("ایمیل یا رمز عبور اشتباه است");
         } else if (error.message.includes("Email not confirmed")) {
-          // For email confirmation errors, suggest using Google OAuth
-          setError("ایمیل شما تایید نشده است");
-          toast.error("لطفاً ایمیل خود را تایید کنید یا از Google OAuth استفاده کنید", {
-            description: "اگر ایمیل تایید را دریافت نکرده‌اید، می‌توانید از دکمه 'ورود با گوگل' استفاده کنید.",
-            duration: 8000
-          });
+          // For email confirmation errors, check if user was just registered
+          const registrationMessage = searchParams?.get('message');
+          if (registrationMessage === 'registration_success') {
+            // User was just registered but email confirmation failed
+            // Try to use Admin API to confirm email or suggest Google OAuth
+            console.log("User registered but email not confirmed - suggesting alternatives");
+            setError("ایمیل شما تایید نشده است");
+            toast.error("لطفاً از Google OAuth استفاده کنید", {
+              description: "ایمیل تایید ارسال نشد. برای ورود سریع، از دکمه 'ورود با گوگل' استفاده کنید.",
+              duration: 10000,
+              action: {
+                label: "ورود با گوگل",
+                onClick: () => handleGoogleSignIn()
+              }
+            });
+          } else {
+            setError("ایمیل شما تایید نشده است");
+            toast.error("لطفاً ایمیل خود را تایید کنید یا از Google OAuth استفاده کنید", {
+              description: "اگر ایمیل تایید را دریافت نکرده‌اید، می‌توانید از دکمه 'ورود با گوگل' استفاده کنید.",
+              duration: 8000
+            });
+          }
         } else if (error.message.includes("fetch") || error.message.includes("network")) {
           setError("خطا در اتصال به سرور. لطفاً اینترنت خود را بررسی کنید.");
         } else {

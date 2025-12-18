@@ -28,7 +28,10 @@ import {
   Clock,
   Star,
   Zap,
-  ArrowLeft
+  ArrowLeft,
+  PenTool,
+  Headphones,
+  Newspaper
 } from "lucide-react";
 import Image from "next/image";
 import imageLogo from "./images/logo.png";
@@ -106,6 +109,13 @@ export default function StudentHeader({ studentName, studentEmail }: StudentHead
       color: "from-indigo-500 to-indigo-600"
     },
     {
+      title: "یادگیری تطبیقی",
+      href: "/students/adaptive-learning",
+      icon: Brain,
+      description: "یادگیری شخصی‌سازی شده با AI",
+      color: "from-purple-500 to-indigo-600"
+    },
+    {
       title: "مربی هوشمند",
       href: "/students/ai-coach",
       icon: Brain,
@@ -132,6 +142,27 @@ export default function StudentHeader({ studentName, studentEmail }: StudentHead
       icon: Users,
       description: "یادگیری گروهی و تعامل",
       color: "from-teal-500 to-teal-600"
+    },
+    {
+      title: "تمرین نوشتن",
+      href: "/students/writing-practice",
+      icon: PenTool,
+      description: "بهبود مهارت نوشتن با تصحیح خودکار",
+      color: "from-purple-500 to-pink-600"
+    },
+    {
+      title: "تمرین شنیداری",
+      href: "/students/listening-practice",
+      icon: Headphones,
+      description: "تمرین شنیداری پیشرفته و تشخیص گفتار",
+      color: "from-green-500 to-blue-600"
+    },
+    {
+      title: "اخبار و مقالات",
+      href: "/students/news-articles",
+      icon: Newspaper,
+      description: "یادگیری از طریق اخبار و مقالات واقعی",
+      color: "from-blue-500 to-purple-600"
     },
     {
       title: "یادگیری تعاملی",

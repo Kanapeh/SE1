@@ -90,10 +90,6 @@ export default function Header() {
           ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-2xl' 
           : 'bg-gradient-to-r from-white/80 via-white/90 to-white/80 dark:from-gray-900/80 dark:via-gray-900/90 dark:to-gray-900/80 backdrop-blur-xl'
       }`}>
-        {/* Top accent bar */}
-        <div className="h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-        
-        
         {/* Scroll Progress Bar */}
         <motion.div
           className="h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 origin-left"
@@ -166,7 +162,7 @@ export default function Header() {
           </motion.div>
 
             {/* Desktop Navigation with enhanced design */}
-            <div className="hidden lg:flex items-center space-x-6">
+            <div className="hidden lg:flex items-center space-x-2">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.name}
@@ -177,7 +173,7 @@ export default function Header() {
               >
                 <Link
                   href={item.href}
-                    className="relative flex flex-col items-center text-foreground/70 hover:text-foreground transition-all duration-300 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-header group"
+                    className="relative flex flex-col items-center text-foreground/70 hover:text-foreground transition-all duration-300 px-2 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 font-header group"
                   >
                     <item.icon className="w-4 h-4 mb-1.5 group-hover:scale-110 transition-transform duration-300" />
                     <span className="text-sm font-medium leading-tight">{item.name}</span>
@@ -198,7 +194,7 @@ export default function Header() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-                className="mr-3"
+                className="mr-2"
             >
               <Link href="/login">
                   <Button variant="outline" className="border-2 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 transition-all duration-300 group font-header px-4 py-2.5 rounded-xl shadow-lg hover:shadow-xl text-sm">
@@ -213,7 +209,7 @@ export default function Header() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.6 }}
-                className="mr-3"
+                className="mr-2"
             >
               <Link href="/register">
                   <Button className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 group font-header px-4 py-2.5 rounded-xl relative overflow-hidden text-sm">
