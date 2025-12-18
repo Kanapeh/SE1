@@ -215,125 +215,85 @@ export default function TopTeachersSection() {
                     viewport={{ once: true }}
                     className="group flex-shrink-0 w-80"
                   >
-                    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl hover:shadow-3xl hover:-translate-y-2 group-hover:scale-[1.02] h-full">
-                      {/* Header with gradient */}
-                      <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
-                        <div className="absolute inset-0 bg-black/10"></div>
-                        
-                        {/* Animated background pattern */}
-                        <div className="absolute inset-0 opacity-20">
-                          <div className="absolute top-4 left-4 w-6 h-6 border-2 border-white/30 rounded-full"></div>
-                          <div className="absolute bottom-4 right-4 w-4 h-4 border border-white/30 rounded-full"></div>
-                        </div>
-
-                        {/* Emoji */}
-                        <div className="absolute top-4 left-4 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl">
-                          {emoji}
-                        </div>
-
-                        {/* Avatar */}
-                        <div className="absolute bottom-4 right-4">
-                          <Avatar className="w-16 h-16 ring-4 ring-white/20 backdrop-blur-sm">
-                            <AvatarImage src={teacher.avatar || ''} alt={fullName} />
-                            <AvatarFallback className="text-lg bg-white/20 text-white backdrop-blur-sm">
-                              {teacher.first_name[0]}{teacher.last_name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </div>
-
-                      <div className="p-6">
-                        {/* Name and Specialty */}
-                        <div className="mb-4">
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <Card className="overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-md hover:shadow-xl hover:-translate-y-1 h-full group">
+                      {/* Avatar Section - Centered */}
+                      <div className="relative pt-8 pb-4 px-6">
+                        <div className="flex flex-col items-center">
+                          <div className="relative mb-4">
+                            <Avatar className="w-24 h-24 ring-4 ring-gray-100 dark:ring-gray-700">
+                              <AvatarImage src={teacher.avatar || ''} alt={fullName} />
+                              <AvatarFallback className={`text-2xl font-bold bg-gradient-to-br ${gradient} text-white`}>
+                                {teacher.first_name[0]}{teacher.last_name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            {/* Badge */}
+                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                              <Crown className="w-4 h-4 text-white" />
+                            </div>
+                          </div>
+                          
+                          {/* Name */}
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1 text-center">
                             {fullName}
                           </h3>
-                          <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-sm`}>
+                          
+                          {/* Specialty */}
+                          <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs mb-3`}>
                             {specialty}
                           </Badge>
                         </div>
+                      </div>
 
-                        {/* Rating and Students */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                              {rating.toFixed(1)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                            <Users className="w-4 h-4" />
-                            <span>{studentCount} دانش‌آموز</span>
-                          </div>
-                        </div>
-
-                        {/* Experience and Price */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            <span>{teacher.experience_years} سال تجربه</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-gray-900 dark:text-white">
-                              {teacher.hourly_rate?.toLocaleString() || '200,000'}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">تومان/ساعت</div>
-                          </div>
-                        </div>
-
-                        {/* Languages */}
-                        <div className="mb-4">
-                          <div className="flex flex-wrap gap-1">
-                            {(teacher.languages || ['انگلیسی']).map((lang, idx) => (
-                              <span 
-                                key={idx}
-                                className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full"
-                              >
-                                {lang === 'english' ? 'انگلیسی' : lang}
-                              </span>
+                      <div className="px-6 pb-6">
+                        {/* Rating */}
+                        <div className="flex items-center justify-center gap-2 mb-4">
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={`w-5 h-5 ${i < Math.floor(rating) ? 'text-yellow-500 fill-current' : 'text-gray-300 dark:text-gray-600'}`} 
+                              />
                             ))}
                           </div>
+                          <span className="text-base font-bold text-gray-900 dark:text-white">
+                            {rating.toFixed(1)}
+                          </span>
                         </div>
 
-                        {/* Bio/Description */}
-                        {teacher.bio && (
-                          <div className="mb-6">
-                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                              {teacher.bio}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Teaching Methods */}
-                        {teacher.teaching_methods && teacher.teaching_methods.length > 0 && (
-                          <div className="mb-6">
-                            <div className="space-y-1">
-                              {teacher.teaching_methods.slice(0, 2).map((method, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                  <Award className="w-3 h-3 text-yellow-500" />
-                                  <span>
-                                    {method === 'communicative' ? 'روش تعاملی' :
-                                     method === 'direct_method' ? 'روش مستقیم' :
-                                     method === 'grammar_translation' ? 'گرامر و ترجمه' :
-                                     method}
-                                  </span>
-                                </div>
-                              ))}
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                            <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400 mb-1">
+                              <Users className="w-4 h-4" />
                             </div>
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {studentCount}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">دانش‌آموز</div>
                           </div>
-                        )}
+                          
+                          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                            <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400 mb-1">
+                              <Clock className="w-4 h-4" />
+                            </div>
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
+                              {teacher.experience_years}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">سال تجربه</div>
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 mb-4 text-center">
+                          <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            {teacher.hourly_rate?.toLocaleString() || '200,000'}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">تومان/ساعت</div>
+                        </div>
 
                         {/* CTA Button */}
                         <Link href={`/teachers/${teacher.id}`}>
-                          <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-base">
-                            <span className="mr-2">👨‍🏫</span>
+                          <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2.5 rounded-xl transition-all duration-300 hover:shadow-md">
                             مشاهده پروفایل
                             <ChevronRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
                           </Button>
@@ -365,127 +325,87 @@ export default function TopTeachersSection() {
                 viewport={{ once: true }}
                 className="group"
               >
-                <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl hover:shadow-3xl hover:-translate-y-2 group-hover:scale-[1.02]">
-                  {/* Header with gradient */}
-                  <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    
-                    {/* Animated background pattern */}
-                    <div className="absolute inset-0 opacity-20">
-                      <div className="absolute top-4 left-4 w-6 h-6 border-2 border-white/30 rounded-full"></div>
-                      <div className="absolute bottom-4 right-4 w-4 h-4 border border-white/30 rounded-full"></div>
-                    </div>
-
-                    {/* Emoji */}
-                    <div className="absolute top-4 left-4 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl">
-                      {emoji}
-                    </div>
-
-                    {/* Avatar */}
-                    <div className="absolute bottom-4 right-4">
-                      <Avatar className="w-16 h-16 ring-4 ring-white/20 backdrop-blur-sm">
-                        <AvatarImage src={teacher.avatar || ''} alt={fullName} />
-                        <AvatarFallback className="text-lg bg-white/20 text-white backdrop-blur-sm">
-                          {teacher.first_name[0]}{teacher.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                  </div>
-
-                    <div className="p-6">
-                    {/* Name and Specialty */}
-                      <div className="mb-4">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <Card className="overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-md hover:shadow-xl hover:-translate-y-1 group">
+                  {/* Avatar Section - Centered */}
+                  <div className="relative pt-8 pb-4 px-6">
+                    <div className="flex flex-col items-center">
+                      <div className="relative mb-4">
+                        <Avatar className="w-24 h-24 ring-4 ring-gray-100 dark:ring-gray-700">
+                          <AvatarImage src={teacher.avatar || ''} alt={fullName} />
+                          <AvatarFallback className={`text-2xl font-bold bg-gradient-to-br ${gradient} text-white`}>
+                            {teacher.first_name[0]}{teacher.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        {/* Badge */}
+                        <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                          <Crown className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                      
+                      {/* Name */}
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1 text-center">
                         {fullName}
                       </h3>
-                        <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-sm`}>
+                      
+                      {/* Specialty */}
+                      <Badge className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs mb-3`}>
                         {specialty}
                       </Badge>
                     </div>
+                  </div>
 
-                    {/* Rating and Students */}
-                      <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                          {rating.toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <Users className="w-4 h-4" />
-                        <span>{studentCount} دانش‌آموز</span>
-                      </div>
-                    </div>
-
-                    {/* Experience and Price */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <Clock className="w-4 h-4" />
-                        <span>{teacher.experience_years} سال تجربه</span>
-                      </div>
-                      <div className="text-right">
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">
-                          {teacher.hourly_rate?.toLocaleString() || '200,000'}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">تومان/ساعت</div>
-                      </div>
-                    </div>
-
-                    {/* Languages */}
-                      <div className="mb-4">
-                      <div className="flex flex-wrap gap-1">
-                        {(teacher.languages || ['انگلیسی']).map((lang, idx) => (
-                          <span 
-                            key={idx}
-                            className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full"
-                          >
-                            {lang === 'english' ? 'انگلیسی' : lang}
-                          </span>
+                  <div className="px-6 pb-6">
+                    {/* Rating */}
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`w-5 h-5 ${i < Math.floor(rating) ? 'text-yellow-500 fill-current' : 'text-gray-300 dark:text-gray-600'}`} 
+                          />
                         ))}
                       </div>
+                      <span className="text-base font-bold text-gray-900 dark:text-white">
+                        {rating.toFixed(1)}
+                      </span>
                     </div>
 
-                    {/* Bio/Description */}
-                    {teacher.bio && (
-                        <div className="mb-6">
-                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                          {teacher.bio}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Teaching Methods */}
-                    {teacher.teaching_methods && teacher.teaching_methods.length > 0 && (
-                        <div className="mb-6">
-                        <div className="space-y-1">
-                          {teacher.teaching_methods.slice(0, 2).map((method, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                              <Award className="w-3 h-3 text-yellow-500" />
-                              <span>
-                                {method === 'communicative' ? 'روش تعاملی' :
-                                 method === 'direct_method' ? 'روش مستقیم' :
-                                 method === 'grammar_translation' ? 'گرامر و ترجمه' :
-                                 method}
-                              </span>
-                            </div>
-                          ))}
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400 mb-1">
+                          <Users className="w-4 h-4" />
                         </div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">
+                          {studentCount}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">دانش‌آموز</div>
                       </div>
-                    )}
+                      
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400 mb-1">
+                          <Clock className="w-4 h-4" />
+                        </div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">
+                          {teacher.experience_years}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">سال تجربه</div>
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 mb-4 text-center">
+                      <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        {teacher.hourly_rate?.toLocaleString() || '200,000'}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">تومان/ساعت</div>
+                    </div>
 
                     {/* CTA Button */}
                     <Link href={`/teachers/${teacher.id}`}>
-                        <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-base">
-                          <span className="mr-2">👨‍🏫</span>
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2.5 rounded-xl transition-all duration-300 hover:shadow-md">
                         مشاهده پروفایل
-                          <ChevronRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
                   </div>
