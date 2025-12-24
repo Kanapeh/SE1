@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,27 @@ function VerifyEmailContent() {
     const emailFromStorage = sessionStorage.getItem('userEmail');
     const emailToUse = emailFromParams || emailFromStorage || "";
     setEmail(emailToUse);
-  }, [searchParams]);
+
+    // Auto-check verification when page loads (if coming from email link)
+    const checkAutoVerification = async () => {
+      // Check if we're coming from email verification link
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromEmail = urlParams.get('from') === 'email' || window.location.hash.includes('access_token') || window.location.hash.includes('type=email');
+      
+      if (fromEmail) {
+        // Small delay to ensure session is established
+        setTimeout(async () => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email_confirmed_at) {
+            // Email is confirmed, check and redirect
+            await handleCheckVerification();
+          }
+        }, 1500);
+      }
+    };
+
+    checkAutoVerification();
+  }, [searchParams, handleCheckVerification]);
 
   const handleResendEmail = async () => {
     if (!email) {
@@ -51,7 +71,7 @@ function VerifyEmailContent() {
     }
   };
 
-  const handleCheckVerification = async () => {
+  const handleCheckVerification = useCallback(async () => {
     setVerifying(true);
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
@@ -64,15 +84,49 @@ function VerifyEmailContent() {
       if (user?.email_confirmed_at) {
         toast.success("ایمیل شما تایید شده است!");
         
-        // Check user type and redirect accordingly
+        // Check user type from sessionStorage first
         const userType = sessionStorage.getItem('userType');
         
-        if (userType === 'teacher') {
-          router.push('/dashboard/teacher');
-        } else if (userType === 'student') {
-          router.push('/dashboard/student');
-        } else {
-          router.push('/');
+        // Check profiles to determine where to redirect
+        try {
+          const [teacherResponse, studentResponse] = await Promise.allSettled([
+            fetch(`/api/teacher-profile?user_id=${user.id}&email=${user.email}`),
+            fetch(`/api/student-profile?user_id=${user.id}&email=${user.email}`)
+          ]);
+
+          // Check teacher profile
+          if (teacherResponse.status === 'fulfilled' && teacherResponse.value.ok) {
+            const { teacher } = await teacherResponse.value.json();
+            if (teacher && (teacher.status === 'active' || teacher.status === 'Approved')) {
+              router.push('/dashboard/teacher');
+              return;
+            }
+          }
+
+          // Check student profile
+          if (studentResponse.status === 'fulfilled' && studentResponse.value.ok) {
+            const result = await studentResponse.value.json();
+            const student = result.student;
+            if (student && student.status === 'active') {
+              router.push('/dashboard/student');
+              return;
+            }
+          }
+
+          // No active profile found - redirect to complete profile based on userType or default to student
+          if (userType === 'teacher') {
+            router.push('/complete-profile?type=teacher');
+          } else {
+            router.push('/complete-profile?type=student');
+          }
+        } catch (profileError) {
+          console.error('Error checking profiles:', profileError);
+          // Fallback: redirect based on userType or to complete profile
+          if (userType === 'teacher') {
+            router.push('/complete-profile?type=teacher');
+          } else {
+            router.push('/complete-profile?type=student');
+          }
         }
       } else {
         toast.info("ایمیل هنوز تایید نشده است. لطفاً ایمیل خود را بررسی کنید");
@@ -82,7 +136,7 @@ function VerifyEmailContent() {
     } finally {
       setVerifying(false);
     }
-  };
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-12 px-4">

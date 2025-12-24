@@ -111,7 +111,15 @@ export async function PUT(request: NextRequest) {
       }
     });
 
-    console.log('🔍 Updating teacher profile:', { id, updateData });
+    // Log update data without avatar to avoid cluttering console
+    const { avatar: updateAvatar, ...updateDataWithoutAvatar } = updateData || {};
+    console.log('🔍 Updating teacher profile:', { 
+      id, 
+      updateData: {
+        ...updateDataWithoutAvatar,
+        avatar: updateAvatar ? `[Avatar: ${updateAvatar.substring(0, 50)}... (${updateAvatar.length} chars)]` : 'No avatar update'
+      }
+    });
 
     console.log('🔍 Attempting to update teacher with ID:', id);
     console.log('🔍 Update data:', updateData);
@@ -135,7 +143,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.log('🔍 Existing teacher data:', existingTeacher);
+    // Log teacher data without avatar to avoid cluttering console
+    const { avatar, ...teacherDataWithoutAvatar } = existingTeacher || {};
+    console.log('🔍 Existing teacher data:', {
+      ...teacherDataWithoutAvatar,
+      avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+    });
 
     let { data, error } = await supabase
       .from('teachers')
