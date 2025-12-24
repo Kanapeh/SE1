@@ -44,7 +44,17 @@ export async function GET() {
     }
 
     console.log('📋 All teachers in database:', allTeachers?.length || 0);
-    console.log('📊 All teachers data:', allTeachers);
+    // Log teachers data without avatar to avoid cluttering console
+    if (allTeachers && allTeachers.length > 0) {
+      const teachersSummary = allTeachers.map(teacher => {
+        const { avatar, ...teacherWithoutAvatar } = teacher;
+        return {
+          ...teacherWithoutAvatar,
+          avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+        };
+      });
+      console.log('📊 All teachers data:', teachersSummary);
+    }
 
     // Now filter for approved teachers
     const approvedTeachers = allTeachers?.filter(teacher => 
@@ -52,7 +62,17 @@ export async function GET() {
     ) || [];
 
     console.log('✅ Filtered approved teachers:', approvedTeachers?.length || 0);
-    console.log('📊 Approved teachers data:', approvedTeachers);
+    // Log approved teachers data without avatar
+    if (approvedTeachers && approvedTeachers.length > 0) {
+      const approvedSummary = approvedTeachers.map(teacher => {
+        const { avatar, ...teacherWithoutAvatar } = teacher;
+        return {
+          ...teacherWithoutAvatar,
+          avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+        };
+      });
+      console.log('📊 Approved teachers data:', approvedSummary);
+    }
 
     // Log status breakdown
     if (allTeachers && allTeachers.length > 0) {

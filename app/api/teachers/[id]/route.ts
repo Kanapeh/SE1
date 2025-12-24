@@ -36,7 +36,12 @@ export async function GET(
       return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
     }
 
-    console.log('✅ API: Teacher fetched successfully:', data);
+    // Log teacher data without avatar to avoid cluttering console
+    const { avatar, ...teacherDataWithoutAvatar } = data || {};
+    console.log('✅ API: Teacher fetched successfully:', {
+      ...teacherDataWithoutAvatar,
+      avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+    });
     console.log('📅 Available days:', data.available_days);
     console.log('⏰ Available hours:', data.available_hours);
     console.log('🏫 Class types:', data.class_types);

@@ -381,8 +381,14 @@ export default function StudentVideoCallPage() {
           return;
         }
 
-        console.log('Teacher data:', teacherData);
-        addDebugInfo(`اطلاعات معلم: ${JSON.stringify(teacherData, null, 2)}`);
+        // Log teacher data without avatar to avoid cluttering console
+        const { avatar, ...teacherDataWithoutAvatar } = teacherData || {};
+        const teacherSummary = {
+          ...teacherDataWithoutAvatar,
+          avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+        };
+        console.log('Teacher data:', teacherSummary);
+        addDebugInfo(`اطلاعات معلم: ${JSON.stringify(teacherSummary, null, 2)}`);
 
         // Set student data
         const studentInfo: Student = {

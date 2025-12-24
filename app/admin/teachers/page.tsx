@@ -180,7 +180,19 @@ export default function TeachersManagementPage() {
       }
 
       console.log("✅ Teachers fetched successfully");
-      console.log("📋 Teachers data:", data);
+      // Log teachers data without avatar to avoid cluttering console
+      if (data && Array.isArray(data)) {
+        const teachersSummary = data.map((teacher: any) => {
+          const { avatar, ...teacherWithoutAvatar } = teacher;
+          return {
+            ...teacherWithoutAvatar,
+            avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+          };
+        });
+        console.log("📋 Teachers data:", teachersSummary);
+      } else {
+        console.log("📋 Teachers data:", data);
+      }
       console.log("🔢 Number of teachers:", data?.length || 0);
       
       setTeachers(data || []);

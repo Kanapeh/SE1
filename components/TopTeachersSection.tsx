@@ -45,7 +45,18 @@ export default function TopTeachersSection() {
         }
         
         const data = await response.json();
-        console.log('✅ Teachers data received:', data);
+        // Log data summary without avatar
+        const dataSummary = {
+          ...data,
+          teachers: data.teachers?.map((teacher: Teacher) => {
+            const { avatar, ...teacherWithoutAvatar } = teacher;
+            return {
+              ...teacherWithoutAvatar,
+              avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+            };
+          })
+        };
+        console.log('✅ Teachers data received:', dataSummary);
         
         // Filter only approved teachers and limit to top 3
         const approvedTeachers = (data.teachers || [])
@@ -56,7 +67,15 @@ export default function TopTeachersSection() {
           )
           .slice(0, 3); // Show only top 3 teachers
         
-        console.log('✅ Approved teachers for homepage:', approvedTeachers);
+        // Log approved teachers summary without avatar
+        const approvedSummary = approvedTeachers.map((teacher: Teacher) => {
+          const { avatar, ...teacherWithoutAvatar } = teacher;
+          return {
+            ...teacherWithoutAvatar,
+            avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
+          };
+        });
+        console.log('✅ Approved teachers for homepage:', approvedSummary);
         setTeachers(approvedTeachers);
         
       } catch (error) {
