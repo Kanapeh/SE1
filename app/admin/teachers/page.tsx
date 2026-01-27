@@ -64,21 +64,57 @@ export default function TeachersManagementPage() {
 
       // Use API route instead of direct Supabase query to bypass RLS
       // Pass 'all=true' to get all teachers (including pending) for admin dashboard
-      const response = await fetch('/api/teachers?all=true');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      let response;
+      try {
+        response = await fetch('/api/teachers?all=true', {
+          signal: controller.signal,
+          cache: 'no-store' // Prevent caching
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('درخواست timeout شد. لطفاً دوباره تلاش کنید.');
+        }
+        throw fetchError;
+      }
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
         console.error("❌ API error:", errorData);
         setError(errorData.error || 'خطا در دریافت لیست معلمان');
         setErrorDetails({
           code: response.status,
           message: errorData.details || errorData.message || 'خطا در ارتباط با سرور'
         });
+        setTeachers([]); // Set empty array on error
         return;
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error("❌ Error parsing JSON:", jsonError);
+        setError("خطا در پردازش پاسخ سرور");
+        setErrorDetails({
+          code: 'JSON_PARSE_ERROR',
+          message: 'پاسخ سرور قابل پردازش نیست'
+        });
+        setTeachers([]);
+        return;
+      }
+
       console.log("✅ Teachers fetched successfully via API");
+      console.log("📋 API Response:", result);
       
       // Log teachers data without avatar
       if (result.teachers && Array.isArray(result.teachers)) {
@@ -92,7 +128,7 @@ export default function TeachersManagementPage() {
         console.log("📋 Teachers data:", teachersSummary);
         console.log("🔢 Number of teachers:", result.teachers.length);
       } else {
-        console.log("📋 Teachers data:", result);
+        console.log("⚠️ No teachers array in response, result:", result);
       }
       
       setTeachers(result.teachers || []);
@@ -103,6 +139,7 @@ export default function TeachersManagementPage() {
         code: 'UNEXPECTED_ERROR',
         message: error instanceof Error ? error.message : 'خطای نامشخص'
       });
+      setTeachers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
