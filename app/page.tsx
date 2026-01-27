@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import HomeClient from "./HomeClient";
 
 export const metadata: Metadata = {
-  title: "آکادمی زبان سِ وان | بهترین آموزش زبان انگلیسی آنلاین | SE1A Academy",
+  title: "آکادمی زبان سِ وان",
   description: "بهترین آکادمی آموزش زبان انگلیسی در ایران. کلاس‌های آنلاین، حضوری و خصوصی با اساتید مجرب. دوره‌های آیلتس، مکالمه، گرامر و کودکان. قیمت مناسب و کیفیت تضمین شده.",
   keywords: "آموزش زبان انگلیسی, کلاس زبان آنلاین, معلم خصوصی زبان, آیلتس, مکالمه انگلیسی, گرامر انگلیسی, کلاس کودکان, SE1A, آکادمی سِ وان, آموزش زبان تهران",
   authors: [{ name: "SE1A Academy" }],
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL('https://www.se1a.org'),
   openGraph: {
-    title: "آکادمی زبان سِ وان | بهترین آموزش زبان انگلیسی آنلاین",
+    title: "آکادمی زبان سِ وان",
     description: "بهترین آکادمی آموزش زبان انگلیسی در ایران. کلاس‌های آنلاین، حضوری و خصوصی با اساتید مجرب. دوره‌های آیلتس، مکالمه، گرامر و کودکان.",
     url: "https://www.se1a.org",
     siteName: "سِ وان - SE1A Academy",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
         url: "https://www.se1a.org/images/home-og.jpg",
         width: 1200,
         height: 630,
-        alt: "آکادمی زبان سِ وان - بهترین آموزش زبان انگلیسی آنلاین",
+        alt: "آکادمی زبان سِ وان",
       },
     ],
     locale: "fa_IR",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "آکادمی زبان سِ وان | بهترین آموزش زبان انگلیسی آنلاین",
+    title: "آکادمی زبان سِ وان",
     description: "بهترین آکادمی آموزش زبان انگلیسی در ایران. کلاس‌های آنلاین، حضوری و خصوصی با اساتید مجرب.",
     images: ["https://www.se1a.org/images/home-og.jpg"],
     creator: "@se1a_academy",

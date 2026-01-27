@@ -42,7 +42,7 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی | SE1A Academy",
+  title: "آکادمی زبان سِ وان",
   description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان. دوره‌های حضوری و آنلاین با بهترین اساتید.",
   keywords: "آموزش زبان انگلیسی, کلاس زبان, دوره زبان, معلم خصوصی زبان, آکادمی زبان, SE1A, سِ وان",
   authors: [{ name: "SE1A Academy" }],
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     'theme-color': '#2b3a67',
   },
   openGraph: {
-    title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+    title: "آکادمی زبان سِ وان",
     description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان. دوره‌های حضوری و آنلاین با بهترین اساتید.",
     url: "https://www.se1a.org",
     siteName: "سِ وان - SE1A Academy",
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
         url: "https://www.se1a.org/images/logo.png",
         width: 1200,
         height: 630,
-        alt: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+        alt: "آکادمی زبان سِ وان",
       },
     ],
     locale: "fa_IR",
@@ -96,7 +96,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "سِ وان - مرکز تخصصی آموزش زبان انگلیسی",
+    title: "آکادمی زبان سِ وان",
     description: "مرکز تخصصی آموزش زبان انگلیسی سِ وان با بیش از ۱۰ سال تجربه در زمینه آموزش زبان",
     images: ["https://www.se1a.org/images/logo.png"],
     creator: "@se1a_academy",
