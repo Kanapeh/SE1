@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     const all = searchParams.get('all') === 'true'; // For admin dashboard
     
     console.log('🔍 API: Fetching teachers...', { all });
+    console.log('🔍 Request URL:', request.url);
     
     // Check environment variables
     console.log('🔧 Environment check:');
@@ -25,8 +26,27 @@ export async function GET(request: Request) {
       console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is not set, using anon key (limited access)');
     }
     
+    // Create a new Supabase client for this request to ensure fresh connection
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ Missing Supabase configuration');
+      return NextResponse.json({ 
+        teachers: [],
+        count: 0,
+        allCount: 0,
+        success: false,
+        error: 'Missing Supabase configuration'
+      }, { status: 500 });
+    }
+    
+    const requestSupabase = createClient(supabaseUrl, supabaseKey);
+    
+    console.log('🔍 Querying teachers table...');
+    
     // Fetch ALL teachers from database
-    const { data: allTeachers, error: allError } = await supabase
+    const { data: allTeachers, error: allError } = await requestSupabase
       .from('teachers')
       .select('*')
       .order('created_at', { ascending: false });
