@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, ChevronRight, Clock, Users, BookOpen, Award, TrendingUp } from "lucide-react";
+import { Star, ChevronRight, Clock, Users, Award, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 // Remove supabase import since we'll use API endpoint
@@ -29,21 +29,39 @@ export default function PopularCoursesSection() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to get icon based on category
+  const getIconForCategory = (category: string): string => {
+    const iconMap: Record<string, string> = {
+      "مبتدی": "🚀",
+      "متوسط": "💼",
+      "پیشرفته": "🎯",
+      "آیلتس": "📚",
+      "کودکان": "🌟",
+      "مکالمه": "💬",
+      "تافل": "📝",
+      "تجاری": "💼",
+      "گرامر": "📖",
+      "مصاحبه": "🎤",
+      "خصوصی": "👑"
+    };
+    return iconMap[category] || "📚";
+  };
+
   // Use the same course data as the main courses page
   const fetchCourses = async () => {
     try {
       console.log('🔍 Fetching courses for popular section...');
       
-      // Use the same mock data as the courses page
-      const mockCourses: Course[] = [
+      // All courses from CoursesClient.tsx
+      const allCourses: Course[] = [
         {
           id: "1",
           title: "انگلیسی برای شروع",
-          teacher: "ادینوس",
-          teacherId: "teacher-1",
+          teacher: "",
+          teacherId: "course-1",
           price: 2800000,
           duration: "12 هفته",
-          students: 45,
+          students: 95,
           rating: 4.8,
           level: "مبتدی",
           icon: "🚀",
@@ -54,87 +72,158 @@ export default function PopularCoursesSection() {
         {
           id: "2",
           title: "انگلیسی کاربردی",
-          teacher: "ادینوس",
-          teacherId: "teacher-2",
+          teacher: "",
+          teacherId: "course-2",
           price: 4200000,
           duration: "16 هفته",
-          students: 38,
+          students: 88,
           rating: 4.9,
           level: "متوسط",
           icon: "💼",
           gradient: "from-purple-500 to-pink-500",
-          features: ["مهارت‌های کاری", "ارائه حرفه‌ای", "نوشتن رسمی"],
-          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
+          features: ["مکالمه پیشرفته", "نوشتار رسمی", "واژگان تخصصی"],
+          image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "3",
           title: "انگلیسی حرفه‌ای",
-          teacher: "سپنتا علیزاده",
-          teacherId: "teacher-3",
+          teacher: "",
+          teacherId: "course-3",
           price: 6800000,
           duration: "20 هفته",
-          students: 32,
+          students: 75,
           rating: 4.9,
           level: "پیشرفته",
           icon: "🎯",
           gradient: "from-green-500 to-teal-500",
-          features: ["محیط‌های بین‌المللی", "مذاکره پیشرفته", "مدیریت پروژه"],
-          image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80"
+          features: ["مهارت‌های ارائه", "مذاکره تجاری", "نوشتار حرفه‌ای"],
+          image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "4",
           title: "آمادگی آیلتس",
-          teacher: "سپنتا علیزاده",
-          teacherId: "teacher-4",
+          teacher: "",
+          teacherId: "course-4",
           price: 7500000,
-          duration: "18 هفته",
-          students: 28,
-          rating: 4.9,
-          level: "پیشرفته",
+          duration: "24 هفته",
+          students: 92,
+          rating: 4.8,
+          level: "آیلتس",
           icon: "📚",
           gradient: "from-orange-500 to-red-500",
-          features: ["استراتژی‌های تست زنی", "نمره 7+", "شبیه‌سازی آزمون"],
+          features: ["استراتژی‌های تست زنی", "تمرینات عملی", "شبیه‌سازی آزمون"],
           image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "5",
           title: "انگلیسی کودکان",
-          teacher: "ادینوس",
-          teacherId: "teacher-5",
+          teacher: "",
+          teacherId: "course-5",
           price: 2200000,
           duration: "10 هفته",
-          students: 52,
-          rating: 4.8,
-          level: "مبتدی",
+          students: 90,
+          rating: 4.9,
+          level: "کودکان",
           icon: "🌟",
           gradient: "from-pink-500 to-purple-500",
-          features: ["آموزش بازی محور", "کارتون‌های آموزشی", "فعالیت‌های خلاقانه"],
-          image: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?auto=format&fit=crop&w=800&q=80"
+          features: ["آموزش بازی محور", "داستان‌های جذاب", "فعالیت‌های خلاقانه"],
+          image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80"
         },
         {
           id: "6",
+          title: "انگلیسی مکالمه",
+          teacher: "",
+          teacherId: "course-6",
+          price: 3800000,
+          duration: "14 هفته",
+          students: 93,
+          rating: 4.9,
+          level: "مکالمه",
+          icon: "💬",
+          gradient: "from-teal-500 to-cyan-500",
+          features: ["تمرین مکالمه روزمره", "صحبت در موقعیت‌های مختلف", "تلفظ و لهجه"],
+          image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "7",
+          title: "آمادگی تافل",
+          teacher: "",
+          teacherId: "course-7",
+          price: 7200000,
+          duration: "20 هفته",
+          students: 87,
+          rating: 4.8,
+          level: "تافل",
+          icon: "📝",
+          gradient: "from-red-500 to-orange-500",
+          features: ["آمادگی کامل تافل", "تمرینات Reading و Listening", "نوشتار آکادمیک"],
+          image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "8",
+          title: "انگلیسی تجاری",
+          teacher: "",
+          teacherId: "course-8",
+          price: 5800000,
+          duration: "18 هفته",
+          students: 82,
+          rating: 4.9,
+          level: "تجاری",
+          icon: "💼",
+          gradient: "from-blue-600 to-indigo-600",
+          features: ["ایمیل‌نویسی حرفه‌ای", "ارائه و Presentation", "مذاکره تجاری"],
+          image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "9",
+          title: "گرامر پیشرفته",
+          teacher: "",
+          teacherId: "course-9",
+          price: 3500000,
+          duration: "16 هفته",
+          students: 78,
+          rating: 4.7,
+          level: "گرامر",
+          icon: "📖",
+          gradient: "from-purple-600 to-pink-600",
+          features: ["گرامر کامل از پایه", "تمرینات عملی", "تست‌های منظم"],
+          image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "10",
+          title: "آمادگی مصاحبه کاری",
+          teacher: "",
+          teacherId: "course-10",
+          price: 4500000,
+          duration: "8 هفته",
+          students: 80,
+          rating: 4.9,
+          level: "مصاحبه",
+          icon: "🎤",
+          gradient: "from-green-600 to-emerald-600",
+          features: ["سوالات رایج مصاحبه", "تمرین مصاحبه واقعی", "نوشتن رزومه انگلیسی"],
+          image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "11",
           title: "کلاس خصوصی VIP",
-          teacher: "سپنتا علیزاده",
-          teacherId: "teacher-6",
+          teacher: "",
+          teacherId: "course-11",
           price: 850000,
           duration: "انعطاف‌پذیر",
-          students: 15,
-          rating: 5.0,
-          level: "شخصی‌سازی شده",
+          students: 85,
+          rating: 4.9,
+          level: "خصوصی",
           icon: "👑",
           gradient: "from-indigo-500 to-purple-500",
-          features: ["برنامه شخصی", "استاد مجرب", "پشتیبانی 24/7"],
-          image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+          features: ["استاد اختصاصی", "برنامه شخصی‌سازی شده", "انعطاف زمانی"],
+          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
         }
       ];
 
-      // Take top 6 most popular courses (based on rating and students)
-      const popularCourses = mockCourses
-        .sort((a, b) => (b.rating * b.students) - (a.rating * a.students))
-        .slice(0, 6);
-
-      console.log('✅ Popular courses loaded:', popularCourses.length);
-      setCourses(popularCourses);
+      // Show all courses (no filtering)
+      console.log('✅ All courses loaded:', allCourses.length);
+      setCourses(allCourses);
       
     } catch (error) {
       console.error('Error loading courses:', error);
@@ -279,15 +368,11 @@ export default function PopularCoursesSection() {
                   </div>
 
                   <CardContent className="p-4">
-                    {/* Course title and teacher */}
+                    {/* Course title */}
                     <div className="mb-3">
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {course.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <BookOpen className="w-4 h-4" />
-                        <span className="text-xs">مدرس: {course.teacher}</span>
-                      </div>
                     </div>
 
                     {/* Rating */}
@@ -334,7 +419,7 @@ export default function PopularCoursesSection() {
                     </div>
 
                     {/* CTA Button */}
-                    <Link href={`/teachers/${course.teacherId}`}>
+                    <Link href="/courses">
                       <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg text-sm">
                         <span className="mr-1">🎯</span>
                         مشاهده دوره
@@ -349,7 +434,7 @@ export default function PopularCoursesSection() {
         </div>
 
         {/* Desktop: Grid layout */}
-        <div className="hidden md:grid grid-cols-3 gap-8 mb-12">
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
           {courses.map((course, index) => (
             <motion.div
               key={course.id}
@@ -401,15 +486,11 @@ export default function PopularCoursesSection() {
                 </div>
 
                 <CardContent className="p-6">
-                  {/* Course title and teacher */}
+                  {/* Course title */}
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {course.title}
                     </h3>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <BookOpen className="w-4 h-4" />
-                      <span className="text-sm">مدرس: {course.teacher}</span>
-                    </div>
                   </div>
 
                   {/* Rating */}
@@ -459,7 +540,7 @@ export default function PopularCoursesSection() {
                   </div>
 
                   {/* CTA Button */}
-                  <Link href={`/teachers/${course.teacherId}`}>
+                  <Link href="/courses">
                     <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 group-hover:shadow-lg">
                       <span className="mr-2">🎯</span>
                       مشاهده دوره
