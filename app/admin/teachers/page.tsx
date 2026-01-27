@@ -112,18 +112,28 @@ export default function TeachersManagementPage() {
     try {
       console.log(`🔄 Updating teacher ${teacherId} status to ${newStatus}`);
 
-      const { error } = await supabase
-        .from('teachers')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', teacherId);
+      // Use API route instead of direct Supabase query to bypass RLS
+      const response = await fetch('/api/teacher-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: teacherId,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        }),
+      });
 
-      if (error) {
-        console.error("❌ Error updating teacher status:", error);
-        toast.error(`خطا در به‌روزرسانی وضعیت: ${error.message}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ Error updating teacher status:", result);
+        toast.error(`خطا در به‌روزرسانی وضعیت: ${result.error || result.details || 'خطای نامشخص'}`);
         return;
       }
 
-      console.log("✅ Teacher status updated successfully");
+      console.log("✅ Teacher status updated successfully via API");
       
       // Show success message
       const statusMessages: Record<string, string> = {
@@ -147,8 +157,10 @@ export default function TeachersManagementPage() {
         setSelectedTeacher(prev => prev ? { ...prev, status: newStatus } : null);
       }
 
-      // Refresh the list
-      fetchTeachers();
+      // Refresh the list after a short delay to ensure database is updated
+      setTimeout(() => {
+        fetchTeachers();
+      }, 500);
 
     } catch (error: any) {
       console.error("❌ Error:", error);
