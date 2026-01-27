@@ -22,17 +22,17 @@ function RegisterContent() {
   const [rateLimitInfo, setRateLimitInfo] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Get userType from URL params first, then sessionStorage, then default to student
-  const userTypeFromParams = searchParams?.get('type');
-  const userTypeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
-  const userType = userTypeFromParams || userTypeFromStorage || 'student';
   
-  // Store userType in sessionStorage for consistency
+  // Get userType from URL params - this is the only source we trust for registration
+  // If no type is provided, redirect to select-type page
+  const userType = searchParams?.get('type');
+  
+  // Redirect to select-type if no type is provided
   useEffect(() => {
-    if (userType && typeof window !== 'undefined') {
-      sessionStorage.setItem('userType', userType);
+    if (!userType || (userType !== 'teacher' && userType !== 'student')) {
+      router.push('/register/select-type');
     }
-  }, [userType]);
+  }, [userType, router]);
 
   const notifyOwner = async (details: {
     email: string;
@@ -174,14 +174,19 @@ function RegisterContent() {
       let authError: any = null;
       
       try {
+        // Ensure origin has trailing slash for proper URL construction
+        const origin = window.location.origin.endsWith('/') 
+          ? window.location.origin.slice(0, -1) 
+          : window.location.origin;
+        
         const signUpResult = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`,
+            emailRedirectTo: `${origin}/verify-email?email=${encodeURIComponent(email)}`,
             data: {
               full_name: fullName,
-              user_type: userType,
+              user_type: userType, // ⭐ CRITICAL: Store in user_metadata - this is the source of truth
             },
             captchaToken: undefined,
           }
@@ -282,7 +287,8 @@ function RegisterContent() {
       if (createdUser) {
         console.log("User created successfully:", createdUser.id);
         
-        // Store user type and email in session storage for later use
+        // Store user type and email in session storage for later use (backup)
+        // Primary source of truth is user_metadata.user_type in Supabase
         sessionStorage.setItem('userType', userType);
         sessionStorage.setItem('userEmail', email);
 
@@ -320,9 +326,7 @@ function RegisterContent() {
             duration: 5000
           });
           
-          // Store user type and email
-          sessionStorage.setItem('userType', userType);
-          sessionStorage.setItem('userEmail', email);
+          // userType is already stored in user_metadata, no need for sessionStorage
           
           // Redirect to login page - user can login without email confirmation
           setTimeout(() => {
@@ -332,8 +336,9 @@ function RegisterContent() {
         } else {
           console.log("Email confirmation required, redirecting to verify email");
           // Email confirmation required
+          // userType is stored in user_metadata, no need to pass it in URL
           toast.success("ثبت‌نام با موفقیت انجام شد. لطفاً ایمیل خود را تایید کنید.");
-          router.push(`/verify-email?email=${encodeURIComponent(email)}&userType=${userType}`);
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
       } else {
         // No user created - this is a real error
