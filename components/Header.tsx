@@ -105,8 +105,8 @@ export default function Header() {
         />
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between relative">
-          {/* Left Side: Hamburger Menu Button (always visible) */}
-          <div className="flex items-center">
+          {/* Left Side: Hamburger Menu Button + Logo (desktop) */}
+          <div className="flex items-center gap-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -120,14 +120,13 @@ export default function Header() {
                 <Menu className="h-5 w-5" />
               </motion.button>
             </motion.div>
-          </div>
 
-          {/* Logo with enhanced animation - Centered on mobile, left on desktop */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-auto lg:transform-none"
-          >
+            {/* Logo - Left on desktop, centered on mobile */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="hidden lg:flex items-center"
+            >
             <Link href="/" className="flex items-center space-x-4 group">
               <div className="relative">
                   <motion.div
@@ -163,6 +162,54 @@ export default function Header() {
                   </motion.span>
                   <span className="text-xs font-persian text-muted-foreground -mt-0.5 flex items-center">
                     <Globe className="w-2.5 h-2.5 lg:w-3 lg:h-3 mr-1" />
+                    آکادمی زبان
+                </span>
+              </div>
+            </Link>
+            </motion.div>
+          </div>
+
+          {/* Logo - Centered on mobile only */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="absolute left-1/2 transform -translate-x-1/2 lg:hidden"
+          >
+            <Link href="/" className="flex items-center space-x-4 group">
+              <div className="relative">
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Image src={imageLogo} alt="لوگو" className="h-8 w-8 transition-transform group-hover:scale-110 logo-image" />
+                  </motion.div>
+                  <motion.div
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-lg"
+                    animate={{ 
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 180, 360]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                <motion.div
+                    className="absolute -bottom-1 -left-1 w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              <div className="flex flex-col">
+                  <motion.span 
+                    className="text-lg font-logo bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                  سِ وان
+                  </motion.span>
+                  <span className="text-xs font-persian text-muted-foreground -mt-0.5 flex items-center">
+                    <Globe className="w-2.5 h-2.5 mr-1" />
                     آکادمی زبان
                 </span>
               </div>
