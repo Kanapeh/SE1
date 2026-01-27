@@ -17,7 +17,6 @@ import {
   FileText, 
   Users, 
   Phone, 
-  Plus,
   GraduationCap,
   Sparkles,
   Menu,
@@ -357,52 +356,11 @@ export default function Header() {
                   </Link>
                 </motion.div>
 
-                {/* New Teacher Registration Option */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  <Link href="/register?type=teacher" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-indigo-200/50 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-2xl transition-all duration-500 p-4">
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                      />
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                            <Plus className="w-6 h-6 text-white" />
-                          </div>
-                          <motion.div
-                            className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center"
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            <Sparkles className="w-2.5 h-2.5 text-white" />
-                          </motion.div>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            معلم جدید
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ثبت‌نام به عنوان معلم جدید و شروع تدریس</p>
-                          <div className="flex items-center space-x-2 text-xs text-indigo-600 dark:text-indigo-400">
-                            <Sparkles className="w-3 h-3" />
-                            <span>شروع جدید</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-
                 {/* Enhanced Student Option */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ delay: 0.2 }}
                 >
                   <Link href="/login" onClick={() => setIsSidebarOpen(false)}>
                     <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-2 border-green-200/50 dark:border-green-700/50 hover:border-green-300 dark:hover:border-green-600 hover:shadow-2xl transition-all duration-500 p-4">
