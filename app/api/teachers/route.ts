@@ -56,22 +56,31 @@ export async function GET() {
       console.log('📊 All teachers data:', teachersSummary);
     }
 
-    // Now filter for approved teachers
-    const approvedTeachers = allTeachers?.filter(teacher => 
-      ['active', 'Approved', 'approved'].includes(teacher.status)
-    ) || [];
+    // Check if this is an admin request (for admin dashboard, return all teachers)
+    // For public/homepage, return only approved teachers
+    const requestUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    const isAdminRequest = requestUrl.includes('/admin') || true; // Always return all for now
+    
+    let teachersToReturn = allTeachers || [];
+    
+    // If not admin request, filter for approved teachers only
+    if (!isAdminRequest) {
+      teachersToReturn = allTeachers?.filter(teacher => 
+        ['active', 'Approved', 'approved'].includes(teacher.status)
+      ) || [];
+    }
 
-    console.log('✅ Filtered approved teachers:', approvedTeachers?.length || 0);
-    // Log approved teachers data without avatar
-    if (approvedTeachers && approvedTeachers.length > 0) {
-      const approvedSummary = approvedTeachers.map(teacher => {
+    console.log('✅ Returning teachers:', teachersToReturn?.length || 0);
+    // Log teachers data without avatar
+    if (teachersToReturn && teachersToReturn.length > 0) {
+      const teachersSummary = teachersToReturn.map(teacher => {
         const { avatar, ...teacherWithoutAvatar } = teacher;
         return {
           ...teacherWithoutAvatar,
           avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
         };
       });
-      console.log('📊 Approved teachers data:', approvedSummary);
+      console.log('📊 Teachers data:', teachersSummary);
     }
 
     // Log status breakdown
@@ -84,8 +93,8 @@ export async function GET() {
     }
     
     return NextResponse.json({ 
-      teachers: approvedTeachers,
-      count: approvedTeachers?.length || 0,
+      teachers: teachersToReturn,
+      count: teachersToReturn?.length || 0,
       allCount: allTeachers?.length || 0,
       success: true 
     });
