@@ -494,7 +494,7 @@ export default function CoursesClient() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
-            دوره‌های زبان انگلیسی
+            دوره‌های انگلیسی و آلمانی با سِ وان
           </motion.h1>
           
           <motion.p 
