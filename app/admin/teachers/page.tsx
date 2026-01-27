@@ -22,6 +22,7 @@ import {
   Languages,
   Star
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Teacher {
   id: string;
@@ -191,7 +192,7 @@ export default function TeachersManagementPage() {
         });
         console.log("📋 Teachers data:", teachersSummary);
       } else {
-        console.log("📋 Teachers data:", data);
+      console.log("📋 Teachers data:", data);
       }
       console.log("🔢 Number of teachers:", data?.length || 0);
       
@@ -214,15 +215,26 @@ export default function TeachersManagementPage() {
 
       const { error } = await supabase
         .from('teachers')
-        .update({ status: newStatus })
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', teacherId);
 
       if (error) {
         console.error("❌ Error updating teacher status:", error);
+        toast.error(`خطا در به‌روزرسانی وضعیت: ${error.message}`);
         return;
       }
 
       console.log("✅ Teacher status updated successfully");
+      
+      // Show success message
+      const statusMessages: Record<string, string> = {
+        'Approved': 'معلم با موفقیت تایید شد',
+        'rejected': 'معلم رد شد',
+        'active': 'معلم فعال شد',
+        'pending': 'وضعیت معلم به در انتظار تغییر کرد'
+      };
+      
+      toast.success(statusMessages[newStatus] || 'وضعیت معلم به‌روزرسانی شد');
       
       // Update local state
       setTeachers(prev => prev.map(teacher => 
@@ -236,8 +248,12 @@ export default function TeachersManagementPage() {
         setSelectedTeacher(prev => prev ? { ...prev, status: newStatus } : null);
       }
 
-    } catch (error) {
+      // Refresh the list
+      fetchTeachers();
+
+    } catch (error: any) {
       console.error("❌ Error:", error);
+      toast.error(`خطا: ${error.message || 'خطا در به‌روزرسانی وضعیت'}`);
     }
   };
 
