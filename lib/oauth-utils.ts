@@ -3,6 +3,15 @@
  * This file handles the correct redirect URLs for OAuth flows
  */
 
+// Helper function to ensure proper URL construction
+const ensureProperUrl = (base: string, path: string): string => {
+  // Remove trailing slash from base if exists
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  // Ensure path starts with /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
 // Function to get the correct site URL for OAuth redirects
 export const getOAuthRedirectUrl = (path: string = '/auth/callback'): string => {
   console.log('🔍 OAuth Redirect URL Detection Started');
@@ -14,41 +23,43 @@ export const getOAuthRedirectUrl = (path: string = '/auth/callback'): string => 
     
     // If we're on localhost, use localhost URL
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      const localUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}${path}`;
+      const base = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+      const localUrl = ensureProperUrl(base, path);
       console.log('🏠 Using localhost URL:', localUrl);
       return localUrl;
     }
     
     // If we're on production domain, use the current origin
     if (hostname.includes('se1a.org') || hostname.includes('vercel.app')) {
-      const prodUrl = `${protocol}//${hostname}${path}`;
+      const base = `${protocol}//${hostname}`;
+      const prodUrl = ensureProperUrl(base, path);
       console.log('🌐 Using production domain URL:', prodUrl);
       return prodUrl;
     }
     
     // Fallback to current origin for any other domain
-    const currentUrl = `${window.location.origin}${path}`;
+    const currentUrl = ensureProperUrl(window.location.origin, path);
     console.log('🔄 Using current origin URL:', currentUrl);
     return currentUrl;
   }
   
   // Server-side: check environment variables
   if (process.env.NEXT_PUBLIC_SITE_URL) {
-    const envUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${path}`;
+    const envUrl = ensureProperUrl(process.env.NEXT_PUBLIC_SITE_URL, path);
     console.log('🔧 Using environment SITE_URL:', envUrl);
     return envUrl;
   }
   
   // Server-side: detect if we're in development
   if (process.env.NODE_ENV === 'development') {
-    const devUrl = `http://localhost:3000${path}`;
+    const devUrl = ensureProperUrl('http://localhost:3000', path);
     console.log('🧪 Development environment - using localhost:', devUrl);
     return devUrl;
   }
   
   // Final fallback - production URL
   const PRODUCTION_URL = 'https://www.se1a.org';
-  const fallbackUrl = `${PRODUCTION_URL}${path}`;
+  const fallbackUrl = ensureProperUrl(PRODUCTION_URL, path);
   console.log('🚨 Server-side fallback - using production URL:', fallbackUrl);
   return fallbackUrl;
 };
@@ -72,7 +83,8 @@ export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): strin
     
     // If we're on localhost, always use localhost regardless of env vars
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      const localUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}${path}`;
+      const base = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+      const localUrl = ensureProperUrl(base, path);
       console.log('🏠 Localhost detected - using local URL:', localUrl);
       return localUrl;
     }
@@ -80,7 +92,7 @@ export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): strin
   
   // PRIORITY 3: Environment variables for production
   if (process.env.NEXT_PUBLIC_SITE_URL) {
-    const envUrl = `${process.env.NEXT_PUBLIC_SITE_URL}${path}`;
+    const envUrl = ensureProperUrl(process.env.NEXT_PUBLIC_SITE_URL, path);
     console.log('🔧 Using environment SITE_URL (production):', envUrl);
     return envUrl;
   }
@@ -92,20 +104,22 @@ export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): strin
     
     // If we're on localhost, use localhost URL
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      const localUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}${path}`;
+      const base = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+      const localUrl = ensureProperUrl(base, path);
       console.log('🏠 Browser fallback - localhost URL:', localUrl);
       return localUrl;
     }
     
     // Use current origin for any domain
-    const currentUrl = `${protocol}//${hostname}${path}`;
+    const base = `${protocol}//${hostname}`;
+    const currentUrl = ensureProperUrl(base, path);
     console.log('🌐 Browser fallback - current domain URL:', currentUrl);
     return currentUrl;
   }
   
   // Final server-side fallback
   const PRODUCTION_URL = 'https://www.se1a.org';
-  const fallbackUrl = `${PRODUCTION_URL}${path}`;
+  const fallbackUrl = ensureProperUrl(PRODUCTION_URL, path);
   console.log('🚨 Final fallback - production URL:', fallbackUrl);
   return fallbackUrl;
 };
