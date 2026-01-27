@@ -364,22 +364,22 @@ export default function CoursesClient() {
   };
 
   return (
-    <div className="min-h-screen py-20 px-4 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen py-12 px-4 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto">
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Badge variant="secondary" className="mb-6 px-6 py-3 text-base bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg">
-              <BookOpen className="w-5 h-5 mr-2" />
+            <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg">
+              <BookOpen className="w-4 h-4 mr-2" />
               بهترین دوره‌های آموزش زبان
             </Badge>
           </motion.div>
@@ -388,7 +388,7 @@ export default function CoursesClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
+            className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
             دوره‌های زبان انگلیسی
           </motion.h1>
@@ -397,7 +397,7 @@ export default function CoursesClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-xl text-gray-700 mb-8 leading-relaxed max-w-4xl mx-auto"
+            className="text-base text-gray-700 mb-6 leading-relaxed max-w-3xl mx-auto"
           >
             با بهترین دوره‌های آموزش زبان انگلیسی، مهارت‌های خود را تقویت کنید و 
             به اهداف زبانی خود برسید. قیمت‌های مناسب و کیفیت تضمین شده!
@@ -429,7 +429,7 @@ export default function CoursesClient() {
         </motion.div>
 
         {/* Courses Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course, index) => (
             <motion.div
               key={course.id}
@@ -438,9 +438,9 @@ export default function CoursesClient() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="group"
             >
-              <Card className="overflow-hidden h-full rounded-2xl shadow-xl bg-white border-0 hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+              <Card className="overflow-hidden h-full rounded-xl shadow-lg bg-white border-0 hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
                 {/* Course Image */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-36 overflow-hidden">
                   <img
                     src={course.image_url}
                     alt={course.title}
@@ -466,78 +466,74 @@ export default function CoursesClient() {
                 </div>
 
                 {/* Course Content */}
-                <div className="p-6 flex flex-col h-full">
+                <div className="p-4 flex flex-col h-full">
                   {/* Level Badge */}
-                  <div className="mb-4">
-                    <Badge variant="outline" className={`bg-gradient-to-r ${course.color} text-white border-0 px-3 py-1 text-sm`}>
+                  <div className="mb-3">
+                    <Badge variant="outline" className={`bg-gradient-to-r ${course.color} text-white border-0 px-2 py-0.5 text-xs`}>
                       {course.level}
                     </Badge>
                   </div>
 
                   {/* Title and Description */}
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <div className="mb-3">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors">
                       {course.title}
                     </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
                       {course.description}
                     </p>
                   </div>
 
                   {/* Course Info */}
-                  <div className="mb-4 p-3 bg-gray-50 rounded-xl">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-blue-600" />
+                  <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-blue-600" />
                         <span className="text-gray-700">{course.duration}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-blue-600" />
+                      <div className="flex items-center gap-1">
+                        <Users className="w-3 h-3 text-blue-600" />
                         <span className="text-gray-700">{course.class_size}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-500" />
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-500" />
                         <span className="text-gray-700">{course.rating}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-blue-600" />
-                        <span className="text-gray-700">{course.instructor}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Features */}
-                  <div className="mb-6 flex-1">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">ویژگی‌های کلیدی:</h4>
-                    <div className="space-y-2">
-                      {course.features.slice(0, 3).map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <div className="mb-3 flex-1">
+                    <h4 className="text-xs font-semibold text-gray-900 mb-2">ویژگی‌های کلیدی:</h4>
+                    <div className="space-y-1">
+                      {course.features.slice(0, 2).map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
                           <span className="text-xs text-gray-600">{feature}</span>
                         </div>
                       ))}
-                      {course.features.length > 3 && (
+                      {course.features.length > 2 && (
                         <div className="text-xs text-blue-600 font-medium">
-                          +{course.features.length - 3} ویژگی دیگر
+                          +{course.features.length - 2} ویژگی دیگر
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Pricing */}
-                  <div className="mb-6">
+                  <div className="mb-3">
                     <div className="text-center">
                       {course.originalPrice && (
-                        <div className="text-sm text-gray-500 line-through mb-1">
+                        <div className="text-xs text-gray-500 line-through mb-0.5">
                           {formatPrice(course.originalPrice)} تومان
                         </div>
                       )}
-                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                      <div className="text-xl font-bold text-gray-900 mb-0.5">
                         {formatPrice(course.price)}
-                        <span className="text-sm font-normal text-gray-600 mr-1">تومان</span>
+                        <span className="text-xs font-normal text-gray-600 mr-1">تومان</span>
                       </div>
                       {course.originalPrice && (
-                        <div className="text-sm text-green-600 font-semibold">
+                        <div className="text-xs text-green-600 font-semibold">
                           {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% تخفیف
                         </div>
                       )}
@@ -546,10 +542,10 @@ export default function CoursesClient() {
 
                   {/* CTA Button */}
                   <Link href="/get-started" className="block">
-                    <Button className={`w-full bg-gradient-to-r ${course.color} hover:opacity-90 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl`}>
-                      <span className="mr-2">🎯</span>
+                    <Button className={`w-full bg-gradient-to-r ${course.color} hover:opacity-90 text-white font-semibold py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg text-sm`}>
+                      <span className="mr-1.5">🎯</span>
                       ثبت نام اکنون
-                      <ArrowRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 mr-1.5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                 </div>
@@ -563,7 +559,7 @@ export default function CoursesClient() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="mt-20 text-center"
+          className="mt-12 text-center"
         >
           <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 rounded-3xl text-white">
             <div className="flex items-center justify-center mb-4">
