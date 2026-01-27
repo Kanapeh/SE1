@@ -428,8 +428,8 @@ export default function CoursesClient() {
           </motion.div>
         </motion.div>
 
-        {/* Courses Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Courses Grid - Responsive Design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {courses.map((course, index) => (
             <motion.div
               key={course.id}
@@ -438,116 +438,117 @@ export default function CoursesClient() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="group"
             >
-              <Card className="overflow-hidden h-full rounded-xl shadow-lg bg-white border-0 hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
-                {/* Course Image */}
-                <div className="relative h-36 overflow-hidden">
+              <Card className="overflow-hidden rounded-xl shadow-lg bg-white border border-gray-100 hover:shadow-2xl transition-all duration-300 group-hover:-translate-y-2 flex flex-col h-full">
+                {/* Course Image - Better Mobile Height */}
+                <div className="relative h-40 sm:h-44 md:h-36 lg:h-40 overflow-hidden">
                   <img
                     src={course.image_url}
                     alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                   
-                  {/* Badge */}
-                  <div className="absolute top-4 right-4">
-                    <Badge className={`${getBadgeColor(course.badge)} text-white border-0 shadow-lg px-3 py-1 text-sm font-semibold`}>
+                  {/* Badge - Better Mobile Visibility */}
+                  <div className="absolute top-3 right-3">
+                    <Badge className={`${getBadgeColor(course.badge)} text-white border-0 shadow-lg px-2.5 py-1 text-xs font-bold`}>
                       {getBadgeIcon(course.badge)}
                       <span className="mr-1">{course.badge}</span>
                     </Badge>
                   </div>
                   
-                  {/* Popularity */}
-                  <div className="absolute top-4 left-4">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-semibold text-gray-700">{course.popularity}%</span>
+                  {/* Popularity - Better Mobile Visibility */}
+                  <div className="absolute top-3 left-3">
+                    <div className="bg-white/95 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 shadow-md">
+                      <TrendingUp className="w-3.5 h-3.5 text-green-600" />
+                      <span className="text-xs font-bold text-gray-800">{course.popularity}%</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Course Content */}
-                <div className="p-4 flex flex-col h-full">
-                  {/* Level Badge */}
-                  <div className="mb-3">
-                    <Badge variant="outline" className={`bg-gradient-to-r ${course.color} text-white border-0 px-2 py-0.5 text-xs`}>
+                  
+                  {/* Level Badge Overlay */}
+                  <div className="absolute bottom-3 right-3">
+                    <Badge variant="outline" className={`bg-gradient-to-r ${course.color} text-white border-0 shadow-lg px-2.5 py-1 text-xs font-semibold`}>
                       {course.level}
                     </Badge>
                   </div>
+                </div>
 
+                {/* Course Content - Better Mobile Padding */}
+                <div className="p-4 sm:p-5 flex flex-col flex-1">
                   {/* Title and Description */}
                   <div className="mb-3">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
                       {course.title}
                     </h3>
-                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
+                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-3">
                       {course.description}
                     </p>
                   </div>
 
-                  {/* Course Info */}
-                  <div className="mb-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-blue-600" />
-                        <span className="text-gray-700">{course.duration}</span>
+                  {/* Course Info - Better Mobile Layout */}
+                  <div className="mb-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <div className="flex flex-col items-center gap-1 text-center">
+                        <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium text-xs">{course.duration}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3 text-blue-600" />
-                        <span className="text-gray-700">{course.class_size}</span>
+                      <div className="flex flex-col items-center gap-1 text-center">
+                        <Users className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium text-xs">{course.class_size}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-yellow-500" />
-                        <span className="text-gray-700">{course.rating}</span>
+                      <div className="flex flex-col items-center gap-1 text-center">
+                        <Star className="w-4 h-4 text-yellow-500 flex-shrink-0 fill-yellow-500" />
+                        <span className="text-gray-700 font-medium text-xs">{course.rating}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <div className="mb-3 flex-1">
-                    <h4 className="text-xs font-semibold text-gray-900 mb-2">ویژگی‌های کلیدی:</h4>
-                    <div className="space-y-1">
+                  {/* Features - Better Mobile Display */}
+                  <div className="mb-4 flex-1">
+                    <div className="flex flex-wrap gap-2">
                       {course.features.slice(0, 2).map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5">
-                          <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
-                          <span className="text-xs text-gray-600">{feature}</span>
+                        <div key={idx} className="flex items-center gap-1.5 bg-green-50 border border-green-100 rounded-lg px-2.5 py-1.5">
+                          <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm text-gray-700 font-medium">{feature}</span>
                         </div>
                       ))}
                       {course.features.length > 2 && (
-                        <div className="text-xs text-blue-600 font-medium">
+                        <div className="text-xs sm:text-sm text-blue-600 font-semibold px-2.5 py-1.5 bg-blue-50 rounded-lg border border-blue-100">
                           +{course.features.length - 2} ویژگی دیگر
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Pricing */}
-                  <div className="mb-3">
-                    <div className="text-center">
-                      {course.originalPrice && (
-                        <div className="text-xs text-gray-500 line-through mb-0.5">
-                          {formatPrice(course.originalPrice)} تومان
+                  {/* Pricing and Button - Better Mobile Layout */}
+                  <div className="mt-auto pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-right">
+                        {course.originalPrice && (
+                          <div className="text-xs text-gray-500 line-through mb-0.5">
+                            {formatPrice(course.originalPrice)} تومان
+                          </div>
+                        )}
+                        <div className="text-xl sm:text-2xl font-bold text-gray-900">
+                          {formatPrice(course.price)}
+                          <span className="text-sm font-normal text-gray-600 mr-1">تومان</span>
                         </div>
-                      )}
-                      <div className="text-xl font-bold text-gray-900 mb-0.5">
-                        {formatPrice(course.price)}
-                        <span className="text-xs font-normal text-gray-600 mr-1">تومان</span>
+                        {course.originalPrice && (
+                          <div className="text-xs sm:text-sm text-green-600 font-bold mt-0.5">
+                            {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% تخفیف
+                          </div>
+                        )}
                       </div>
-                      {course.originalPrice && (
-                        <div className="text-xs text-green-600 font-semibold">
-                          {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% تخفیف
-                        </div>
-                      )}
                     </div>
-                  </div>
 
-                  {/* CTA Button */}
-                  <Link href="/get-started" className="block">
-                    <Button className={`w-full bg-gradient-to-r ${course.color} hover:opacity-90 text-white font-semibold py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg text-sm`}>
-                      <span className="mr-1.5">🎯</span>
-                      ثبت نام اکنون
-                      <ArrowRight className="w-3.5 h-3.5 mr-1.5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
+                    {/* CTA Button - Better Mobile Size */}
+                    <Link href="/get-started" className="block">
+                      <Button className={`w-full bg-gradient-to-r ${course.color} hover:opacity-95 text-white font-bold py-3 sm:py-3.5 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg text-sm sm:text-base`}>
+                        <span className="mr-2">🎯</span>
+                        ثبت نام در دوره
+                        <ArrowRight className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </Card>
             </motion.div>
