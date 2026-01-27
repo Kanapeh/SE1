@@ -104,10 +104,9 @@ export default function Header() {
           transition={{ duration: 0.1 }}
         />
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          {/* Left Side: Hamburger Menu Button and Logo */}
-          <div className="flex items-center gap-4">
-            {/* Hamburger Menu Button */}
+        <div className="flex items-center justify-between relative">
+          {/* Left Side: Hamburger Menu Button (always visible) */}
+          <div className="flex items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -121,53 +120,54 @@ export default function Header() {
                 <Menu className="h-5 w-5" />
               </motion.button>
             </motion.div>
-
-            {/* Logo with enhanced animation */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <Link href="/" className="flex items-center space-x-4 group">
-                <div className="relative">
-                    <motion.div
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      <Image src={imageLogo} alt="لوگو" className="h-10 w-10 transition-transform group-hover:scale-110 logo-image" />
-                    </motion.div>
-                    <motion.div
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-lg"
-                      animate={{ 
-                        scale: [1, 1.3, 1],
-                        rotate: [0, 180, 360]
-                      }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  <motion.div
-                      className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
-                      animate={{ 
-                        scale: [1, 1.5, 1],
-                        opacity: [0.5, 1, 0.5]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </div>
-                <div className="flex flex-col">
-                    <motion.span 
-                      className="text-xl font-logo bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                    سِ وان
-                    </motion.span>
-                    <span className="text-xs font-persian text-muted-foreground -mt-0.5 flex items-center">
-                      <Globe className="w-3 h-3 mr-1" />
-                      آکادمی زبان
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
           </div>
+
+          {/* Logo with enhanced animation - Centered on mobile, left on desktop */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-auto lg:transform-none"
+          >
+            <Link href="/" className="flex items-center space-x-4 group">
+              <div className="relative">
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Image src={imageLogo} alt="لوگو" className="h-8 w-8 lg:h-10 lg:w-10 transition-transform group-hover:scale-110 logo-image" />
+                  </motion.div>
+                  <motion.div
+                    className="absolute -top-1 -right-1 w-3 h-3 lg:w-4 lg:h-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-lg"
+                    animate={{ 
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 180, 360]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                <motion.div
+                    className="absolute -bottom-1 -left-1 w-2 h-2 lg:w-2.5 lg:h-2.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              <div className="flex flex-col">
+                  <motion.span 
+                    className="text-lg lg:text-xl font-logo bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                  سِ وان
+                  </motion.span>
+                  <span className="text-xs font-persian text-muted-foreground -mt-0.5 flex items-center">
+                    <Globe className="w-2.5 h-2.5 lg:w-3 lg:h-3 mr-1" />
+                    آکادمی زبان
+                </span>
+              </div>
+            </Link>
+          </motion.div>
 
             {/* Center: Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-1 absolute left-1/2 transform -translate-x-1/2">
@@ -199,62 +199,68 @@ export default function Header() {
             </div>
 
             {/* Right Side: Combined Login/Register Button and Theme Toggle */}
-            <div className="hidden lg:flex items-center gap-2">
-              {/* Combined Login/Register Dropdown Button */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 group font-header px-4 py-2.5 rounded-xl relative overflow-hidden text-sm">
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    <span>ورود / ثبت‌نام</span>
-                    <ChevronDown className="w-4 h-4 mr-0 ml-1.5 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link href="/login" className="flex items-center cursor-pointer">
-                      <User className="w-4 h-4 mr-2" />
-                      ورود
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/register" className="flex items-center cursor-pointer">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      ثبت‌نام
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </motion.div>
-
-              {/* Enhanced Theme Toggle Button */}
-            <motion.button
-              initial={{ opacity: 0, rotate: -180 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              transition={{ delay: 0.7 }}
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 text-foreground hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200/50 dark:border-gray-600/50"
-              >
+            <div className="flex items-center gap-2">
+              {/* Empty spacer for mobile to balance hamburger menu */}
+              <div className="w-11 h-11 lg:hidden"></div>
+              
+              {/* Desktop buttons */}
+              <div className="hidden lg:flex items-center gap-2">
+                {/* Combined Login/Register Dropdown Button */}
                 <motion.div
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.5 }}
-            >
-              {theme === "light" ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 group font-header px-4 py-2.5 rounded-xl relative overflow-hidden text-sm">
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                          animate={{ x: ["-100%", "100%"] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                        <span>ورود / ثبت‌نام</span>
+                        <ChevronDown className="w-4 h-4 mr-0 ml-1.5 opacity-70" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link href="/login" className="flex items-center cursor-pointer">
+                          <User className="w-4 h-4 mr-2" />
+                          ورود
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/register" className="flex items-center cursor-pointer">
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          ثبت‌نام
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </motion.div>
-            </motion.button>
+
+                {/* Enhanced Theme Toggle Button */}
+                <motion.button
+                  initial={{ opacity: 0, rotate: -180 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  transition={{ delay: 0.7 }}
+                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                  className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 text-foreground hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200/50 dark:border-gray-600/50"
+                >
+                  <motion.div
+                    whileHover={{ rotate: 180 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {theme === "light" ? (
+                      <Moon className="h-5 w-5" />
+                    ) : (
+                      <Sun className="h-5 w-5" />
+                    )}
+                  </motion.div>
+                </motion.button>
+              </div>
             </div>
           </div>
       </nav>
