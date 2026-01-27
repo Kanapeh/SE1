@@ -184,6 +184,96 @@ export default function CoursesPage() {
         },
         {
           "@type": "Course",
+          "name": "انگلیسی مکالمه",
+          "description": "تمرکز کامل بر مهارت مکالمه و صحبت کردن روان",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "intermediate",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "3800000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "آمادگی تافل",
+          "description": "دوره تخصصی آمادگی آزمون تافل با تمرکز بر هر چهار مهارت",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "advanced",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "7200000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "انگلیسی تجاری",
+          "description": "آموزش زبان انگلیسی برای محیط کار و کسب‌وکار",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "advanced",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "5800000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "گرامر پیشرفته",
+          "description": "تقویت کامل مهارت گرامر از پایه تا پیشرفته",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "intermediate",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "3500000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "آمادگی مصاحبه کاری",
+          "description": "آمادگی کامل برای مصاحبه‌های کاری بین‌المللی",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "advanced",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "4500000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
           "name": "کلاس خصوصی VIP",
           "description": "کلاس خصوصی با استاد مجرب برای یادگیری سریع و شخصی‌سازی شده",
           "provider": {
