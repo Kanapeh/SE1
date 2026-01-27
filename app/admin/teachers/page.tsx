@@ -63,7 +63,8 @@ export default function TeachersManagementPage() {
       console.log("🔍 Fetching teachers via API...");
 
       // Use API route instead of direct Supabase query to bypass RLS
-      const response = await fetch('/api/teachers');
+      // Pass 'all=true' to get all teachers (including pending) for admin dashboard
+      const response = await fetch('/api/teachers?all=true');
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

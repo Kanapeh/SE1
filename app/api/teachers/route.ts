@@ -7,9 +7,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    console.log('🔍 API: Fetching all teachers first for debugging...');
+    const { searchParams } = new URL(request.url);
+    const all = searchParams.get('all') === 'true'; // For admin dashboard
+    
+    console.log('🔍 API: Fetching teachers...', { all });
     
     // Check environment variables
     console.log('🔧 Environment check:');
@@ -21,10 +24,11 @@ export async function GET() {
       console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is not set, using anon key (limited access)');
     }
     
-    // First, fetch ALL teachers to see what's in the database
+    // Fetch ALL teachers from database
     const { data: allTeachers, error: allError } = await supabase
       .from('teachers')
-      .select('*');
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (allError) {
       console.error('❌ API: Error fetching all teachers:', allError);
@@ -56,31 +60,18 @@ export async function GET() {
       console.log('📊 All teachers data:', teachersSummary);
     }
 
-    // Check if this is an admin request (for admin dashboard, return all teachers)
-    // For public/homepage, return only approved teachers
-    const requestUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-    const isAdminRequest = requestUrl.includes('/admin') || true; // Always return all for now
-    
+    // If 'all=true' parameter is provided (for admin), return all teachers
+    // Otherwise, return only approved teachers (for public/homepage)
     let teachersToReturn = allTeachers || [];
     
-    // If not admin request, filter for approved teachers only
-    if (!isAdminRequest) {
+    if (!all) {
+      // Filter for approved teachers only (for public use)
       teachersToReturn = allTeachers?.filter(teacher => 
         ['active', 'Approved', 'approved'].includes(teacher.status)
       ) || [];
-    }
-
-    console.log('✅ Returning teachers:', teachersToReturn?.length || 0);
-    // Log teachers data without avatar
-    if (teachersToReturn && teachersToReturn.length > 0) {
-      const teachersSummary = teachersToReturn.map(teacher => {
-        const { avatar, ...teacherWithoutAvatar } = teacher;
-        return {
-          ...teacherWithoutAvatar,
-          avatar: avatar ? `[Avatar: ${avatar.substring(0, 50)}... (${avatar.length} chars)]` : 'No avatar'
-        };
-      });
-      console.log('📊 Teachers data:', teachersSummary);
+      console.log('✅ Filtered approved teachers:', teachersToReturn?.length || 0);
+    } else {
+      console.log('✅ Returning all teachers for admin:', teachersToReturn?.length || 0);
     }
 
     // Log status breakdown
