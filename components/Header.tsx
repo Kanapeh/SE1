@@ -199,7 +199,7 @@ export default function Header() {
             </div>
 
             {/* Right Side: Combined Login/Register Button and Theme Toggle */}
-            <div className="flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               {/* Combined Login/Register Dropdown Button */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
