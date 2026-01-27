@@ -333,8 +333,8 @@ export default function Header() {
                 >
                   <div
                     onClick={() => {
-                      // Store userType in sessionStorage before navigation
-                      sessionStorage.setItem('userType', 'teacher');
+                      // Navigate directly to register page with teacher type
+                      // userType will be stored in user_metadata during registration
                       setIsSidebarOpen(false);
                       router.push('/register?type=teacher');
                     }}
@@ -371,8 +371,8 @@ export default function Header() {
                 >
                   <div
                     onClick={() => {
-                      // Store userType in sessionStorage before navigation
-                      sessionStorage.setItem('userType', 'student');
+                      // Navigate directly to register page with student type
+                      // userType will be stored in user_metadata during registration
                       setIsSidebarOpen(false);
                       router.push('/register?type=student');
                     }}
