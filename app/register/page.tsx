@@ -323,7 +323,7 @@ function RegisterContent() {
           console.log("Email confirmation required, redirecting to verify email");
           // Email confirmation required
           toast.success("ثبت‌نام با موفقیت انجام شد. لطفاً ایمیل خود را تایید کنید.");
-          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+          router.push(`/verify-email?email=${encodeURIComponent(email)}&userType=${userType}`);
         }
       } else {
         // No user created - this is a real error

@@ -25,6 +25,14 @@ function VerifyEmailContent() {
     const emailToUse = emailFromParams || emailFromStorage || "";
     setEmail(emailToUse);
 
+    // Get userType from URL params or session storage and save it
+    const userTypeFromParams = searchParams.get('userType');
+    const userTypeFromStorage = sessionStorage.getItem('userType');
+    const userTypeToUse = userTypeFromParams || userTypeFromStorage;
+    if (userTypeToUse) {
+      sessionStorage.setItem('userType', userTypeToUse);
+    }
+
     // Auto-check verification when page loads (if coming from email link)
     const checkAutoVerification = async () => {
       // Check if we're coming from email verification link
@@ -84,8 +92,16 @@ function VerifyEmailContent() {
       if (user?.email_confirmed_at) {
         toast.success("ایمیل شما تایید شده است!");
         
-        // Check user type from sessionStorage first
-        const userType = sessionStorage.getItem('userType');
+        // Check user type from multiple sources: URL params, sessionStorage, or user metadata
+        const userTypeFromParams = searchParams?.get('userType');
+        const userTypeFromStorage = sessionStorage.getItem('userType');
+        const userTypeFromMetadata = user.user_metadata?.user_type;
+        const userType = userTypeFromParams || userTypeFromStorage || userTypeFromMetadata;
+        
+        // Save userType to sessionStorage for future use
+        if (userType) {
+          sessionStorage.setItem('userType', userType);
+        }
         
         // Check profiles to determine where to redirect
         try {
@@ -98,7 +114,7 @@ function VerifyEmailContent() {
           if (teacherResponse.status === 'fulfilled' && teacherResponse.value.ok) {
             const { teacher } = await teacherResponse.value.json();
             if (teacher && (teacher.status === 'active' || teacher.status === 'Approved')) {
-              router.push('/dashboard/teacher');
+          router.push('/dashboard/teacher');
               return;
             }
           }
@@ -108,7 +124,7 @@ function VerifyEmailContent() {
             const result = await studentResponse.value.json();
             const student = result.student;
             if (student && student.status === 'active') {
-              router.push('/dashboard/student');
+          router.push('/dashboard/student');
               return;
             }
           }
@@ -124,7 +140,7 @@ function VerifyEmailContent() {
           // Fallback: redirect based on userType or to complete profile
           if (userType === 'teacher') {
             router.push('/complete-profile?type=teacher');
-          } else {
+        } else {
             router.push('/complete-profile?type=student');
           }
         }

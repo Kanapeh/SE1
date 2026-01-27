@@ -254,6 +254,12 @@ function AuthCompleteContent() {
         // No profile found - redirect to complete profile
         console.log("ℹ️ No active profile found, redirecting to complete profile");
 
+        // Save userType to sessionStorage for future use
+        if (userType && typeof window !== 'undefined') {
+          sessionStorage.setItem('userType', userType);
+          sessionStorage.setItem('userEmail', session.user.email || '');
+        }
+
         if (!hasNotificationFlag && session.user.email) {
           const ownerNotified = await notifyOwner({
             email: session.user.email,
