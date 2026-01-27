@@ -36,7 +36,7 @@ import Image from "next/image";
 import imageLogo from "./images/logo.png";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -45,6 +45,7 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -330,30 +331,36 @@ export default function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.3 }}
                 >
-                  <Link href="/login" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-blue-200/50 dark:border-blue-700/50 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                            <TeacherIcon className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                            <Star className="w-2.5 h-2.5 text-white" />
-                          </div>
+                  <div
+                    onClick={() => {
+                      // Store userType in sessionStorage before navigation
+                      sessionStorage.setItem('userType', 'teacher');
+                      setIsSidebarOpen(false);
+                      router.push('/register?type=teacher');
+                    }}
+                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-blue-200/50 dark:border-blue-700/50 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 p-4 cursor-pointer active:scale-[0.98]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                          <TeacherIcon className="w-6 h-6 text-white" />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            معلم هستم
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ورود به پنل معلم و مدیریت کلاس‌ها</p>
-                          <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
-                            <Zap className="w-3 h-3" />
-                            <span>ورود سریع</span>
-                          </div>
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                          <Star className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-header text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          معلم هستم
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 leading-tight">ورود به پنل معلم و مدیریت کلاس‌ها</p>
+                        <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
+                          <Zap className="w-3 h-3" />
+                          <span>ورود سریع</span>
                         </div>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 </motion.div>
 
                 {/* Enhanced Student Option */}
@@ -362,8 +369,15 @@ export default function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <Link href="/login" onClick={() => setIsSidebarOpen(false)}>
-                    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-2 border-green-200/50 dark:border-green-700/50 hover:border-green-300 dark:hover:border-green-600 hover:shadow-2xl transition-all duration-500 p-4">
+                  <div
+                    onClick={() => {
+                      // Store userType in sessionStorage before navigation
+                      sessionStorage.setItem('userType', 'student');
+                      setIsSidebarOpen(false);
+                      router.push('/register?type=student');
+                    }}
+                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 border-2 border-green-200/50 dark:border-green-700/50 hover:border-green-300 dark:hover:border-green-600 hover:shadow-2xl transition-all duration-500 p-4 cursor-pointer active:scale-[0.98]"
+                  >
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                         animate={{ x: ["-100%", "100%"] }}
@@ -394,8 +408,7 @@ export default function Header() {
                         </div>
                       </div>
                     </div>
-                  </Link>
-                </motion.div>
+                  </motion.div>
 
                 {/* Enhanced About Us Option */}
                 <motion.div

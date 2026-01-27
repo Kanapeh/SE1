@@ -475,9 +475,22 @@ function LoginPageContent() {
           console.log("ℹ️ User not found in students table");
         }
 
-        // User exists in auth but no profile - redirect to complete profile
+        // User exists in auth but no profile - redirect to complete profile based on userType
         console.log("ℹ️ User has no profile in any table, redirecting to complete profile");
-        handleRedirect("/complete-profile", "لطفاً پروفایل خود را تکمیل کنید");
+        
+        // Get userType from sessionStorage or default to student
+        const userType = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
+        const profileType = userType === 'teacher' ? 'teacher' : 'student';
+        
+        // Store userType in sessionStorage if not already stored
+        if (userType && typeof window !== 'undefined') {
+          sessionStorage.setItem('userType', userType);
+        } else if (typeof window !== 'undefined') {
+          // Default to student if no userType found
+          sessionStorage.setItem('userType', 'student');
+        }
+        
+        handleRedirect(`/complete-profile?type=${profileType}`, "لطفاً پروفایل خود را تکمیل کنید");
       }
     } catch (error: any) {
       console.error("Unexpected error:", error);

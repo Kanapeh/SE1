@@ -174,7 +174,16 @@ function CompleteProfileContent() {
   useEffect(() => {
     if (!searchParams) return;
     
-    const type = searchParams.get('type') || 'student';
+    // Get userType from URL params first, then sessionStorage, then default to student
+    const typeFromParams = searchParams.get('type');
+    const typeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
+    const type = typeFromParams || typeFromStorage || 'student';
+    
+    // Store userType in sessionStorage for consistency
+    if (type && typeof window !== 'undefined') {
+      sessionStorage.setItem('userType', type);
+    }
+    
     setUserType(type);
     
     const getCurrentUser = async () => {

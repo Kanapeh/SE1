@@ -22,7 +22,17 @@ function RegisterContent() {
   const [rateLimitInfo, setRateLimitInfo] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const userType = searchParams?.get('type') || 'student';
+  // Get userType from URL params first, then sessionStorage, then default to student
+  const userTypeFromParams = searchParams?.get('type');
+  const userTypeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
+  const userType = userTypeFromParams || userTypeFromStorage || 'student';
+  
+  // Store userType in sessionStorage for consistency
+  useEffect(() => {
+    if (userType && typeof window !== 'undefined') {
+      sessionStorage.setItem('userType', userType);
+    }
+  }, [userType]);
 
   const notifyOwner = async (details: {
     email: string;
