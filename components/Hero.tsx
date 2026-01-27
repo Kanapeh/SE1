@@ -94,7 +94,7 @@ export default function Hero() {
                   یادگیری زبان انگلیسی
                 </span>
                 <span className="block mt-3 text-slate-800">
-                  با بهترین روش
+                  با آموزش‌های سِ وان
                 </span>
               </motion.h1>
               
