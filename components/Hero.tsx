@@ -90,11 +90,11 @@ export default function Hero() {
                 transition={{ delay: 0.2 }}
                 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight"
               >
-                <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  یادگیری زبان انگلیسی
+                <span className="block text-slate-400 text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                  With Se One, Speak to Everyone
                 </span>
-                <span className="block mt-3 text-slate-800">
-                  با آموزش‌های سِ وان
+                <span className="block bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mt-2">
+                  با سِ وان به راحتی با کل دنیا صحبت کنید
                 </span>
               </motion.h1>
               
@@ -161,50 +161,57 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Right Side - Image */}
+          {/* Right Side - Image - Smaller with Beautiful Frame */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.7 }}
-            className="relative"
+            className="relative flex items-center justify-center"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <div className="relative aspect-[4/5] lg:aspect-square">
-                <Image
-                  src={HeroImage}
-                  alt="SE1A Language Academy"
-                  fill
-                  className="object-cover"
-                  priority
-                  placeholder="blur"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  quality={90}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-              </div>
+            <div className="relative w-full max-w-md">
+              {/* Decorative Frame */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-indigo-200/20 via-purple-200/20 to-pink-200/20 rounded-3xl blur-xl"></div>
+              <div className="absolute -inset-2 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 rounded-3xl"></div>
               
-              {/* Floating Stats Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-                className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-white/50"
-              >
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-black text-indigo-600">۱۴+</div>
-                    <div className="text-xs text-slate-600 font-medium mt-1">زبان</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-black text-purple-600">۲۴/۷</div>
-                    <div className="text-xs text-slate-600 font-medium mt-1">پشتیبانی</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-black text-pink-600">۹۵٪</div>
-                    <div className="text-xs text-slate-600 font-medium mt-1">رضایت</div>
-                  </div>
+              {/* Image Container */}
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-br from-indigo-50 to-purple-50 p-2">
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
+                  <Image
+                    src={HeroImage}
+                    alt="SE1A Language Academy"
+                    fill
+                    className="object-cover"
+                    priority
+                    placeholder="blur"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    quality={90}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                 </div>
-              </motion.div>
+                
+                {/* Floating Stats Card - Smaller */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-xl rounded-xl p-3 shadow-lg border border-white/50"
+                >
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-xl font-black text-indigo-600">۱۴+</div>
+                      <div className="text-xs text-slate-600 font-medium">زبان</div>
+                    </div>
+                    <div>
+                      <div className="text-xl font-black text-purple-600">۲۴/۷</div>
+                      <div className="text-xs text-slate-600 font-medium">پشتیبانی</div>
+                    </div>
+                    <div>
+                      <div className="text-xl font-black text-pink-600">۹۵٪</div>
+                      <div className="text-xs text-slate-600 font-medium">رضایت</div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         </div>
