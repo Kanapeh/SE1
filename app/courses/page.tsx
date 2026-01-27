@@ -289,6 +289,78 @@ export default function CoursesPage() {
             "priceCurrency": "IRR",
             "availability": "https://schema.org/InStock"
           }
+        },
+        {
+          "@type": "Course",
+          "name": "آلمانی Starten wir A1",
+          "description": "دوره کامل زبان آلمانی برای مبتدیان با کتاب Starten wir A1",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "beginner",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "3080000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "آلمانی Starten wir A2",
+          "description": "ادامه یادگیری زبان آلمانی با کتاب Starten wir A2",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "intermediate",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "4620000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "آلمانی Starten wir B1",
+          "description": "دوره متوسط زبان آلمانی با کتاب Starten wir B1",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "intermediate",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "4620000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "Course",
+          "name": "آلمانی Sicher B2",
+          "description": "دوره پیشرفته زبان آلمانی با کتاب Sicher B2",
+          "provider": {
+            "@type": "Organization",
+            "name": "آکادمی زبان سِ وان"
+          },
+          "courseMode": "blended",
+          "educationalLevel": "advanced",
+          "inLanguage": "fa-IR",
+          "offers": {
+            "@type": "Offer",
+            "price": "7480000",
+            "priceCurrency": "IRR",
+            "availability": "https://schema.org/InStock"
+          }
         }
       ]
     }

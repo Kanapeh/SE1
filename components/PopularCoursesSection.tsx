@@ -218,6 +218,66 @@ export default function PopularCoursesSection() {
           gradient: "from-indigo-500 to-purple-500",
           features: ["استاد اختصاصی", "برنامه شخصی‌سازی شده", "انعطاف زمانی"],
           image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "12",
+          title: "آلمانی Starten wir A1",
+          teacher: "",
+          teacherId: "course-12",
+          price: 3080000,
+          duration: "14 هفته",
+          students: 85,
+          rating: 4.8,
+          level: "مبتدی",
+          icon: "🇩🇪",
+          gradient: "from-yellow-500 to-orange-500",
+          features: ["کتاب Starten wir A1", "گرامر پایه آلمانی", "مکالمه روزمره"],
+          image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "13",
+          title: "آلمانی Starten wir A2",
+          teacher: "",
+          teacherId: "course-13",
+          price: 4620000,
+          duration: "16 هفته",
+          students: 82,
+          rating: 4.9,
+          level: "مبتدی-متوسط",
+          icon: "🇩🇪",
+          gradient: "from-orange-500 to-red-500",
+          features: ["کتاب Starten wir A2", "گرامر پیشرفته‌تر", "مکالمه پیشرفته"],
+          image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "14",
+          title: "آلمانی Starten wir B1",
+          teacher: "",
+          teacherId: "course-14",
+          price: 4620000,
+          duration: "18 هفته",
+          students: 88,
+          rating: 4.8,
+          level: "متوسط",
+          icon: "🇩🇪",
+          gradient: "from-blue-600 to-indigo-600",
+          features: ["کتاب Starten wir B1", "گرامر متوسط", "مکالمه حرفه‌ای"],
+          image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80"
+        },
+        {
+          id: "15",
+          title: "آلمانی Sicher B2",
+          teacher: "",
+          teacherId: "course-15",
+          price: 7480000,
+          duration: "20 هفته",
+          students: 90,
+          rating: 4.9,
+          level: "پیشرفته",
+          icon: "🇩🇪",
+          gradient: "from-purple-600 to-pink-600",
+          features: ["کتاب Sicher B2", "گرامر پیشرفته", "مکالمه روان"],
+          image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
         }
       ];
 
