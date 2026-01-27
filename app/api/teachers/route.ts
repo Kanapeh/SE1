@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Create server-side Supabase client with proper service role key
@@ -106,5 +107,88 @@ export async function GET(request: Request) {
       error: 'API temporarily unavailable - using fallback',
       errorDetails: error instanceof Error ? error.message : 'Unknown error'
     });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Teacher ID is required' }, { status: 400 });
+    }
+
+    if (!status) {
+      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
+
+    console.log(`🔄 API: Updating teacher ${id} status to ${status}`);
+
+    // Get environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      console.error('Missing Supabase configuration');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
+    // Create Supabase client with service role key to bypass RLS
+    const adminSupabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        persistSession: false
+      }
+    });
+
+    // Update teacher status
+    const { data, error } = await adminSupabase
+      .from('teachers')
+      .update({ 
+        status: status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ API: Error updating teacher status:', {
+        error: error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      return NextResponse.json(
+        { 
+          error: 'Database error', 
+          details: error.message,
+          code: error.code,
+          hint: error.hint
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ API: Teacher status updated successfully:', {
+      id: data?.id,
+      status: data?.status
+    });
+
+    return NextResponse.json({ 
+      teacher: data, 
+      message: 'Status updated successfully' 
+    });
+
+  } catch (error: any) {
+    console.error('💥 API: Unexpected error updating status:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
   }
 }

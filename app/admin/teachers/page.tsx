@@ -113,15 +113,14 @@ export default function TeachersManagementPage() {
       console.log(`🔄 Updating teacher ${teacherId} status to ${newStatus}`);
 
       // Use API route instead of direct Supabase query to bypass RLS
-      const response = await fetch('/api/teacher-profile', {
-        method: 'PUT',
+      const response = await fetch('/api/teachers', {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           id: teacherId,
-          status: newStatus,
-          updated_at: new Date().toISOString()
+          status: newStatus
         }),
       });
 
