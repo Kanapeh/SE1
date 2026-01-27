@@ -174,18 +174,6 @@ function CompleteProfileContent() {
   useEffect(() => {
     if (!searchParams) return;
     
-    // Get userType from URL params first, then sessionStorage, then default to student
-    const typeFromParams = searchParams.get('type');
-    const typeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
-    const type = typeFromParams || typeFromStorage || 'student';
-    
-    // Store userType in sessionStorage for consistency
-    if (type && typeof window !== 'undefined') {
-      sessionStorage.setItem('userType', type);
-    }
-    
-    setUserType(type);
-    
     const getCurrentUser = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -195,6 +183,28 @@ function CompleteProfileContent() {
           window.location.href = loginUrl;
           return;
         }
+        
+        // ⭐ Priority order for userType:
+        // 1. URL params (for navigation - if user came from a link)
+        // 2. user_metadata.user_type (source of truth - stored in Supabase during registration)
+        // 3. Default to student
+        const typeFromParams = searchParams.get('type');
+        const typeFromMetadata = user.user_metadata?.user_type;
+        const type = typeFromParams || typeFromMetadata || 'student';
+        
+        // If URL has type but metadata doesn't, update metadata (shouldn't happen, but safety check)
+        if (typeFromParams && !typeFromMetadata) {
+          try {
+            await supabase.auth.updateUser({
+              data: { user_type: typeFromParams }
+            });
+            console.log('✅ Updated user_metadata with user_type from URL:', typeFromParams);
+          } catch (updateError) {
+            console.error('❌ Error updating user_metadata:', updateError);
+          }
+        }
+        
+        setUserType(type);
         
         // Check if email is confirmed
         if (!user.email_confirmed_at) {
@@ -289,34 +299,50 @@ function CompleteProfileContent() {
         throw new Error('کاربر یافت نشد');
       }
 
-      const { error } = await supabase.from('teachers').insert({
-        user_id: currentUser.id,
-        email: currentUser.email,
-        ...teacherProfile,
-        status: 'pending',
-        available: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      // Use API route to create teacher profile
+      const response = await fetch('/api/teacher-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentUser.id, // Use id instead of user_id
+          email: currentUser.email,
+          ...teacherProfile,
+          status: 'pending',
+          available: true,
+        }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
 
-      // Also insert into users table
-      const { error: userError } = await supabase.from('users').insert({
-        id: currentUser.id,
-        email: currentUser.email,
-        first_name: teacherProfile.first_name,
-        last_name: teacherProfile.last_name,
-        phone: teacherProfile.phone,
-        role: 'teacher',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      if (!response.ok) {
+        throw new Error(result.error || result.details || 'خطا در ثبت پروفایل');
+      }
 
-      if (userError) throw userError;
+      // Also insert into users table (optional, for backward compatibility)
+      try {
+        await supabase.from('users').upsert({
+          id: currentUser.id,
+          email: currentUser.email,
+          first_name: teacherProfile.first_name,
+          last_name: teacherProfile.last_name,
+          phone: teacherProfile.phone,
+          role: 'teacher',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      } catch (userError) {
+        // Ignore user table errors - it's optional
+        console.warn('User table insert failed (optional):', userError);
+      }
 
-      toast.success('پروفایل معلم با موفقیت ثبت شد. پس از تایید ادمین، می‌توانید وارد شوید.');
-      router.push('/dashboard/teacher');
+      toast.success('پروفایل شما تکمیل شد. پس از بررسی پروفایل شما تایید خواهد شد.');
+      
+      // Redirect to login or home page
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     } catch (error: any) {
       console.error('Error creating teacher profile:', error);
       toast.error(error.message || 'خطا در ثبت پروفایل');
