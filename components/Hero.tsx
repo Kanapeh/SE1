@@ -20,6 +20,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
+import PopularCoursesSection from "./PopularCoursesSection";
 
 const highlightCards = [
   {
@@ -216,6 +217,11 @@ export default function Hero() {
           </motion.div>
         </div>
 
+      </div>
+      
+      {/* Popular Courses Section - Below Hero Image */}
+      <div className="mt-0">
+        <PopularCoursesSection />
       </div>
     </section>
   );

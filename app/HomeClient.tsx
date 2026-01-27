@@ -31,10 +31,6 @@ export default function HomeClient() {
       </Suspense>
       
       <Suspense fallback={<SectionLoader />}>
-        <PopularCoursesSection />
-      </Suspense>
-      
-      <Suspense fallback={<SectionLoader />}>
         <TopTeachersSection />
       </Suspense>
       
