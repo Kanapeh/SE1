@@ -52,7 +52,7 @@ export default function PopularCoursesSection() {
     try {
       console.log('🔍 Fetching courses for popular section...');
       
-      // All courses from CoursesClient.tsx
+      // All courses from CoursesClient.tsx - matching all 11 courses
       const allCourses: Course[] = [
         {
           id: "1",
