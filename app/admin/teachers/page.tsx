@@ -60,130 +60,28 @@ export default function TeachersManagementPage() {
       setLoading(true);
       setError(null);
       setErrorDetails(null);
-      console.log("🔍 Fetching teachers...");
+      console.log("🔍 Fetching teachers via API...");
 
-      // First, let's test the connection
-      console.log("🔌 Testing Supabase connection...");
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log("👤 Current user:", user?.email, "Auth error:", authError);
-
-      if (authError) {
-        console.error("❌ Auth error:", authError);
-        setError("خطا در احراز هویت");
-        setErrorDetails({
-          code: 'AUTH_ERROR',
-          message: authError.message
-        });
-        return;
-      }
-
-      if (!user) {
-        console.error("❌ No user found");
-        setError("کاربر یافت نشد");
-        setErrorDetails({
-          code: 'NO_USER',
-          message: 'لطفاً دوباره وارد شوید'
-        });
-        return;
-      }
-
-      // Test basic table access
-      console.log("🧪 Testing basic table access...");
-      const { data: testData, error: testError } = await supabase
-        .from('teachers')
-        .select('id')
-        .limit(1);
+      // Use API route instead of direct Supabase query to bypass RLS
+      const response = await fetch('/api/teachers');
       
-      console.log("🧪 Test query result:", { testData, testError });
-
-      if (testError) {
-        console.error("❌ Test query failed:", testError);
-        setError("خطا در دسترسی به جدول معلمان");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("❌ API error:", errorData);
+        setError(errorData.error || 'خطا در دریافت لیست معلمان');
         setErrorDetails({
-          code: testError.code || 'TEST_ERROR',
-          message: testError.message || 'خطا در تست دسترسی'
+          code: response.status,
+          message: errorData.details || errorData.message || 'خطا در ارتباط با سرور'
         });
         return;
       }
 
-      // First, let's check if we can access the table at all
-      const { data: countData, error: countError } = await supabase
-        .from('teachers')
-        .select('id', { count: 'exact', head: true });
-
-      console.log("📊 Count query result:", { countData, countError });
-
-      if (countError) {
-        console.error("❌ Error counting teachers:", countError);
-        console.error("❌ Error details:", {
-          message: countError.message,
-          code: countError.code,
-          details: countError.details,
-          hint: countError.hint
-        });
-        
-        // Check if it's a permission issue
-        if (countError.code === '42501') {
-          console.error("🚨 Permission denied - This is likely an RLS policy issue");
-          console.error("💡 Solution: Run the admin_teachers_access.sql script in Supabase");
-          setError("دسترسی رد شد - مشکل در تنظیمات امنیتی دیتابیس");
-          setErrorDetails({
-            code: countError.code,
-            message: "برای حل این مشکل، فایل admin_teachers_access.sql را در Supabase اجرا کنید"
-          });
-        }
-        
-        // Check if table doesn't exist
-        if (countError.code === '42P01') {
-          console.error("🚨 Table 'teachers' does not exist");
-          console.error("💡 Solution: Run the admin_teachers_access.sql script in Supabase");
-          setError("جدول معلمان وجود ندارد");
-          setErrorDetails({
-            code: countError.code,
-            message: "برای حل این مشکل، فایل admin_teachers_access.sql را در Supabase اجرا کنید"
-          });
-        }
-        
-        return;
-      }
-
-      console.log("📊 Total teachers count:", countData?.length || 0);
-
-      // Now fetch all teachers
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      console.log("📋 Fetch query result:", { data, error });
-
-      if (error) {
-        console.error("❌ Error fetching teachers:", error);
-        console.error("❌ Error details:", {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-        
-        // Check if it's a permission issue
-        if (error.code === '42501') {
-          console.error("🚨 Permission denied - This is likely an RLS policy issue");
-          console.error("💡 Solution: Run the admin_teachers_access.sql script in Supabase");
-          setError("دسترسی رد شد - مشکل در تنظیمات امنیتی دیتابیس");
-          setErrorDetails({
-            code: error.code,
-            message: "برای حل این مشکل، فایل admin_teachers_access.sql را در Supabase اجرا کنید"
-          });
-        }
-        
-        return;
-      }
-
-      console.log("✅ Teachers fetched successfully");
-      // Log teachers data without avatar to avoid cluttering console
-      if (data && Array.isArray(data)) {
-        const teachersSummary = data.map((teacher: any) => {
+      const result = await response.json();
+      console.log("✅ Teachers fetched successfully via API");
+      
+      // Log teachers data without avatar
+      if (result.teachers && Array.isArray(result.teachers)) {
+        const teachersSummary = result.teachers.map((teacher: any) => {
           const { avatar, ...teacherWithoutAvatar } = teacher;
           return {
             ...teacherWithoutAvatar,
@@ -191,12 +89,12 @@ export default function TeachersManagementPage() {
           };
         });
         console.log("📋 Teachers data:", teachersSummary);
+        console.log("🔢 Number of teachers:", result.teachers.length);
       } else {
-      console.log("📋 Teachers data:", data);
+        console.log("📋 Teachers data:", result);
       }
-      console.log("🔢 Number of teachers:", data?.length || 0);
       
-      setTeachers(data || []);
+      setTeachers(result.teachers || []);
     } catch (error) {
       console.error("❌ Unexpected error:", error);
       setError("خطای غیرمنتظره رخ داده است");
