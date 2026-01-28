@@ -57,10 +57,11 @@ export const getOAuthRedirectUrl = (path: string = '/auth/callback'): string => 
     return devUrl;
   }
   
-  // Final fallback - production URL
-  const PRODUCTION_URL = 'https://www.se1a.org';
+  // Final fallback - use environment variable or default
+  const PRODUCTION_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://se1a.org';
   const fallbackUrl = ensureProperUrl(PRODUCTION_URL, path);
   console.log('🚨 Server-side fallback - using production URL:', fallbackUrl);
+  console.log('🔍 Using NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL || 'not set');
   return fallbackUrl;
 };
 
