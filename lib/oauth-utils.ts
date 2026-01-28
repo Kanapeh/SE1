@@ -84,11 +84,13 @@ export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): strin
       return localUrl;
     }
     
-    // If we're on production domain (se1a.org), use current origin
+    // If we're on production domain (se1a.org with or without www), use current origin
     if (hostname.includes('se1a.org') || hostname.includes('vercel.app')) {
       const base = `${protocol}//${hostname}`;
       const prodUrl = ensureProperUrl(base, path);
       console.log('🌐 Production domain detected - using current origin:', prodUrl);
+      console.log('🔍 Hostname:', hostname);
+      console.log('🔍 Protocol:', protocol);
       return prodUrl;
     }
     
