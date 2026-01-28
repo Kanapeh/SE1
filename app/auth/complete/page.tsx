@@ -244,15 +244,15 @@ function AuthCompleteContent() {
                   description: `سلام ${teacher.first_name || 'معلم'}، به پنل معلم خود خوش آمدید`,
                 });
                 
-                // Use router.replace for faster navigation
-                router.replace('/dashboard/teacher');
-                return;
+            // Use window.location.href for reliable redirect
+            window.location.href = '/dashboard/teacher';
+            return;
               } else {
                 console.log("⚠️ Teacher not approved:", teacher.status);
                 setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacher.status}. لطفاً منتظر تایید ادمین باشید.`);
                 // Still redirect to complete profile to allow updates
                 setTimeout(() => {
-                  router.replace(`/complete-profile?type=teacher`);
+                  window.location.href = `/complete-profile?type=teacher`;
                 }, 3000);
                 return;
               }
@@ -279,14 +279,14 @@ function AuthCompleteContent() {
                   description: `سلام ${student.first_name || 'دانشجو'}، به داشبورد خود خوش آمدید`,
                 });
                 
-                // Use router.replace for consistency
-                router.replace('/dashboard/student');
-                return;
+            // Use window.location.href for reliable redirect
+            window.location.href = '/dashboard/student';
+            return;
               } else {
                 console.log("⚠️ Student not active:", student.status);
                 // Student exists but not active - redirect to complete profile
                 const userTypeFromMetadata = session.user.user_metadata?.user_type || 'student';
-                router.replace(`/complete-profile?type=${userTypeFromMetadata}`);
+                window.location.href = `/complete-profile?type=${userTypeFromMetadata}`;
                 return;
               }
             }
@@ -387,10 +387,13 @@ function AuthCompleteContent() {
           description: `لطفاً پروفایل ${finalUserType === 'teacher' ? 'معلم' : 'دانش‌آموز'} خود را تکمیل کنید`,
         });
         
-        // Use router.replace for consistency
+        // Use window.location.href for reliable redirect
         const redirectPath = `/complete-profile?type=${finalUserType}`;
         console.log('🔄 Redirecting to complete profile:', redirectPath);
-        router.replace(redirectPath);
+        console.log('🔄 Full redirect URL:', `${window.location.origin}${redirectPath}`);
+        
+        // Force redirect using window.location.href
+        window.location.href = redirectPath;
       } catch (error: any) {
         console.error('💥 Unexpected error in handleUserSession:', error);
         setError('خطای غیرمنتظره در پردازش ورود. لطفاً دوباره تلاش کنید.');
