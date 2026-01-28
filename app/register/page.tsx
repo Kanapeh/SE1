@@ -82,7 +82,17 @@ function RegisterContent() {
       setGoogleLoading(true);
       setError(null);
 
+      // Check if userType is valid
+      if (!userType || (userType !== 'teacher' && userType !== 'student')) {
+        console.error('❌ Invalid userType:', userType);
+        setError('لطفاً نوع کاربری خود را انتخاب کنید');
+        toast.error('لطفاً نوع کاربری خود را انتخاب کنید');
+        router.push('/register/select-type');
+        return;
+      }
+
       console.log("🚀 Starting Google OAuth sign in...");
+      console.log("📋 User type:", userType);
       
       // Clear any existing OAuth state first
       await supabase.auth.signOut();
@@ -101,6 +111,9 @@ function RegisterContent() {
       
       console.log("Current origin:", window.location.origin);
       console.log("Final redirect URL:", redirectUrl);
+      
+      // Store userType in sessionStorage before redirect
+      sessionStorage.setItem('userType', userType);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -114,33 +127,49 @@ function RegisterContent() {
       });
 
       if (error) {
-        console.error("Google OAuth error:", error);
+        console.error("❌ Google OAuth error:", error);
         
         // Handle specific OAuth errors
         if (error.message.includes("Unsupported provider") || error.message.includes("provider is not enabled")) {
           setError("ورود با گوگل در حال حاضر غیرفعال است. لطفاً از ثبت‌نام با ایمیل استفاده کنید.");
           toast.error("Google OAuth غیرفعال است. از ایمیل استفاده کنید.");
         } else {
-          throw error;
+          setError(`خطا در ورود با گوگل: ${error.message}`);
+          toast.error(`خطا: ${error.message}`);
         }
         return;
       }
 
-      console.log("Google OAuth initiated successfully");
-      toast.success("در حال انتقال به گوگل...");
+      console.log("✅ Google OAuth initiated successfully");
+      console.log("🔗 OAuth data:", data);
+      console.log("🔗 OAuth URL:", data?.url);
+      
+      if (data?.url) {
+        console.log("🔄 Redirecting to Google OAuth...");
+        toast.success("در حال انتقال به گوگل...");
+        // Small delay to ensure toast is shown
+        setTimeout(() => {
+          // Redirect to Google OAuth page
+          window.location.href = data.url;
+        }, 100);
+      } else {
+        console.error("❌ No OAuth URL returned");
+        setError("خطا در دریافت لینک گوگل. لطفاً دوباره تلاش کنید.");
+        toast.error("خطا در دریافت لینک گوگل");
+        setGoogleLoading(false);
+      }
       
     } catch (error: any) {
-      console.error("Google sign in error:", error);
+      console.error("💥 Google sign in error:", error);
+      setGoogleLoading(false);
       
       if (error.message?.includes("Unsupported provider") || error.message?.includes("provider is not enabled")) {
         setError("ورود با گوگل در حال حاضر غیرفعال است. لطفاً از ثبت‌نام با ایمیل استفاده کنید.");
         toast.error("Google OAuth غیرفعال است. از ایمیل استفاده کنید.");
       } else {
         setError(error.message || "خطا در ورود با گوگل");
-        toast.error("خطا در ورود با گوگل");
+        toast.error(`خطا در ورود با گوگل: ${error.message || 'خطای ناشناخته'}`);
       }
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
