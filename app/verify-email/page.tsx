@@ -25,13 +25,7 @@ function VerifyEmailContent() {
     const emailToUse = emailFromParams || emailFromStorage || "";
     setEmail(emailToUse);
 
-    // Get userType from URL params or session storage and save it
-    const userTypeFromParams = searchParams.get('userType');
-    const userTypeFromStorage = sessionStorage.getItem('userType');
-    const userTypeToUse = userTypeFromParams || userTypeFromStorage;
-    if (userTypeToUse) {
-      sessionStorage.setItem('userType', userTypeToUse);
-    }
+    // userType is stored in user_metadata, no need to read from URL or sessionStorage
 
     // Auto-check verification when page loads (if coming from email link)
     const checkAutoVerification = async () => {
@@ -92,15 +86,24 @@ function VerifyEmailContent() {
       if (user?.email_confirmed_at) {
         toast.success("ایمیل شما تایید شده است!");
         
-        // Check user type from multiple sources: URL params, sessionStorage, or user metadata
-        const userTypeFromParams = searchParams?.get('userType');
-        const userTypeFromStorage = sessionStorage.getItem('userType');
-        const userTypeFromMetadata = user.user_metadata?.user_type;
-        const userType = userTypeFromParams || userTypeFromStorage || userTypeFromMetadata;
+        // ⭐ Source of Truth: user_metadata.user_type (stored in Supabase during registration)
+        // This is the ONLY reliable source - don't use URL params or sessionStorage
+        let userType = user.user_metadata?.user_type;
         
-        // Save userType to sessionStorage for future use
-        if (userType) {
-          sessionStorage.setItem('userType', userType);
+        // If user_metadata doesn't have user_type (shouldn't happen, but fallback)
+        if (!userType) {
+          console.warn('⚠️ user_type not found in user_metadata, checking URL params as fallback');
+          userType = searchParams?.get('userType') || 'student';
+          
+          // Try to update user_metadata with the type from URL
+          try {
+            await supabase.auth.updateUser({
+              data: { user_type: userType }
+            });
+            console.log('✅ Updated user_metadata with user_type:', userType);
+          } catch (updateError) {
+            console.error('❌ Error updating user_metadata:', updateError);
+          }
         }
         
         // Check profiles to determine where to redirect
@@ -238,13 +241,11 @@ function VerifyEmailContent() {
             </Button>
 
             <Button
-              onClick={() => {
-                const userType = sessionStorage.getItem('userType');
-                if (userType === 'teacher') {
-                  router.push("/complete-profile?type=teacher");
-                } else {
-                  router.push("/complete-profile?type=student");
-                }
+              onClick={async () => {
+                // Get userType from user_metadata
+                const { data: { user } } = await supabase.auth.getUser();
+                const userType = user?.user_metadata?.user_type || 'student';
+                router.push(`/complete-profile?type=${userType}`);
               }}
               variant="ghost"
               className="w-full"

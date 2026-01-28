@@ -117,16 +117,15 @@ export default function TopTeachersSection() {
 
   if (loading) {
     return (
-      <section className="py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
+      <section className="py-16 md:py-24 px-4 relative overflow-hidden bg-white dark:bg-gray-900">
         <div className="container mx-auto relative z-10">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              معلمان برتر ما
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white">
+              اساتید با تجربه در آکادمی سِ وان
             </h2>
+            <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed px-4 mb-8">
+              مدرسان سِ وان با تخصص بالا و سابقه بین‌المللی یادگیری زبان را دقیق، مؤثر و لذت‌بخش می‌کنند
+            </p>
             <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
               <Loader2 className="w-6 h-6 animate-spin" />
               <span>در حال بارگذاری معلمان...</span>
@@ -139,16 +138,15 @@ export default function TopTeachersSection() {
 
   if (error) {
     return (
-      <section className="py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
+      <section className="py-16 md:py-24 px-4 relative overflow-hidden bg-white dark:bg-gray-900">
         <div className="container mx-auto relative z-10">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-500 to-orange-600 rounded-2xl mb-6">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              معلمان برتر ما
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white">
+              اساتید با تجربه در آکادمی سِ وان
             </h2>
+            <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed px-4 mb-8">
+              مدرسان سِ وان با تخصص بالا و سابقه بین‌المللی یادگیری زبان را دقیق، مؤثر و لذت‌بخش می‌کنند
+            </p>
             <p className="text-red-600 dark:text-red-400">خطا در بارگذاری معلمان: {error}</p>
           </div>
         </div>
@@ -158,19 +156,18 @@ export default function TopTeachersSection() {
 
   if (teachers.length === 0) {
     return (
-      <section className="py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
+      <section className="py-16 md:py-24 px-4 relative overflow-hidden bg-white dark:bg-gray-900">
         <div className="container mx-auto relative z-10">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              معلمان برتر ما
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white">
+              اساتید با تجربه در آکادمی سِ وان
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">هنوز معلم تایید شده‌ای وجود ندارد.</p>
+            <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed px-4 mb-8">
+              مدرسان سِ وان با تخصص بالا و سابقه بین‌المللی یادگیری زبان را دقیق، مؤثر و لذت‌بخش می‌کنند
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">هنوز معلم تایید شده‌ای وجود ندارد.</p>
             <Link href="/register/teacher">
-              <Button className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
+              <Button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
                 معلم شوید
               </Button>
             </Link>
@@ -180,16 +177,7 @@ export default function TopTeachersSection() {
     );
   }
   return (
-    <section className="py-20 px-4 relative overflow-hidden">
-      {/* Background with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
-      
-      {/* Floating elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200/20 dark:bg-blue-800/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-200/20 dark:bg-purple-800/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-indigo-200/20 dark:bg-indigo-800/20 rounded-full blur-2xl"></div>
-      </div>
+    <section className="py-16 md:py-24 px-4 relative overflow-hidden bg-white dark:bg-gray-900">
 
       <div className="container mx-auto relative z-10">
         {/* Header */}
@@ -198,17 +186,13 @@ export default function TopTeachersSection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12 md:mb-16"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6">
-            <Crown className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            معلمان برتر ما
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white">
+            اساتید با تجربه در آکادمی سِ وان
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mb-6 rounded-full"></div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            با بهترین معلمان زبان که سال‌ها تجربه در آموزش دارند آشنا شوید
+          <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">
+            مدرسان سِ وان با تخصص بالا و سابقه بین‌المللی یادگیری زبان را دقیق، مؤثر و لذت‌بخش می‌کنند
           </p>
         </motion.div>
 
@@ -234,7 +218,7 @@ export default function TopTeachersSection() {
                     viewport={{ once: true }}
                     className="group flex-shrink-0 w-80"
                   >
-                    <Card className="overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-md hover:shadow-xl hover:-translate-y-1 h-full group">
+                    <Card className="overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:-translate-y-1 h-full group">
                       {/* Avatar Section - Centered */}
                       <div className="relative pt-8 pb-4 px-6">
                         <div className="flex flex-col items-center">
@@ -344,7 +328,7 @@ export default function TopTeachersSection() {
                 viewport={{ once: true }}
                 className="group"
               >
-                <Card className="overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-md hover:shadow-xl hover:-translate-y-1 group">
+                <Card className="overflow-hidden transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:-translate-y-1 group">
                   {/* Avatar Section - Centered */}
                   <div className="relative pt-8 pb-4 px-6">
                     <div className="flex flex-col items-center">
