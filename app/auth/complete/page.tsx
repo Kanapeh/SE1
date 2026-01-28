@@ -92,6 +92,28 @@ function AuthCompleteContent() {
         // If we have an authorization code, try different approaches
         if (code) {
           console.log('🔄 Processing authorization code...');
+          console.log('🔍 Current URL:', window.location.href);
+          console.log('🔍 Current origin:', window.location.origin);
+          console.log('🔍 Code from URL:', code.substring(0, 20) + '...');
+          
+          // Try to exchange the code for a session immediately
+          // This is more reliable than waiting for auth state change
+          try {
+            console.log('🔄 Attempting to exchange code for session...');
+            const { data: { session }, error: exchangeError } = await supabase.auth.getSession();
+            
+            if (exchangeError) {
+              console.error('❌ Session exchange error:', exchangeError);
+            }
+            
+            if (session) {
+              console.log('✅ Session found immediately after code exchange');
+              await handleUserSession(session);
+              return;
+            }
+          } catch (exchangeErr) {
+            console.error('❌ Error exchanging code:', exchangeErr);
+          }
           
           // Use auth state listener approach (more reliable for PKCE)
           console.log('⏳ Waiting for auth state change...');
@@ -99,17 +121,19 @@ function AuthCompleteContent() {
           return new Promise((resolve) => {
             let resolved = false;
             let timeoutId: NodeJS.Timeout;
+            let intervalId: NodeJS.Timeout;
             
             // Set up auth state change listener
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
               async (event, session) => {
-                console.log(`🔄 Auth state change: ${event}`);
+                console.log(`🔄 Auth state change: ${event}`, session ? 'Session present' : 'No session');
                 
                 if (event === 'SIGNED_IN' && session && !resolved) {
                   resolved = true;
                   clearTimeout(timeoutId);
+                  clearInterval(intervalId);
                   subscription?.unsubscribe();
-                  console.log('✅ User signed in successfully');
+                  console.log('✅ User signed in successfully via auth state change');
                   await handleUserSession(session);
                   resolve(undefined);
                 }
@@ -119,14 +143,22 @@ function AuthCompleteContent() {
             // Also check for existing session (in case auth state change doesn't fire)
             const checkSession = async () => {
               try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                  console.error('❌ Session check error:', sessionError);
+                }
+                
                 if (session && !resolved) {
                   resolved = true;
                   clearTimeout(timeoutId);
+                  clearInterval(intervalId);
                   subscription?.unsubscribe();
                   console.log('✅ Session found via direct check');
                   await handleUserSession(session);
                   resolve(undefined);
+                } else if (!session && !resolved) {
+                  console.log('⏳ Still waiting for session...');
                 }
               } catch (error) {
                 console.error('❌ Session check failed:', error);
@@ -135,35 +167,44 @@ function AuthCompleteContent() {
             
             // Check immediately and then every 500ms
             checkSession();
-            const intervalId = setInterval(checkSession, 500);
+            intervalId = setInterval(checkSession, 500);
             
-            // Timeout after 10 seconds (increased for better reliability)
+            // Timeout after 15 seconds (increased for production)
             timeoutId = setTimeout(() => {
               if (!resolved) {
                 resolved = true;
                 clearInterval(intervalId);
                 subscription?.unsubscribe();
-                console.log('❌ Auth timeout - no session found');
-                setError('Authentication timeout - please try again');
-                // Redirect to login page instead of showing error
-                setTimeout(() => {
-                  router.push('/login?error=oauth_timeout');
-                }, 2000);
+                console.log('❌ Auth timeout - no session found after 15 seconds');
+                console.log('🔍 Final check - trying one more time...');
+                
+                // One final attempt
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                  if (session) {
+                    console.log('✅ Session found in final check!');
+                    handleUserSession(session);
+                  } else {
+                    console.error('❌ No session found even after timeout');
+                    setError('Authentication timeout - please try again');
+                    // Redirect to login page
+                    setTimeout(() => {
+                      window.location.href = '/login?error=oauth_timeout';
+                    }, 2000);
+                  }
+                });
+                
                 resolve(undefined);
               }
-            }, 10000);
-            
-            // Clean up interval when resolved
-            const originalResolve = resolve;
-            resolve = (value: any) => {
-              clearInterval(intervalId);
-              originalResolve(value);
-            };
+            }, 15000);
           });
         } else {
           // No code - maybe session already exists
           console.log('🔍 No authorization code, checking for existing session...');
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error('❌ Session check error:', sessionError);
+          }
           
           if (session) {
             console.log('✅ Existing session found');
@@ -173,7 +214,7 @@ function AuthCompleteContent() {
             setError('کد احراز هویت یافت نشد');
             // Redirect to login page
             setTimeout(() => {
-              router.push('/login?error=no_code');
+              window.location.href = '/login?error=no_code';
             }, 2000);
           }
         }
