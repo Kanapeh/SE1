@@ -464,8 +464,8 @@ function LoginPageContent() {
         if (studentData) {
           console.log("✅ User found in students table:", studentData);
           if (studentData.status === 'active') {
-            console.log("🎯 User is active student, redirecting to dashboard");
-            handleRedirect("/dashboard", "خوش آمدید دانشجو!");
+            console.log("🎯 User is active student, redirecting to student dashboard");
+            handleRedirect("/dashboard/student", "خوش آمدید دانشجو!");
           } else {
             console.log("⚠️ User is inactive student");
             setError("حساب کاربری دانشجو شما غیرفعال است.");
@@ -478,19 +478,20 @@ function LoginPageContent() {
         // User exists in auth but no profile - redirect to complete profile based on userType
         console.log("ℹ️ User has no profile in any table, redirecting to complete profile");
         
-        // Get userType from sessionStorage or default to student
-        const userType = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
-        const profileType = userType === 'teacher' ? 'teacher' : 'student';
+        // Priority order for userType:
+        // 1. user_metadata.user_type (source of truth - stored in Supabase)
+        // 2. sessionStorage (backup)
+        // 3. default to student
+        const userTypeFromMetadata = data.user.user_metadata?.user_type;
+        const userTypeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
+        const userType = userTypeFromMetadata || userTypeFromStorage || 'student';
         
-        // Store userType in sessionStorage if not already stored
-        if (userType && typeof window !== 'undefined') {
+        // Store userType in sessionStorage for future use (backup)
+        if (typeof window !== 'undefined') {
           sessionStorage.setItem('userType', userType);
-        } else if (typeof window !== 'undefined') {
-          // Default to student if no userType found
-          sessionStorage.setItem('userType', 'student');
         }
         
-        handleRedirect(`/complete-profile?type=${profileType}`, "لطفاً پروفایل خود را تکمیل کنید");
+        handleRedirect(`/complete-profile?type=${userType}`, "لطفاً پروفایل خود را تکمیل کنید");
       }
     } catch (error: any) {
       console.error("Unexpected error:", error);

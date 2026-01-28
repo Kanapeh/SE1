@@ -31,6 +31,7 @@ function RegisterContent() {
   useEffect(() => {
     if (!userType || (userType !== 'teacher' && userType !== 'student')) {
       router.push('/register/select-type');
+      return;
     }
   }, [userType, router]);
 
@@ -452,27 +453,29 @@ function RegisterContent() {
         </div>
 
         {/* Google OAuth Button */}
-        <div className="space-y-4">
-          <Button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={googleLoading}
-            variant="outline"
-            className="w-full h-12 bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 font-medium"
-          >
-            <Chrome className="w-5 h-5 mr-2" />
-            {googleLoading ? "در حال انتقال..." : "ادامه با گوگل"}
-          </Button>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">یا</span>
+        {userType && (userType === 'teacher' || userType === 'student') && (
+          <div className="space-y-4">
+            <Button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading || !userType}
+              variant="outline"
+              className="w-full h-12 bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 font-medium"
+            >
+              <Chrome className="w-5 h-5 mr-2" />
+              {googleLoading ? "در حال انتقال..." : "ادامه با گوگل"}
+            </Button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">یا</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
