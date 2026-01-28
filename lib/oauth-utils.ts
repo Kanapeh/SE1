@@ -116,10 +116,11 @@ export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): strin
     return devUrl;
   }
   
-  // Final server-side fallback - production URL
-  const PRODUCTION_URL = 'https://www.se1a.org';
+  // Final server-side fallback - use environment variable or default
+  const PRODUCTION_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://se1a.org';
   const fallbackUrl = ensureProperUrl(PRODUCTION_URL, path);
   console.log('🚨 Final fallback - production URL:', fallbackUrl);
+  console.log('🔍 Using NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL || 'not set');
   return fallbackUrl;
 };
 
