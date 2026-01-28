@@ -217,75 +217,133 @@ function AuthCompleteContent() {
         });
 
         // Check profiles simultaneously for better performance
+        console.log('🔍 Checking for existing profiles...');
         const [teacherResponse, studentResponse] = await Promise.allSettled([
-          fetch(`/api/teacher-profile?user_id=${session.user.id}&email=${session.user.email}`),
-          fetch(`/api/student-profile?user_id=${session.user.id}&email=${session.user.email}`)
+          fetch(`/api/teacher-profile?user_id=${session.user.id}&email=${encodeURIComponent(session.user.email || '')}`),
+          fetch(`/api/student-profile?user_id=${session.user.id}&email=${encodeURIComponent(session.user.email || '')}`)
         ]);
+
+        console.log('📊 Profile check results:', {
+          teacher: teacherResponse.status,
+          teacherOk: teacherResponse.status === 'fulfilled' ? teacherResponse.value.ok : false,
+          student: studentResponse.status,
+          studentOk: studentResponse.status === 'fulfilled' ? studentResponse.value.ok : false
+        });
 
         // Check teacher profile
         if (teacherResponse.status === 'fulfilled' && teacherResponse.value.ok) {
-          const { teacher } = await teacherResponse.value.json();
-          console.log('✅ Teacher profile found:', teacher.first_name, teacher.last_name);
-          
-          if (teacher.status === 'active' || teacher.status === 'Approved') {
-            console.log("✅ Redirecting to teacher dashboard");
-            toast({
-              title: "خوش آمدید!",
-              description: `سلام ${teacher.first_name}، به پنل معلم خود خوش آمدید`,
-            });
+          try {
+            const { teacher } = await teacherResponse.value.json();
+            console.log('✅ Teacher profile found:', teacher);
             
-            // Use router.replace for faster navigation
-            router.replace('/dashboard/teacher');
-            return;
-          } else {
-            console.log("⚠️ Teacher not approved:", teacher.status);
-            setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacher.status}. لطفاً منتظر تایید ادمین باشید.`);
-            return;
+            if (teacher && teacher.id) {
+              if (teacher.status === 'active' || teacher.status === 'Approved') {
+                console.log("✅ Redirecting to teacher dashboard");
+                toast({
+                  title: "خوش آمدید!",
+                  description: `سلام ${teacher.first_name || 'معلم'}، به پنل معلم خود خوش آمدید`,
+                });
+                
+                // Use router.replace for faster navigation
+                router.replace('/dashboard/teacher');
+                return;
+              } else {
+                console.log("⚠️ Teacher not approved:", teacher.status);
+                setError(`حساب کاربری معلم شما هنوز تایید نشده است. وضعیت فعلی: ${teacher.status}. لطفاً منتظر تایید ادمین باشید.`);
+                // Still redirect to complete profile to allow updates
+                setTimeout(() => {
+                  router.replace(`/complete-profile?type=teacher`);
+                }, 3000);
+                return;
+              }
+            }
+          } catch (parseError) {
+            console.error('❌ Error parsing teacher response:', parseError);
           }
+        } else {
+          console.log('ℹ️ No teacher profile found');
         }
 
         // Check student profile
         if (studentResponse.status === 'fulfilled' && studentResponse.value.ok) {
-          const result = await studentResponse.value.json();
-          const student = result.student;
-          console.log('✅ Student profile found:', student.first_name, student.last_name);
-          
-          if (student.status === 'active') {
-            console.log("✅ Redirecting to student dashboard");
-            toast({
-              title: "خوش آمدید!",
-              description: `سلام ${student.first_name}، به داشبورد خود خوش آمدید`,
-            });
+          try {
+            const result = await studentResponse.value.json();
+            const student = result.student;
+            console.log('✅ Student profile found:', student);
             
-            // Use router.replace for consistency
-            router.replace('/dashboard/student');
-            return;
-          } else {
-            console.log("⚠️ Student not active:", student.status);
-            // Student exists but not active - redirect to complete profile
-            const userTypeFromMetadata = session.user.user_metadata?.user_type || 'student';
-            router.replace(`/complete-profile?type=${userTypeFromMetadata}`);
-            return;
+            if (student && student.id) {
+              if (student.status === 'active') {
+                console.log("✅ Redirecting to student dashboard");
+                toast({
+                  title: "خوش آمدید!",
+                  description: `سلام ${student.first_name || 'دانشجو'}، به داشبورد خود خوش آمدید`,
+                });
+                
+                // Use router.replace for consistency
+                router.replace('/dashboard/student');
+                return;
+              } else {
+                console.log("⚠️ Student not active:", student.status);
+                // Student exists but not active - redirect to complete profile
+                const userTypeFromMetadata = session.user.user_metadata?.user_type || 'student';
+                router.replace(`/complete-profile?type=${userTypeFromMetadata}`);
+                return;
+              }
+            }
+          } catch (parseError) {
+            console.error('❌ Error parsing student response:', parseError);
           }
+        } else {
+          console.log('ℹ️ No student profile found');
         }
 
         // No profile found - redirect to complete profile
         console.log("ℹ️ No active profile found, redirecting to complete profile");
+        console.log("📋 Session user metadata:", session.user.user_metadata);
+        console.log("📋 Session user app metadata:", session.user.app_metadata);
 
         // Priority order for userType:
         // 1. user_metadata.user_type (source of truth - stored in Supabase)
-        // 2. URL params
-        // 3. sessionStorage (backup)
-        // 4. default to student
+        // 2. URL params (from callback or registration)
+        // 3. sessionStorage (backup - might be cleared)
+        // 4. Check if user email matches any existing teacher/student (by email)
+        // 5. default to student
         const userTypeFromMetadata = session.user.user_metadata?.user_type;
         const userTypeFromParams = userType;
         const userTypeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
-        const finalUserType = userTypeFromMetadata || userTypeFromParams || userTypeFromStorage || 'student';
+        
+        // Try to detect userType by checking if email exists in teachers or students table
+        let detectedUserType: string | null = null;
+        if (session.user.email) {
+          try {
+            // Quick check: if teacher response had any data (even if not ok), user might be teacher
+            if (teacherResponse.status === 'fulfilled') {
+              const teacherData = await teacherResponse.value.json().catch(() => null);
+              if (teacherData?.teacher?.id) {
+                detectedUserType = 'teacher';
+                console.log('🔍 Detected userType as teacher from API response');
+              }
+            }
+            // Quick check: if student response had any data (even if not ok), user might be student
+            if (!detectedUserType && studentResponse.status === 'fulfilled') {
+              const studentData = await studentResponse.value.json().catch(() => null);
+              if (studentData?.student?.id) {
+                detectedUserType = 'student';
+                console.log('🔍 Detected userType as student from API response');
+              }
+            }
+          } catch (detectError) {
+            console.error('Error detecting userType:', detectError);
+          }
+        }
+        
+        const finalUserType = userTypeFromMetadata || userTypeFromParams || userTypeFromStorage || detectedUserType || 'student';
 
         console.log('🔍 User type detection:', {
           metadata: userTypeFromMetadata,
           params: userTypeFromParams,
           storage: userTypeFromStorage,
+          detected: detectedUserType,
           final: finalUserType
         });
 

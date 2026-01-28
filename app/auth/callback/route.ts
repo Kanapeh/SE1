@@ -36,11 +36,13 @@ export async function GET(request: NextRequest) {
     console.log('🔄 PKCE flow detected - redirecting to client-side handler');
     
     // Redirect to a client-side page that will handle the PKCE exchange
+    // If userType is not provided, we'll detect it from user_metadata in auth/complete
     const redirectUrl = userType 
       ? `${requestUrl.origin}/auth/complete?type=${userType}&code=${encodeURIComponent(code)}`
-      : `${requestUrl.origin}/auth/complete?type=student&code=${encodeURIComponent(code)}`;
+      : `${requestUrl.origin}/auth/complete?code=${encodeURIComponent(code)}`;
     
     console.log('🔄 Redirecting to client-side handler:', redirectUrl);
+    console.log('📋 User type from callback:', userType || 'not provided (will be detected)');
     return NextResponse.redirect(redirectUrl);
 
   } catch (error: any) {
