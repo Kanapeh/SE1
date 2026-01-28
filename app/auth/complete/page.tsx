@@ -137,7 +137,7 @@ function AuthCompleteContent() {
             checkSession();
             const intervalId = setInterval(checkSession, 500);
             
-            // Timeout after 5 seconds
+            // Timeout after 10 seconds (increased for better reliability)
             timeoutId = setTimeout(() => {
               if (!resolved) {
                 resolved = true;
@@ -145,9 +145,13 @@ function AuthCompleteContent() {
                 subscription?.unsubscribe();
                 console.log('❌ Auth timeout - no session found');
                 setError('Authentication timeout - please try again');
+                // Redirect to login page instead of showing error
+                setTimeout(() => {
+                  router.push('/login?error=oauth_timeout');
+                }, 2000);
                 resolve(undefined);
               }
-            }, 5000);
+            }, 10000);
             
             // Clean up interval when resolved
             const originalResolve = resolve;
@@ -165,12 +169,21 @@ function AuthCompleteContent() {
             console.log('✅ Existing session found');
             await handleUserSession(session);
           } else {
+            console.log('❌ No session found, redirecting to login');
             setError('کد احراز هویت یافت نشد');
+            // Redirect to login page
+            setTimeout(() => {
+              router.push('/login?error=no_code');
+            }, 2000);
           }
         }
       } catch (error: any) {
         console.error('💥 Unexpected error in completeAuth:', error);
         setError('خطای غیرمنتظره. لطفاً دوباره تلاش کنید.');
+        // Redirect to login page on error
+        setTimeout(() => {
+          router.push('/login?error=unexpected_error');
+        }, 3000);
       } finally {
         setIsLoading(false);
       }
@@ -244,9 +257,14 @@ function AuthCompleteContent() {
               description: `سلام ${student.first_name}، به داشبورد خود خوش آمدید`,
             });
             
-            // Direct redirect for better performance
-            const dashboardUrl = `${window.location.origin}/dashboard/student`;
-            window.location.replace(dashboardUrl);
+            // Use router.replace for consistency
+            router.replace('/dashboard/student');
+            return;
+          } else {
+            console.log("⚠️ Student not active:", student.status);
+            // Student exists but not active - redirect to complete profile
+            const userTypeFromMetadata = session.user.user_metadata?.user_type || 'student';
+            router.replace(`/complete-profile?type=${userTypeFromMetadata}`);
             return;
           }
         }
@@ -254,17 +272,46 @@ function AuthCompleteContent() {
         // No profile found - redirect to complete profile
         console.log("ℹ️ No active profile found, redirecting to complete profile");
 
-        // Save userType to sessionStorage for future use
-        if (userType && typeof window !== 'undefined') {
-          sessionStorage.setItem('userType', userType);
+        // Priority order for userType:
+        // 1. user_metadata.user_type (source of truth - stored in Supabase)
+        // 2. URL params
+        // 3. sessionStorage (backup)
+        // 4. default to student
+        const userTypeFromMetadata = session.user.user_metadata?.user_type;
+        const userTypeFromParams = userType;
+        const userTypeFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('userType') : null;
+        const finalUserType = userTypeFromMetadata || userTypeFromParams || userTypeFromStorage || 'student';
+
+        console.log('🔍 User type detection:', {
+          metadata: userTypeFromMetadata,
+          params: userTypeFromParams,
+          storage: userTypeFromStorage,
+          final: finalUserType
+        });
+
+        // Save userType to sessionStorage for future use (backup)
+        if (finalUserType && typeof window !== 'undefined') {
+          sessionStorage.setItem('userType', finalUserType);
           sessionStorage.setItem('userEmail', session.user.email || '');
+        }
+        
+        // If user_metadata doesn't have user_type, update it
+        if (!userTypeFromMetadata && finalUserType) {
+          try {
+            await supabase.auth.updateUser({
+              data: { user_type: finalUserType }
+            });
+            console.log('✅ Updated user_metadata with user_type:', finalUserType);
+          } catch (updateError) {
+            console.error('Error updating user_metadata:', updateError);
+          }
         }
 
         if (!hasNotificationFlag && session.user.email) {
           const ownerNotified = await notifyOwner({
             email: session.user.email,
             fullName: session.user.user_metadata?.full_name,
-            userType,
+            userType: finalUserType,
             metadata: {
               provider: session.user.app_metadata?.provider || 'unknown',
               reason: 'missing-profile',
@@ -279,18 +326,20 @@ function AuthCompleteContent() {
         
         toast({
           title: "تکمیل پروفایل",
-          description: `لطفاً پروفایل ${userType === 'teacher' ? 'معلم' : 'دانش‌آموز'} خود را تکمیل کنید`,
+          description: `لطفاً پروفایل ${finalUserType === 'teacher' ? 'معلم' : 'دانش‌آموز'} خود را تکمیل کنید`,
         });
         
-        const redirectUrl = userType 
-          ? `complete-profile?type=${userType}`
-          : 'complete-profile?type=student';
-        
-        const completeProfileUrl = `${window.location.origin}/${redirectUrl}`;
-        window.location.replace(completeProfileUrl);
+        // Use router.replace for consistency
+        const redirectPath = `/complete-profile?type=${finalUserType}`;
+        console.log('🔄 Redirecting to complete profile:', redirectPath);
+        router.replace(redirectPath);
       } catch (error: any) {
         console.error('💥 Unexpected error in handleUserSession:', error);
         setError('خطای غیرمنتظره در پردازش ورود. لطفاً دوباره تلاش کنید.');
+        // Redirect to login page on error
+        setTimeout(() => {
+          router.push('/login?error=session_error');
+        }, 3000);
       }
     };
 
