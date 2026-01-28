@@ -68,56 +68,52 @@ export const getOAuthRedirectUrl = (path: string = '/auth/callback'): string => 
 // SSR-safe: returns consistent URLs on server and client
 export const getSmartOAuthRedirectUrl = (path: string = '/auth/callback'): string => {
   console.log('🤖 Smart OAuth URL Detection Started');
+  console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+  console.log('🔍 NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
   
-  // PRIORITY 1: Check if we're in development mode (localhost should always stay local)
-  if (process.env.NODE_ENV === 'development') {
-    const devUrl = `http://localhost:3000${path}`;
-    console.log('🧪 Development environment detected - using localhost:', devUrl);
-    return devUrl;
-  }
-  
-  // PRIORITY 2: Browser environment detection for localhost
+  // PRIORITY 1: Browser environment detection (most reliable)
   if (typeof window !== 'undefined') {
     const { protocol, hostname, port } = window.location;
     console.log('🌍 Browser environment detected:', { protocol, hostname, port });
     
-    // If we're on localhost, always use localhost regardless of env vars
+    // If we're on localhost, always use localhost
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       const base = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
       const localUrl = ensureProperUrl(base, path);
       console.log('🏠 Localhost detected - using local URL:', localUrl);
       return localUrl;
     }
-  }
-  
-  // PRIORITY 3: Environment variables for production
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    const envUrl = ensureProperUrl(process.env.NEXT_PUBLIC_SITE_URL, path);
-    console.log('🔧 Using environment SITE_URL (production):', envUrl);
-    return envUrl;
-  }
-  
-  // Browser environment - only as fallback
-  if (typeof window !== 'undefined') {
-    const { protocol, hostname, port } = window.location;
-    console.log('🌍 Browser fallback detected:', { protocol, hostname, port });
     
-    // If we're on localhost, use localhost URL
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      const base = `${protocol}//${hostname}${port ? `:${port}` : ''}`;
-      const localUrl = ensureProperUrl(base, path);
-      console.log('🏠 Browser fallback - localhost URL:', localUrl);
-      return localUrl;
+    // If we're on production domain (se1a.org), use current origin
+    if (hostname.includes('se1a.org') || hostname.includes('vercel.app')) {
+      const base = `${protocol}//${hostname}`;
+      const prodUrl = ensureProperUrl(base, path);
+      console.log('🌐 Production domain detected - using current origin:', prodUrl);
+      return prodUrl;
     }
     
-    // Use current origin for any domain
+    // For any other domain, use current origin
     const base = `${protocol}//${hostname}`;
     const currentUrl = ensureProperUrl(base, path);
-    console.log('🌐 Browser fallback - current domain URL:', currentUrl);
+    console.log('🔄 Using current origin URL:', currentUrl);
     return currentUrl;
   }
   
-  // Final server-side fallback
+  // PRIORITY 2: Environment variables for production (server-side)
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    const envUrl = ensureProperUrl(process.env.NEXT_PUBLIC_SITE_URL, path);
+    console.log('🔧 Using environment SITE_URL (server-side):', envUrl);
+    return envUrl;
+  }
+  
+  // PRIORITY 3: Check if we're in development mode (server-side fallback)
+  if (process.env.NODE_ENV === 'development') {
+    const devUrl = `http://localhost:3000${path}`;
+    console.log('🧪 Development environment detected - using localhost:', devUrl);
+    return devUrl;
+  }
+  
+  // Final server-side fallback - production URL
   const PRODUCTION_URL = 'https://www.se1a.org';
   const fallbackUrl = ensureProperUrl(PRODUCTION_URL, path);
   console.log('🚨 Final fallback - production URL:', fallbackUrl);
